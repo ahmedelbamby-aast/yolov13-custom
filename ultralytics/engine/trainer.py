@@ -199,14 +199,16 @@ class BaseTrainer:
                 self.args.batch = 16
 
             # Command
-            cmd, file = generate_ddp_command(world_size, self)
+            cmd, file = None, None
             try:
+                cmd, file = generate_ddp_command(world_size, self)
                 LOGGER.info(f"{colorstr('DDP:')} debug command {' '.join(cmd)}")
                 subprocess.run(cmd, check=True)
             except Exception as e:
                 raise e
             finally:
-                ddp_cleanup(self, str(file))
+                if file is not None:
+                    ddp_cleanup(self, str(file))
 
         else:
             self._do_train(world_size)
