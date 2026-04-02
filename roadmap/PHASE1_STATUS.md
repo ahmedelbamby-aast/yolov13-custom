@@ -15,6 +15,26 @@ Phase 1 focuses on compatibility and correctness fixes before adding new v13 tas
 - Why:
   - Prevent key/value mismatch in `results_dict` and downstream callback/report consumers
 
+### Step 2 - Task preflight validation wiring
+
+- File updated: `ultralytics/data/utils.py`
+- Added:
+  - `_sample_label_files(...)`
+  - `_validate_task_label_schema(data, task)`
+  - `check_det_dataset(..., task=None)` now accepts task context and runs task-specific schema preflight
+- File updated: `ultralytics/engine/trainer.py`
+  - pass `task=self.args.task` into `check_det_dataset(...)`
+- File updated: `ultralytics/engine/validator.py`
+  - pass `task=self.args.task` into `check_det_dataset(...)`
+- File updated: `ultralytics/models/yolo/world/train_world.py`
+  - pass `task=self.args.task` into dataset checks
+
+Preflight behavior summary:
+
+- `segment`: sampled label rows must look like polygon rows (odd token count, minimum 7).
+- `pose`: requires valid `kpt_shape` and exact token count (`5 + nkpt * ndim`).
+- `obb`: sampled label rows must look like corner-based OBB rows (odd token count, minimum 9).
+
 ## Phase 1 Workflow
 
 ```mermaid

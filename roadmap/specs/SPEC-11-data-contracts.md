@@ -28,6 +28,14 @@ Define strict dataset schema and validation rules so task training fails early w
 - Errors include file path, row index, and expected format example.
 - Optional strict mode to stop on first malformed sample.
 
+Implementation status (Phase 1):
+
+- Implemented in `ultralytics/data/utils.py` with task-aware invocation from training and validation paths.
+- Current checks validate sampled train labels for:
+  - segment polygon row shape,
+  - pose token count against `kpt_shape`,
+  - obb corner-style row shape.
+
 ## Acceptance
 
 - Invalid datasets produce clear, deterministic error messages.

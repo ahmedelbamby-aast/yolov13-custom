@@ -11,6 +11,7 @@
 Current status:
 
 - Step 1 complete: OBB metrics key alignment fix drafted and tracked in `roadmap/PHASE1_STATUS.md`.
+- Step 2 complete: task-aware dataset preflight checks wired into trainer/validator/world dataset flow.
 
 ### Phase 2 - v13 Task Model Definitions
 

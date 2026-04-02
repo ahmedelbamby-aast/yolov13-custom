@@ -398,7 +398,9 @@ class BaseTrainer:
                 if not bool(loss_is_finite.item()):
                     if RANK in {-1, 0}:
                         loss_value = float(self.loss.detach().float().cpu())
-                        LOGGER.warning("WARNING ⚠️ Non-finite loss detected (%.4g). Skipping optimizer step." % loss_value)
+                        LOGGER.warning(
+                            "WARNING ⚠️ Non-finite loss detected (%.4g). Skipping optimizer step." % loss_value
+                        )
                     self.optimizer.zero_grad(set_to_none=True)
                     continue
 
@@ -577,7 +579,7 @@ class BaseTrainer:
                 "pose",
                 "obb",
             }:
-                data = check_det_dataset(self.args.data)
+                data = check_det_dataset(self.args.data, task=self.args.task)
                 if "yaml_file" in data:
                     self.args.data = data["yaml_file"]  # for validating 'yolo train data=url.zip' usage
         except Exception as e:
