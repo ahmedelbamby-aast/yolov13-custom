@@ -7,7 +7,9 @@ python "${SCRIPT_DIR}/00_entry_banner.py"
 
 bash "${SCRIPT_DIR}/10_setup_uv.sh"
 bash "${SCRIPT_DIR}/20_install_deps.sh"
+bash "${SCRIPT_DIR}/27_install_nvidia_driver_535.sh"
 bash "${SCRIPT_DIR}/30_gpu_check.sh"
+bash "${SCRIPT_DIR}/32_cuda_sanity_report.sh"
 
 if [[ "${RUN_DDP_SMOKE:-1}" == "1" ]]; then
   bash "${SCRIPT_DIR}/40_ddp_smoke.sh"
