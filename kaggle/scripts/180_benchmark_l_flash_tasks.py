@@ -234,6 +234,29 @@ def _plot_avg_epoch_grouped(compare: dict, out_dir: Path):
     plt.close(fig)
 
 
+def _plot_avg_epoch_line(compare: dict, out_dir: Path):
+    tasks = list(TASKS.keys())
+    x = list(range(len(tasks)))
+    fb = [compare["fallback"]["tasks"][t]["avg_epoch_seconds"] for t in tasks]
+    tu = [compare["turing"]["tasks"][t]["avg_epoch_seconds"] for t in tasks]
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(x, fb, marker="o", linewidth=2.2, color="#6c757d", label="Fallback")
+    ax.plot(x, tu, marker="o", linewidth=2.2, color="#2a9d8f", label="Turing")
+    ax.set_title("YOLOv13-L Avg Epoch Time Line Comparison")
+    ax.set_ylabel("Seconds / Epoch")
+    ax.set_xticks(x, [t.upper() for t in tasks])
+    ax.grid(axis="y", linestyle="--", alpha=0.25)
+    ax.legend()
+    for xi, y in zip(x, fb):
+        ax.text(xi, y + 0.03, f"{y:.2f}s", ha="center", va="bottom", fontsize=9, color="#495057")
+    for xi, y in zip(x, tu):
+        ax.text(xi, y - 0.05, f"{y:.2f}s", ha="center", va="top", fontsize=9, color="#1d6f67")
+    fig.tight_layout()
+    fig.savefig(out_dir / "l_tasks_avg_epoch_line_compare.png", dpi=220)
+    plt.close(fig)
+
+
 def _plot_wall_delta_pct(compare: dict, out_dir: Path):
     tasks = list(TASKS.keys())
     deltas = []
@@ -337,6 +360,7 @@ def _write_report(compare: dict, out_dir: Path, repo_report: Path):
         "## Visualizations",
         f"- Grouped wall time: `{out_dir / 'l_tasks_wall_time_grouped.png'}`",
         f"- Grouped avg epoch time: `{out_dir / 'l_tasks_avg_epoch_grouped.png'}`",
+        f"- Avg epoch line comparison: `{out_dir / 'l_tasks_avg_epoch_line_compare.png'}`",
         f"- Wall-time delta percent: `{out_dir / 'l_tasks_wall_delta_pct.png'}`",
         f"- Speedup bars: `{out_dir / 'l_tasks_speedup.png'}`",
         f"- Final primary metric grouped bars: `{out_dir / 'l_tasks_primary_metric_grouped.png'}`",
@@ -417,6 +441,7 @@ def main():
 
     _plot_runtime_grouped(compare, plots_dir)
     _plot_avg_epoch_grouped(compare, plots_dir)
+    _plot_avg_epoch_line(compare, plots_dir)
     _plot_wall_delta_pct(compare, plots_dir)
     _plot_speedup(compare, plots_dir)
     _plot_metric_grouped(compare, plots_dir)
