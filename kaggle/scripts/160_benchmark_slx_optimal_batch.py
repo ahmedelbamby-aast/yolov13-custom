@@ -50,7 +50,9 @@ def _dataset_info(data_yaml: str):
     }
 
 
-def _train_probe(model_cfg: str, data_yaml: str, imgsz: int, batch: int, workers: int, out_root: Path, name: str) -> bool:
+def _train_probe(
+    model_cfg: str, data_yaml: str, imgsz: int, batch: int, workers: int, out_root: Path, name: str
+) -> bool:
     from ultralytics import YOLO
 
     try:
@@ -111,6 +113,7 @@ def _to_float(d: dict, key: str) -> float:
     except Exception:
         return 0.0
 
+
 def _feature_maps(weights: Path, sample_image: str, imgsz: int, case: str, out_root: Path):
     from ultralytics import YOLO
 
@@ -159,12 +162,24 @@ def _plots(run_root: Path, data: dict):
     fig.savefig(p / "slx_map50_line.png", dpi=220)
     plt.close(fig)
 
-def run_benchmark(data_yaml: str = "coco128.yaml", epochs: int = 30, workers: int = 4, use_turing_flash: bool = True, force_disable_flash: bool = False, run_name: str = "y13_bench_slx_30e") -> dict:
-    from ultralytics import YOLO
-    from ultralytics.nn.modules import block
 
+def run_benchmark(
+    data_yaml: str = "coco128.yaml",
+    epochs: int = 30,
+    workers: int = 4,
+    use_turing_flash: bool = True,
+    force_disable_flash: bool = False,
+    run_name: str = "y13_bench_slx_30e",
+) -> dict:
     os.environ["Y13_USE_TURING_FLASH"] = "1" if use_turing_flash else "0"
     os.environ["Y13_DISABLE_FLASH"] = "1" if force_disable_flash else "0"
+
+    from ultralytics.nn.modules import block
+
+    if hasattr(block, "configure_flash_backend"):
+        block.configure_flash_backend(disable_flash=force_disable_flash, use_turing_flash=use_turing_flash)
+
+    from ultralytics import YOLO
 
     run_root = Path(f"/kaggle/working/{run_name}")
     run_root.mkdir(parents=True, exist_ok=True)

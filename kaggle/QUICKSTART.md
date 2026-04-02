@@ -112,3 +112,19 @@ except Exception as e:
     print("torch error:", e)
 PY
 ```
+
+## L-scale fallback vs turing benchmark (segment/pose/obb)
+
+Run the dedicated L-only backend comparison suite:
+
+```bash
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/181_benchmark_l_flash_tasks.sh
+```
+
+Main outputs:
+
+- JSON summaries: `/kaggle/working/phase2_l_flash_compare/*/suite_summary.json`
+- Comparison summary: `/kaggle/working/phase2_l_flash_compare/compare_summary.json`
+- Plots: `/kaggle/working/phase2_l_flash_compare/plots/`
+- Synced report: `kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md`
