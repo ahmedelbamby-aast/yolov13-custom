@@ -47,8 +47,14 @@ flowchart TD
 
 ## Next Steps
 
-1. Run smoke verification checklist for correctness.
-2. Update roadmap/specs with completed evidence and artifacts.
+1. Phase 1 complete. Begin Phase 2 (v13 task-head model configs).
+
+## Phase 1 Completion
+
+- Compatibility fix: OBB metrics keys aligned.
+- Task-aware preflight checks: integrated into trainer/validator/world paths.
+- Smoke evidence: 6/6 checks passed.
+- Ready to proceed to model-config implementation phase.
 
 ### Step 3 - Smoke harness prepared
 

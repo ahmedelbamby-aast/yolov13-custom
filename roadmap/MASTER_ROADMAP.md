@@ -85,6 +85,11 @@ flowchart TD
     E --> F[Phase 6: docs, benchmark, release]
 ```
 
+Phase progress snapshot:
+
+- Phase 1: completed (compatibility + task preflight + smoke evidence)
+- Phase 2: planned (`roadmap/PHASE2_PLAN.md`)
+
 ```mermaid
 gantt
     title YOLOv13 Multi-Task Enablement
