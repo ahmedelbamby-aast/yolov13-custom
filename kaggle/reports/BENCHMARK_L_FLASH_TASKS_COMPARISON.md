@@ -23,6 +23,7 @@
 ## Visualizations
 - Grouped wall time: `/kaggle/working/phase2_l_flash_compare/plots/l_tasks_wall_time_grouped.png`
 - Grouped avg epoch time: `/kaggle/working/phase2_l_flash_compare/plots/l_tasks_avg_epoch_grouped.png`
+- Avg epoch line comparison: `/kaggle/working/phase2_l_flash_compare/plots/l_tasks_avg_epoch_line_compare.png`
 - Wall-time delta percent: `/kaggle/working/phase2_l_flash_compare/plots/l_tasks_wall_delta_pct.png`
 - Speedup bars: `/kaggle/working/phase2_l_flash_compare/plots/l_tasks_speedup.png`
 - Final primary metric grouped bars: `/kaggle/working/phase2_l_flash_compare/plots/l_tasks_primary_metric_grouped.png`
