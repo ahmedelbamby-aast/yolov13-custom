@@ -301,23 +301,67 @@ def find_dataset_yaml(path: Path) -> Path:
 def _sample_label_files(train_paths, max_files=200):
     """Collect a sample of label files from train image paths."""
     label_files = []
+    seen = set()
+
+    def _add_from_dir(d: Path):
+        if not d.exists() or not d.is_dir():
+            return False
+        added = False
+        for lb in d.rglob("*.txt"):
+            s = str(lb)
+            if s not in seen:
+                seen.add(s)
+                label_files.append(lb)
+                added = True
+                if len(label_files) >= max_files:
+                    return True
+        return added
+
     for p in train_paths:
         p = Path(p)
-        if not p.exists() or p.is_file():
+        if not p.exists():
+            continue
+
+        # train path can be a text file with image paths
+        if p.is_file() and p.suffix.lower() == ".txt":
+            try:
+                im_files = [
+                    Path(x.strip()) for x in p.read_text(encoding="utf-8", errors="ignore").splitlines() if x.strip()
+                ]
+            except Exception:
+                im_files = []
+            for im in im_files:
+                lb = Path(str(im).replace(f"{os.sep}images{os.sep}", f"{os.sep}labels{os.sep}")).with_suffix(".txt")
+                if lb.exists():
+                    s = str(lb)
+                    if s not in seen:
+                        seen.add(s)
+                        label_files.append(lb)
+                        if len(label_files) >= max_files:
+                            return label_files
+            continue
+
+        if p.is_file():
             continue
 
         candidates = [
             Path(str(p).replace(f"{os.sep}images{os.sep}", f"{os.sep}labels{os.sep}")),
             p.parent / "labels",
             p.parent.parent / "labels" / p.name,
+            p / "labels",
         ]
         for c in candidates:
-            if c.exists() and c.is_dir():
-                for lb in c.rglob("*.txt"):
-                    label_files.append(lb)
-                    if len(label_files) >= max_files:
-                        return label_files
-                break
+            if _add_from_dir(c) and len(label_files) >= max_files:
+                return label_files
+
+        # Fallback: scan nearby roots for any labels subtree
+        for root in {p, p.parent, p.parent.parent}:
+            if not root.exists() or not root.is_dir():
+                continue
+            for labels_dir in root.rglob("labels"):
+                if _add_from_dir(labels_dir) and len(label_files) >= max_files:
+                    return label_files
+
     return label_files
 
 
