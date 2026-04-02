@@ -14,6 +14,7 @@ import time
 import warnings
 from copy import copy, deepcopy
 from datetime import datetime, timedelta
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -794,7 +795,7 @@ class BaseTrainer:
         Returns:
             (torch.optim.Optimizer): The constructed optimizer.
         """
-        g = [], [], [], []  # optimizer parameter groups: decay, norm, bias, muon
+        g = [{}, {}, {}, {}]  # optimizer parameter groups: decay, norm, bias, muon
         bn = tuple(v for k, v in nn.__dict__.items() if "Norm" in k)  # normalization layers, i.e. BatchNorm2d()
         if name == "auto":
             LOGGER.info(
@@ -816,36 +817,56 @@ class BaseTrainer:
             for param_name, param in module.named_parameters(recurse=False):
                 fullname = f"{module_name}.{param_name}" if module_name else param_name
                 if "bias" in fullname:  # bias (no decay)
-                    g[2].append(param)
+                    g[2][fullname] = param
                 elif isinstance(module, bn):  # weight (no decay)
-                    g[1].append(param)
+                    g[1][fullname] = param
                 elif use_muon and param.ndim >= 2:  # muon-capable matrices/filters
-                    g[3].append(param)
+                    g[3][fullname] = param
                 else:  # weight (with decay)
-                    g[0].append(param)
+                    g[0][fullname] = param
+
+        if not use_muon:
+            g = [x.values() for x in g[:3]]
 
         optimizers = {"Adam", "Adamax", "AdamW", "NAdam", "RAdam", "RMSProp", "SGD", "MuSGD", "auto"}
         name = {x.lower(): x for x in optimizers}.get(requested_name.lower())
         if name in {"Adam", "Adamax", "AdamW", "NAdam", "RAdam"}:
-            optimizer = getattr(optim, name, optim.Adam)(g[2], lr=lr, betas=(momentum, 0.999), weight_decay=0.0)
+            optim_args = dict(lr=lr, betas=(momentum, 0.999), weight_decay=0.0)
         elif name == "RMSProp":
-            optimizer = optim.RMSprop(g[2], lr=lr, momentum=momentum)
-        elif name == "SGD":
-            optimizer = optim.SGD(g[2], lr=lr, momentum=momentum, nesterov=True)
-        elif name == "MuSGD":
-            optimizer = MuSGD(g[2], lr=lr, momentum=momentum, nesterov=True, weight_decay=0.0, use_muon=False)
-            optimizer.add_param_group({"params": g[3], "weight_decay": decay, "use_muon": True})
-        else:
+            optim_args = dict(lr=lr, momentum=momentum)
+        elif name in {"SGD", "MuSGD"}:
+            optim_args = dict(lr=lr, momentum=momentum, nesterov=True)
+        else:  # includes unknown names and failed normalization
             raise NotImplementedError(
                 f"Optimizer '{requested_name}' not found in list of available optimizers {optimizers}. "
                 "Request support for addition optimizers at https://github.com/ultralytics/ultralytics."
             )
 
-        optimizer.add_param_group({"params": g[0], "weight_decay": decay})  # add g0 with weight_decay
-        optimizer.add_param_group({"params": g[1], "weight_decay": 0.0})  # add g1 (BatchNorm2d weights)
+        num_params = [len(g[0]), len(g[1]), len(g[2])]
+        g[2] = {"params": g[2], **optim_args, "param_group": "bias"}
+        g[0] = {"params": g[0], **optim_args, "weight_decay": decay, "param_group": "weight"}
+        g[1] = {"params": g[1], **optim_args, "weight_decay": 0.0, "param_group": "bn"}
+        muon, sgd = (0.2, 1.0)
+
+        if use_muon:
+            import re
+
+            num_params[0] = len(g[3])
+            g[3] = {"params": g[3], **optim_args, "weight_decay": decay, "use_muon": True, "param_group": "muon"}
+
+            pattern = re.compile(r"(?=.*23)(?=.*cv3)|proto\.semseg")
+            groups = []
+            for x in g:
+                params_dict = x.pop("params")
+                p1 = [v for k, v in params_dict.items() if pattern.search(k)]
+                p2 = [v for k, v in params_dict.items() if not pattern.search(k)]
+                groups.extend([{"params": p1, **x, "lr": lr * 3}, {"params": p2, **x}])
+            g = groups
+
+        optimizer = getattr(optim, name, partial(MuSGD, muon=muon, sgd=sgd))(params=g)
+
         LOGGER.info(
             f"{colorstr('optimizer:')} {type(optimizer).__name__}(lr={lr}, momentum={momentum}) with parameter groups "
-            f"{len(g[1])} weight(decay=0.0), {len(g[0])} weight(decay={decay}), {len(g[2])} bias(decay=0.0), "
-            f"{len(g[3])} muon(decay={decay})"
+            f"{num_params[1]} weight(decay=0.0), {num_params[0]} weight(decay={decay}), {num_params[2]} bias(decay=0.0)"
         )
         return optimizer
