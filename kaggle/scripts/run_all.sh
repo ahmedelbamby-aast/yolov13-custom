@@ -13,6 +13,10 @@ if [[ "${RUN_DDP_SMOKE:-1}" == "1" ]]; then
   bash "${SCRIPT_DIR}/40_ddp_smoke.sh"
 fi
 
+if [[ "${RUN_FULL_VALIDATION:-0}" == "1" ]]; then
+  bash "${SCRIPT_DIR}/100_full_validation.sh"
+fi
+
 bash "${SCRIPT_DIR}/50_package_zip.sh"
 
 echo "Pipeline complete: /kaggle/working/yolov13.zip"

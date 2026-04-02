@@ -47,3 +47,15 @@ PY
 cd /kaggle/work_here/yolov13
 bash kaggle/scripts/50_package_zip.sh
 ```
+
+## Kaggle Notebook UI (No SSH)
+
+Use prebuilt notebooks in `notebooks/`:
+
+- `notebooks/01_train.ipynb`
+- `notebooks/02_validate.ipynb`
+- `notebooks/03_export.ipynb`
+- `notebooks/04_tracking.ipynb`
+- `notebooks/05_test.ipynb`
+
+These notebooks assume repository source starts in `/kaggle/working`, then mirror active development to `/kaggle/work_here`, and keep outputs in `/kaggle/working`.
