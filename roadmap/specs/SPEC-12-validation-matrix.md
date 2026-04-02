@@ -31,6 +31,10 @@ Phase 1 harness:
 - `kaggle/scripts/33_phase1_task_preflight_smoke.py`
   - validates task preflight behavior on synthetic valid/invalid labels for segment/pose/obb.
 
+Evidence:
+
+- `roadmap/artifacts/phase1_task_preflight_smoke.json` (latest run passed all 6 checks)
+
 ## Matrix
 
 | Task | Train | Val | Predict | DDP | Export |

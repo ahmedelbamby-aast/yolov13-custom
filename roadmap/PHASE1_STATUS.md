@@ -58,3 +58,21 @@ flowchart TD
     `segment`, `pose`, and `obb`.
 - Output artifact:
   - `/kaggle/working/phase1_preflight_smoke/phase1_task_preflight_smoke.json`
+
+### Step 3 - Smoke harness executed
+
+- Run environment: Kaggle Linux 2xT4 machine
+- Result summary:
+  - total cases: 6
+  - ok: 6
+  - mismatch: 0
+- Artifact mirrored to repo:
+  - `roadmap/artifacts/phase1_task_preflight_smoke.json`
+
+```mermaid
+flowchart LR
+    A[Build synthetic valid/invalid labels] --> B[Run check_det_dataset task-aware preflight]
+    B --> C[Collect JSON report in /kaggle/working]
+    C --> D[Mirror artifact to roadmap/artifacts]
+    D --> E[Update status docs]
+```

@@ -1,0 +1,49 @@
+{
+  "total": 6,
+  "ok": 6,
+  "mismatch": 0,
+  "cases": [
+    {
+      "name": "segment_valid",
+      "task": "segment",
+      "expected": "pass",
+      "status": "ok",
+      "detail": "validated"
+    },
+    {
+      "name": "pose_valid",
+      "task": "pose",
+      "expected": "pass",
+      "status": "ok",
+      "detail": "validated"
+    },
+    {
+      "name": "obb_valid",
+      "task": "obb",
+      "expected": "pass",
+      "status": "ok",
+      "detail": "validated"
+    },
+    {
+      "name": "segment_invalid",
+      "task": "segment",
+      "expected": "fail",
+      "status": "ok",
+      "detail": "Task preflight failed for task=segment \u274c\n/kaggle/working/phase1_preflight_smoke/segment_invalid/train/labels/im0.txt:1 has 5 columns, expected cls + polygon coords (odd >= 7)\n/kaggle/working/phase1_preflight_smoke/segment_invalid/val/labels/im0.txt:1 has 5 columns, expected cls + polygon coords (odd >= 7)\nSee https://docs.ultralytics.com/datasets for dataset formatting guidance."
+    },
+    {
+      "name": "pose_invalid",
+      "task": "pose",
+      "expected": "fail",
+      "status": "ok",
+      "detail": "Task preflight failed for task=pose \u274c\n/kaggle/working/phase1_preflight_smoke/pose_invalid/train/labels/im0.txt:1 has 7 columns, expected 11 for pose\n/kaggle/working/phase1_preflight_smoke/pose_invalid/val/labels/im0.txt:1 has 7 columns, expected 11 for pose\nSee https://docs.ultralytics.com/datasets for dataset formatting guidance."
+    },
+    {
+      "name": "obb_invalid",
+      "task": "obb",
+      "expected": "fail",
+      "status": "ok",
+      "detail": "Task preflight failed for task=obb \u274c\n/kaggle/working/phase1_preflight_smoke/obb_invalid/train/labels/im0.txt:1 has 7 columns, expected cls + 8+ corner coords (odd >= 9)\n/kaggle/working/phase1_preflight_smoke/obb_invalid/val/labels/im0.txt:1 has 7 columns, expected cls + 8+ corner coords (odd >= 9)\nSee https://docs.ultralytics.com/datasets for dataset formatting guidance."
+    }
+  ]
+}
