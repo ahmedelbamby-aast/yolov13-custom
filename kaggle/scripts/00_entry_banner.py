@@ -7,7 +7,7 @@ from rich.text import Text
 def main() -> None:
     console = Console()
     title = Text("YOLOv13 Custom Kaggle DDP", style="bold bright_magenta")
-    subtitle = Text("Welcome Eng.Ahmed ElBamby", style="bold purple")
+    subtitle = Text("Eng.Ahmed ElBamby", style="bold purple")
     body = Text()
     body.append("Environment: ", style="bold white")
     body.append("/kaggle/work_here", style="bold orchid")
