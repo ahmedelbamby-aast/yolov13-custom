@@ -250,6 +250,21 @@ model = YOLO('yolov13{n/s/l/x}.pt')  # Replace with the desired model scale
 model.export(format="engine", half=True)  # or format="onnx"
 ```
 
+### 6. Developer Scripts (modular workflows)
+
+For developer-friendly modular workflows (train/val/test/predict/export/benchmark) with custom-data support and Flash backend toggles, see:
+
+- `scripts/README.md`
+
+Included scripts:
+
+- `scripts/train.py`
+- `scripts/val.py`
+- `scripts/test.py`
+- `scripts/predict.py`
+- `scripts/export.py`
+- `scripts/benchmark.py`
+
 ## Related Projects 🔗
 
 - The code is based on [Ultralytics](https://github.com/ultralytics/ultralytics). Thanks for their excellent work!
