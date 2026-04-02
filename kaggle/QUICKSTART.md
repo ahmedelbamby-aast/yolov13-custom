@@ -1,130 +1,331 @@
-# YOLOv13 Kaggle Quickstart (2x T4 DDP)
+# YOLOv13 Quickstart (Kaggle + Dev Workflows)
 
-## Paths
-- Development workspace: `/kaggle/work_here/yolov13`
-- Outputs and artifacts: `/kaggle/working`
-- Remote sync target: `github.com/ahmedelbamby-aast/yolov13-custom`
+This guide covers setup and end-to-end usage for:
 
-## End-to-end pipeline
+- environment preparation
+- training
+- validation/testing
+- prediction
+- export
+- benchmarking
+- packaging
+
+It includes both:
+
+- Kaggle automation scripts (`kaggle/scripts/*`)
+- modular developer scripts (`scripts/*`)
+
+## 1) Paths and assumptions
+
+- Repo workspace: `/kaggle/work_here/yolov13`
+- Output root: `/kaggle/working`
+- Python venv: `/kaggle/work_here/yolov13/.venv`
+
+If you are on a fresh session:
+
+```bash
+mkdir -p /kaggle/work_here
+cd /kaggle/work_here
+git clone https://github.com/ahmedelbamby-aast/yolov13-custom.git yolov13
+cd /kaggle/work_here/yolov13
+```
+
+## 2) One-command bootstrap pipeline
+
+Run the full bootstrap pipeline:
+
 ```bash
 cd /kaggle/work_here/yolov13
 bash kaggle/scripts/run_all.sh
 ```
 
-This pipeline will:
-1. Show a colorful Rich startup banner for Eng.Ahmed ElBamby.
-2. Create a uv-based virtual environment.
-3. Install core dependencies with edge-case handling.
-4. Validate 2-GPU CUDA visibility.
-5. Run a DDP smoke training job.
-6. Package the project as `/kaggle/working/yolov13.zip`.
+This performs:
 
-## Optional Flash Backend Flags (T4/Turing)
-```bash
-# default runtime uses Turing flash on T4
-export Y13_INSTALL_TURING_FLASH=1   # one-time install/build
-# export Y13_USE_TURING_FLASH=0     # disable if needed
-# export Y13_DISABLE_FLASH=1        # force fallback backend
-```
+1. venv setup (`10_setup_uv.sh`)
+2. dependency install (`20_install_deps.sh`)
+3. NVIDIA driver check/install step (`27_install_nvidia_driver_535.sh`)
+4. CUDA/GPU checks (`30_gpu_check.sh`, `32_cuda_sanity_report.sh`)
+5. optional DDP smoke train (`40_ddp_smoke.sh`)
+6. zip packaging (`50_package_zip.sh`)
 
-## Kaggle Notebook UI (No SSH)
+Output zip:
 
-Use prebuilt notebooks in `notebooks/`:
-- `notebooks/01_train.ipynb`
-- `notebooks/02_validate.ipynb`
-- `notebooks/03_export.ipynb`
-- `notebooks/04_tracking.ipynb`
-- `notebooks/05_test.ipynb`
+- `/kaggle/working/yolov13.zip`
 
-All notebooks use one canonical environment in `/kaggle/work_here/yolov13/.venv`.
+## 3) Manual setup (step-by-step)
 
-## Packaging only
-```bash
-cd /kaggle/work_here/yolov13
-bash kaggle/scripts/50_package_zip.sh
-```
-
-## New machine GPU bring-up (2x T4)
-
-For a fresh Kaggle machine session, run:
-
-
-
-Manual equivalent commands:
-
-
-
-If CUDA appears unavailable in Python while  exists, run:
-
-
-
-## New machine GPU bring-up (2x T4)
-
-For a fresh Kaggle machine session, run:
+If you prefer explicit setup:
 
 ```bash
 cd /kaggle/work_here/yolov13
+bash kaggle/scripts/10_setup_uv.sh
+bash kaggle/scripts/20_install_deps.sh
 bash kaggle/scripts/27_install_nvidia_driver_535.sh
+bash kaggle/scripts/30_gpu_check.sh
 bash kaggle/scripts/32_cuda_sanity_report.sh
 ```
 
-Manual equivalent commands:
+## 4) Flash backend controls (global)
+
+Default behavior in this repo prefers Turing flash on T4 when available.
 
 ```bash
-sudo apt update
-sudo apt install -y nvidia-driver-535
+# optional one-time install/build of turing flash
+export Y13_INSTALL_TURING_FLASH=1
 
-ls -l /dev/nvidia*
-echo $CUDA_VISIBLE_DEVICES
-python - << PY
-import torch
-print("torch cuda available:", torch.cuda.is_available())
-print("device count:", torch.cuda.device_count())
-for i in range(torch.cuda.device_count()):
-    print(i, torch.cuda.get_device_name(i))
-PY
+# flash runtime control
+export Y13_USE_TURING_FLASH=1   # enable turing path
+export Y13_DISABLE_FLASH=0      # do not force fallback
+
+# force fallback backend
+# export Y13_DISABLE_FLASH=1
 ```
 
-If CUDA appears unavailable in Python while `/dev/nvidia*` exists, run:
+## 5) Core developer workflows (recommended)
 
-```bash
-apt-get update -y && apt-get install -y pciutils
-lspci | grep -i nvidia || true
-cat /proc/driver/nvidia/version || true
-cat /proc/driver/nvidia/gpus/0000:00:04.0/information 2>/dev/null || true
-cat /proc/driver/nvidia/gpus/0000:00:05.0/information 2>/dev/null || true
-python - << PY
-import os
-print("CUDA_VISIBLE_DEVICES =", os.getenv("CUDA_VISIBLE_DEVICES"))
-try:
-    import tensorflow as tf
-    print("TF GPUs:", tf.config.list_physical_devices(GPU))
-except Exception as e:
-    print("TF error:", e)
-try:
-    import torch
-    print("torch:", torch.__version__)
-    print("cuda avail:", torch.cuda.is_available())
-    print("count:", torch.cuda.device_count())
-    for i in range(torch.cuda.device_count()):
-        print(i, torch.cuda.get_device_name(i))
-except Exception as e:
-    print("torch error:", e)
-PY
-```
+Use the modular scripts under `scripts/`.
 
-## L-scale fallback vs turing benchmark (segment/pose/obb)
-
-Run the dedicated L-only backend comparison suite:
+### 5.1 Training
 
 ```bash
 cd /kaggle/work_here/yolov13
+source .venv/bin/activate
+
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data coco8.yaml \
+  --epochs 50 \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0,1 \
+  --workers 4 \
+  --project /kaggle/working/runs/train \
+  --name detect_l_50e \
+  --flash-mode turing
+```
+
+### 5.2 Validation
+
+```bash
+python scripts/val.py \
+  --model /kaggle/working/runs/train/detect_l_50e/weights/best.pt \
+  --data coco8.yaml \
+  --split val \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0 \
+  --flash-mode auto
+```
+
+### 5.3 Testing (val alias)
+
+```bash
+python scripts/test.py \
+  --model /kaggle/working/runs/train/detect_l_50e/weights/best.pt \
+  --data coco8.yaml \
+  --split test \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0
+```
+
+### 5.4 Prediction
+
+```bash
+python scripts/predict.py \
+  --model /kaggle/working/runs/train/detect_l_50e/weights/best.pt \
+  --source /kaggle/work_here/datasets/coco8/images/val \
+  --imgsz 640 \
+  --conf 0.25 \
+  --device 0 \
+  --save \
+  --project /kaggle/working/runs/predict \
+  --name detect_l_pred \
+  --flash-mode fallback
+```
+
+### 5.5 Export
+
+```bash
+python scripts/export.py \
+  --model /kaggle/working/runs/train/detect_l_50e/weights/best.pt \
+  --format onnx \
+  --imgsz 640 \
+  --batch 1 \
+  --device 0 \
+  --dynamic
+```
+
+### 5.6 Benchmark
+
+```bash
+python scripts/benchmark.py \
+  --model /kaggle/working/runs/train/detect_l_50e/weights/best.pt \
+  --data coco8.yaml \
+  --imgsz 640 \
+  --device 0 \
+  --half \
+  --flash-mode turing
+```
+
+## 6) Custom dataset usage
+
+All scripts accept custom dataset YAML through `--data`:
+
+```bash
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l-seg.yaml \
+  --data /kaggle/work_here/mydata/custom_seg.yaml \
+  --task segment \
+  --epochs 100 \
+  --imgsz 640 \
+  --device 0,1
+```
+
+You can pass any extra Ultralytics override via repeated `--arg KEY=VALUE`.
+
+Example:
+
+```bash
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l-pose.yaml \
+  --data /kaggle/work_here/mydata/custom_pose.yaml \
+  --task pose \
+  --flash-mode turing \
+  --arg optimizer=AdamW \
+  --arg lr0=0.001 \
+  --arg patience=50
+```
+
+## 7) Kaggle validation and utility pipelines
+
+### DDP smoke
+
+```bash
+bash kaggle/scripts/40_ddp_smoke.sh
+```
+
+### 5-epoch DDP train
+
+```bash
+bash kaggle/scripts/60_ddp_train_5epochs.sh
+```
+
+### Full validation pipeline
+
+```bash
+bash kaggle/scripts/100_full_validation.sh
+```
+
+### Export validation helper
+
+```bash
+bash kaggle/scripts/70_export_onnx_tensorrt.sh
+```
+
+## 8) L-scale fallback vs Turing benchmark suite
+
+Run the dedicated multi-task comparison benchmark:
+
+```bash
+cd /kaggle/work_here/yolov13
+Y13_BENCH_EPOCHS=30 \
+Y13_BENCH_WORKERS=4 \
+Y13_BENCH_OUT_ROOT=/kaggle/working/phase2_l_flash_compare_v2 \
 bash kaggle/scripts/181_benchmark_l_flash_tasks.sh
 ```
 
 Main outputs:
 
-- JSON summaries: `/kaggle/working/phase2_l_flash_compare/*/suite_summary.json`
-- Comparison summary: `/kaggle/working/phase2_l_flash_compare/compare_summary.json`
-- Plots: `/kaggle/working/phase2_l_flash_compare/plots/`
-- Synced report: `kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md`
+- `/kaggle/working/phase2_l_flash_compare_v2/fallback/suite_summary.json`
+- `/kaggle/working/phase2_l_flash_compare_v2/turing/suite_summary.json`
+- `/kaggle/working/phase2_l_flash_compare_v2/compare_summary.json`
+- `/kaggle/working/phase2_l_flash_compare_v2/plots/`
+
+Synced report/artifacts in repo:
+
+- `kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md`
+- `kaggle/benchmarks/l_flash_tasks/`
+
+## 9) Packaging and snapshots
+
+### Create repo zip
+
+```bash
+bash kaggle/scripts/50_package_zip.sh
+```
+
+Output:
+
+- `/kaggle/working/yolov13.zip`
+
+### Optional full snapshot + custom bundles
+
+```bash
+python - <<'PY'
+import shutil
+from pathlib import Path
+src = Path('/kaggle/work_here/yolov13')
+dst = Path('/kaggle/working/yolov13_snapshot_full')
+shutil.rmtree(dst, ignore_errors=True)
+ignore = shutil.ignore_patterns('__pycache__', '*.pyc', '.venv', '.git', '.pytest_cache', 'ultralytics.egg-info')
+shutil.copytree(src, dst, ignore=ignore)
+print(dst)
+PY
+
+cd /kaggle/working
+zip -r yolov13_snapshot_full.zip yolov13_snapshot_full
+zip -r yolov13_l_flash_compare_bundle.zip \
+  phase2_l_flash_compare_v2 \
+  yolov13_snapshot_full/kaggle/benchmarks/l_flash_tasks \
+  yolov13_snapshot_full/kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md
+```
+
+## 10) Troubleshooting
+
+### CUDA unavailable in Python but `/dev/nvidia*` exists
+
+```bash
+apt-get update -y && apt-get install -y pciutils
+ls -l /dev/nvidia*
+nvidia-smi
+lspci | grep -i nvidia || true
+cat /proc/driver/nvidia/version || true
+
+python - <<'PY'
+import os
+print('CUDA_VISIBLE_DEVICES =', os.getenv('CUDA_VISIBLE_DEVICES'))
+try:
+    import torch
+    print('torch:', torch.__version__)
+    print('cuda avail:', torch.cuda.is_available())
+    print('count:', torch.cuda.device_count())
+    for i in range(torch.cuda.device_count()):
+        print(i, torch.cuda.get_device_name(i))
+except Exception as e:
+    print('torch error:', e)
+PY
+```
+
+### `gh` auth for PR/issue operations
+
+```bash
+gh auth login
+gh auth status
+```
+
+## 11) Notebook workflow (no SSH)
+
+Use notebooks from `notebooks/` with the same venv in `/kaggle/work_here/yolov13/.venv`:
+
+- `notebooks/01_train.ipynb`
+- `notebooks/02_validate.ipynb`
+- `notebooks/03_export.ipynb`
+- `notebooks/04_tracking.ipynb`
+- `notebooks/05_test.ipynb`
+- `notebooks/06_benchmark_flash.ipynb`
+
+## 12) References
+
+- Developer script guide: `scripts/README.md`
+- L-task benchmark report: `kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md`
