@@ -49,6 +49,10 @@ flowchart LR
 - Align OBB metrics key/value outputs in `ultralytics/utils/metrics.py`.
 - Add task-specific preflight validation and clear failure messages.
 
+Status:
+
+- OBB metrics key alignment: in progress (Phase 1 step implemented).
+
 ### 3) Data Contracts
 
 - Seg: polygons/masks schema and empty-object behavior.

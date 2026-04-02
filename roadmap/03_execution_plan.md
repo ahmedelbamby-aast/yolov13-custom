@@ -8,6 +8,10 @@
 - Add preflight checks for task-specific dataset schemas.
 - Verify no detect regression.
 
+Current status:
+
+- Step 1 complete: OBB metrics key alignment fix drafted and tracked in `roadmap/PHASE1_STATUS.md`.
+
 ### Phase 2 - v13 Task Model Definitions
 
 - Implement v13 segment/pose/obb YAMLs.
