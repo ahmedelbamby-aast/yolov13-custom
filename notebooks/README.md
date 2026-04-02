@@ -1,14 +1,18 @@
 # Kaggle Notebooks (No SSH Required)
 
-These notebooks are designed for standard Kaggle UI users:
+Single-environment design:
+- canonical repo path: `/kaggle/work_here/yolov13`
+- canonical venv path: `/kaggle/work_here/yolov13/.venv`
+- outputs: `/kaggle/working`
 
-- `01_train.ipynb`: setup + DDP training
-- `02_validate.ipynb`: validation mode
-- `03_export.ipynb`: ONNX and TensorRT export
-- `04_tracking.ipynb`: tracking mode
-- `05_test.ipynb`: mode matrix + layer visualizations
+Notebooks:
+- `01_train.ipynb`
+- `02_validate.ipynb`
+- `03_export.ipynb`
+- `04_tracking.ipynb`
+- `05_test.ipynb`
 
-Assumptions:
-- repo is cloned to `/kaggle/working` (notebooks can clone automatically)
-- working/dev copy is in `/kaggle/work_here`
-- outputs are written to `/kaggle/working`
+Optional flash backend flags:
+- `Y13_INSTALL_TURING_FLASH=1` build/install Turing flash extension
+- `Y13_USE_TURING_FLASH=1` enable turing flash backend at runtime
+- `Y13_DISABLE_FLASH=1` force fallback backend

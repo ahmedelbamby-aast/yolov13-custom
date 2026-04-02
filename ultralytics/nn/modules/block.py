@@ -1162,20 +1162,51 @@ class TorchVision(nn.Module):
         return y
 
 import logging
+import os
+
 logger = logging.getLogger(__name__)
 
 USE_FLASH_ATTN = False
+FLASH_BACKEND = "fallback"
+FLASH_ERROR = ""
+
 try:
     import torch
-    if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:  # Ampere or newer
-        from flash_attn.flash_attn_interface import flash_attn_func
-        USE_FLASH_ATTN = True
-    else:
-        from torch.nn.functional import scaled_dot_product_attention as sdpa
-        logger.warning("FlashAttention is not available on this device. Using scaled_dot_product_attention instead.")
-except Exception:
-    from torch.nn.functional import scaled_dot_product_attention as sdpa
-    logger.warning("FlashAttention is not available on this device. Using scaled_dot_product_attention instead.")
+
+    disable_flash = os.getenv("Y13_DISABLE_FLASH", "0") == "1"
+    use_turing_flash = os.getenv("Y13_USE_TURING_FLASH", "0") == "1"
+
+    if torch.cuda.is_available() and not disable_flash:
+        major, minor = torch.cuda.get_device_capability()
+
+        if major >= 8:
+            try:
+                from flash_attn.flash_attn_interface import flash_attn_func
+
+                USE_FLASH_ATTN = True
+                FLASH_BACKEND = "flash_attn"
+            except Exception as e:
+                FLASH_ERROR = str(e)
+
+        elif (major, minor) == (7, 5) and use_turing_flash:
+            try:
+                from ultralytics.utils.flash_turing_interface import flash_attn_func
+
+                USE_FLASH_ATTN = True
+                FLASH_BACKEND = "flash_attn_turing"
+            except Exception as e:
+                FLASH_ERROR = str(e)
+
+    if not USE_FLASH_ATTN:
+        if disable_flash:
+            logger.info("Flash attention disabled by Y13_DISABLE_FLASH=1, using fallback attention backend.")
+        elif FLASH_ERROR:
+            logger.warning(f"Flash attention backend unavailable ({FLASH_ERROR}). Using fallback attention backend.")
+        else:
+            logger.warning("Flash attention backend unavailable on this device/config. Using fallback attention backend.")
+except Exception as e:
+    FLASH_ERROR = str(e)
+    logger.warning(f"Flash attention initialization failed ({FLASH_ERROR}). Using fallback attention backend.")
 
 class AAttn(nn.Module):
     """
@@ -1234,7 +1265,7 @@ class AAttn(nn.Module):
             B, N, _ = qk.shape
         q, k = qk.split([C, C], dim=2)
 
-        if x.is_cuda and USE_FLASH_ATTN:
+        if x.is_cuda and USE_FLASH_ATTN and self.head_dim in {64, 128}:
             q = q.view(B, N, self.num_heads, self.head_dim)
             k = k.view(B, N, self.num_heads, self.head_dim)
             v = v.view(B, N, self.num_heads, self.head_dim)

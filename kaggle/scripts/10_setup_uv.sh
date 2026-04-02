@@ -9,7 +9,12 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 1
 fi
 
-uv venv "${Y13_ROOT}/.venv" --python /usr/bin/python3 --system-site-packages
+if [[ ! -x "${Y13_ROOT}/.venv/bin/python" ]]; then
+  uv venv "${Y13_ROOT}/.venv" --python /usr/bin/python3 --system-site-packages
+else
+  echo "Using existing virtual environment: ${Y13_ROOT}/.venv"
+fi
+
 uv pip install --python "${Y13_ROOT}/.venv/bin/python" --upgrade pip setuptools wheel
 
 "${Y13_ROOT}/.venv/bin/python" -V

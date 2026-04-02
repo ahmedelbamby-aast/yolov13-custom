@@ -22,7 +22,7 @@ req = Path('requirements.txt')
 if not req.exists():
     raise SystemExit('requirements.txt not found')
 
-skip_tokens = ('flash_attn', '.whl')
+skip_tokens = ('flash_attn', '.whl', 'onnx==1.14.0', 'onnxruntime==1.15.1')
 lines = [x.strip() for x in req.read_text(encoding='utf-8').splitlines() if x.strip() and not x.strip().startswith('#')]
 
 for line in lines:
@@ -35,3 +35,10 @@ for line in lines:
     if rc != 0:
         print(f'[warn] failed to install: {line}')
 PY
+
+if [[ "${Y13_INSTALL_TURING_FLASH:-0}" == "1" ]]; then
+  bash "${SCRIPT_DIR}/25_install_turing_flash.sh"
+fi
+
+# Prefer cp312-compatible ONNX runtime stack
+uv pip install --python "${PY}" onnx==1.17.0 onnxruntime-gpu==1.18.0 || true
