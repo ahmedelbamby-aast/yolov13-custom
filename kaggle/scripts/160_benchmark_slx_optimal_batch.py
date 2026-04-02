@@ -159,14 +159,14 @@ def _plots(run_root: Path, data: dict):
     fig.savefig(p / "slx_map50_line.png", dpi=220)
     plt.close(fig)
 
-def run_benchmark(data_yaml: str = "coco128.yaml", epochs: int = 30, workers: int = 4) -> dict:
+def run_benchmark(data_yaml: str = "coco128.yaml", epochs: int = 30, workers: int = 4, use_turing_flash: bool = True, force_disable_flash: bool = False, run_name: str = "y13_bench_slx_30e") -> dict:
     from ultralytics import YOLO
     from ultralytics.nn.modules import block
 
-    os.environ.setdefault("Y13_USE_TURING_FLASH", "1")
-    os.environ["Y13_DISABLE_FLASH"] = "0"
+    os.environ["Y13_USE_TURING_FLASH"] = "1" if use_turing_flash else "0"
+    os.environ["Y13_DISABLE_FLASH"] = "1" if force_disable_flash else "0"
 
-    run_root = Path("/kaggle/working/y13_bench_slx_30e")
+    run_root = Path(f"/kaggle/working/{run_name}")
     run_root.mkdir(parents=True, exist_ok=True)
     tune_root = run_root / "tune"
     tune_root.mkdir(parents=True, exist_ok=True)
@@ -231,7 +231,8 @@ def run_benchmark(data_yaml: str = "coco128.yaml", epochs: int = 30, workers: in
     }
     (run_root / "benchmark_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
-    report = Path("/kaggle/work_here/yolov13/kaggle/reports/BENCHMARK_SLX_30E.md")
+    report_suffix = "fallback" if force_disable_flash else ("turing" if use_turing_flash else "noflash")
+    report = Path(f"/kaggle/work_here/yolov13/kaggle/reports/BENCHMARK_SLX_30E_{report_suffix}.md")
     lines = [
         "# YOLOv13 S/L/X Benchmark (DDP 2xT4)",
         "",
@@ -268,5 +269,8 @@ if __name__ == "__main__":
         data_yaml=os.getenv("Y13_BENCH_DATA", "coco128.yaml"),
         epochs=int(os.getenv("Y13_BENCH_EPOCHS", "30")),
         workers=int(os.getenv("Y13_BENCH_WORKERS", "4")),
+        use_turing_flash=os.getenv("Y13_BENCH_USE_TURING_FLASH", "1") == "1",
+        force_disable_flash=os.getenv("Y13_BENCH_FORCE_DISABLE_FLASH", "0") == "1",
+        run_name=os.getenv("Y13_BENCH_RUN_NAME", "y13_bench_slx_30e"),
     )
     print(json.dumps({"variants": list(out["variants"].keys()), "backend": out["flash_backend"]}, indent=2))

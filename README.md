@@ -266,3 +266,17 @@ model.export(format="engine", half=True)  # or format="onnx"
 }
 ```
 
+
+
+## Known Runtime Warning
+
+You may still see repeated logs similar to:
+- `Unable to register cuDNN factory`
+- `Unable to register cuBLAS factory`
+- `computation placer already registered`
+
+These are typically produced by upstream CUDA/XLA/TensorFlow-linked binaries loaded in the runtime and are usually non-fatal for PyTorch training.
+
+Current status in this repo:
+- Training, DDP, export, and benchmark runs complete successfully despite these warnings.
+- We track this as an environment-level cleanup target for future hardening.
