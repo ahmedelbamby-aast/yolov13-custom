@@ -8,3 +8,5 @@ These notebooks use normal Ultralytics usage style:
 - `model.predict(...)`
 
 No project shell script calls are used inside notebook workflows.
+
+- `06_benchmark_flash.ipynb`: S/L/X benchmark with auto batch tuning and plots

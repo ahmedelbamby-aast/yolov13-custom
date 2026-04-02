@@ -48,6 +48,23 @@ This fork includes a Kaggle-focused modernization layer built by **Eng.Ahmed ElB
 
 See `kaggle/QUICKSTART.md` for the full one-command workflow.
 
+
+
+## Benchmark Update: S/L/X on 2xT4 (DDP)
+
+A new benchmark pass was added for YOLOv13 **S**, **L**, and **X** variants on Kaggle with **2x Tesla T4** using DDP.
+
+- Automatic per-variant batch-size search was added to maximize stable GPU utilization.
+- Dataset image-size statistics are now read first, and benchmark `imgsz` is aligned with dataset dimensions.
+- Benchmark now saves:
+  - runtime and metric JSON summaries
+  - matplotlib comparison plots
+  - feature-map visualizations (preview set in repo, full set in `/kaggle/working`)
+- Main benchmark runner: `kaggle/scripts/160_benchmark_slx_optimal_batch.py`
+- Benchmark report: `kaggle/reports/BENCHMARK_SLX_30E.md`
+- Synced artifacts: `kaggle/benchmarks/slx_30e`
+- Notebook entrypoint: `notebooks/06_benchmark_flash.ipynb`
+
 <h2>Table of Contents</h2>
 
 - [Technical Briefing 💡](#technical-briefing-)
@@ -55,6 +72,7 @@ See `kaggle/QUICKSTART.md` for the full one-command workflow.
   - [1. MS COCO Benchmark](#1-ms-coco-benchmark)
   - [2. Visualizations](#2-visualizations)
 - [Customization by Eng.Ahmed ElBamby 💜](#customization-by-engahmed-elbamby-)
+- [Benchmark Update: S/L/X on 2xT4 (DDP)](#benchmark-update-slx-on-2xt4-ddp)
 - [Quick Start 🚀](#quick-start-)
   - [1. Install Dependencies](#1-install-dependencies)
   - [2. Validation](#2-validation)
