@@ -1,0 +1,31 @@
+{
+  "variant": "x",
+  "batch": 12,
+  "imgsz": 640,
+  "epochs": 30,
+  "wall_seconds": 846.6692692160013,
+  "avg_epoch_seconds": 28.22230897386671,
+  "mAP50": 0.022,
+  "mAP50_95": 0.00904,
+  "results_csv": "/kaggle/working/y13_bench_slx_30e_turing_fixed/x_bench_fixed/results.csv",
+  "weights": "/kaggle/working/y13_bench_slx_30e_turing_fixed/x_bench_fixed/weights/best.pt",
+  "feature_map_dir": "/kaggle/working/y13_bench_slx_30e_turing_fixed/feature_maps/x_bench_fixed",
+  "final_metrics": {
+    "epoch": "30",
+    "time": "790.149",
+    "train/box_loss": "2.82348",
+    "train/cls_loss": "4.65676",
+    "train/dfl_loss": "3.20413",
+    "metrics/precision(B)": "0.18162",
+    "metrics/recall(B)": "0.05757",
+    "metrics/mAP50(B)": "0.022",
+    "metrics/mAP75(B)": "0.00275",
+    "metrics/mAP50-95(B)": "0.00904",
+    "val/box_loss": "2.89462",
+    "val/cls_loss": "4.07305",
+    "val/dfl_loss": "3.22645",
+    "lr/pg0": "4.3e-05",
+    "lr/pg1": "4.3e-05",
+    "lr/pg2": "4.3e-05"
+  }
+}

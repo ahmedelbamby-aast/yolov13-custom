@@ -52,18 +52,20 @@ See `kaggle/QUICKSTART.md` for the full one-command workflow.
 
 ## Benchmark Update: S/L/X on 2xT4 (DDP)
 
-A new benchmark pass was added for YOLOv13 **S**, **L**, and **X** variants on Kaggle with **2x Tesla T4** using DDP.
+S/L/X benchmark coverage now includes two modes on Kaggle with **2x Tesla T4** using DDP:
 
-- Automatic per-variant batch-size search was added to maximize stable GPU utilization.
-- Dataset image-size statistics are now read first, and benchmark `imgsz` is aligned with dataset dimensions.
-- Benchmark now saves:
-  - runtime and metric JSON summaries
-  - matplotlib comparison plots
-  - feature-map visualizations (preview set in repo, full set in `/kaggle/working`)
-- Main benchmark runner: `kaggle/scripts/160_benchmark_slx_optimal_batch.py`
-- Benchmark report: `kaggle/reports/BENCHMARK_SLX_30E.md`
-- Synced artifacts: `kaggle/benchmarks/slx_30e`
-- Notebook entrypoint: `notebooks/06_benchmark_flash.ipynb`
+- **Auto-batch benchmark** (per-variant search for largest stable batch)
+  - Script: `kaggle/scripts/160_benchmark_slx_optimal_batch.py`
+  - Report: `kaggle/reports/BENCHMARK_SLX_30E.md`
+  - Artifacts: `kaggle/benchmarks/slx_30e`
+- **Fixed-largest-batch comparison** (**S=32, L=16, X=12**) with backend A/B:
+  - Script: `kaggle/scripts/170_benchmark_slx_fixed_batch.py`
+  - Report: `kaggle/reports/BENCHMARK_SLX_30E_FIXED_BATCH_COMPARISON.md`
+  - Artifacts: `kaggle/benchmarks/slx_30e_fixed`
+
+Both benchmark modes align `imgsz` to dataset image-size statistics, persist JSON metrics and plots, and sync feature-map previews to the repository (full outputs remain in `/kaggle/working`).
+
+Notebook entrypoint: `notebooks/06_benchmark_flash.ipynb`
 
 <h2>Table of Contents</h2>
 

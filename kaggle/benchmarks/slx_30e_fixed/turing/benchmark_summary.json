@@ -1,0 +1,113 @@
+{
+  "dataset": {
+    "dataset": "coco128.yaml",
+    "train_dir": "/kaggle/work_here/datasets/coco128/images/train2017",
+    "samples": 128,
+    "long_mode": 640,
+    "short_mode": 480,
+    "long_median": 640,
+    "imgsz": 640,
+    "sample_image": "/kaggle/work_here/datasets/coco128/images/train2017/000000000540.jpg"
+  },
+  "flash_backend": "flash_attn_turing",
+  "fixed_batches": {
+    "s": 32,
+    "l": 16,
+    "x": 12
+  },
+  "variants": {
+    "s": {
+      "variant": "s",
+      "batch": 32,
+      "imgsz": 640,
+      "epochs": 30,
+      "wall_seconds": 241.1180456760012,
+      "avg_epoch_seconds": 8.03726818920004,
+      "mAP50": 0.0,
+      "mAP50_95": 0.0,
+      "results_csv": "/kaggle/working/y13_bench_slx_30e_turing_fixed_v2/s_bench_fixed/results.csv",
+      "weights": "/kaggle/working/y13_bench_slx_30e_turing_fixed_v2/s_bench_fixed/weights/best.pt",
+      "feature_map_dir": "/kaggle/working/y13_bench_slx_30e_turing_fixed_v2/feature_maps/s_bench_fixed",
+      "final_metrics": {
+        "epoch": "30",
+        "time": "190.549",
+        "train/box_loss": "3.22705",
+        "train/cls_loss": "5.35615",
+        "train/dfl_loss": "3.79075",
+        "metrics/precision(B)": "0",
+        "metrics/recall(B)": "0",
+        "metrics/mAP50(B)": "0",
+        "metrics/mAP75(B)": "0",
+        "metrics/mAP50-95(B)": "0",
+        "val/box_loss": "3.45439",
+        "val/cls_loss": "5.51437",
+        "val/dfl_loss": "4.22651",
+        "lr/pg0": "4.3e-05",
+        "lr/pg1": "4.3e-05",
+        "lr/pg2": "4.3e-05"
+      }
+    },
+    "l": {
+      "variant": "l",
+      "batch": 16,
+      "imgsz": 640,
+      "epochs": 30,
+      "wall_seconds": 544.5292040569984,
+      "avg_epoch_seconds": 18.150973468566615,
+      "mAP50": 0.00761,
+      "mAP50_95": 0.00215,
+      "results_csv": "/kaggle/working/y13_bench_slx_30e_turing_fixed_v2/l_bench_fixed/results.csv",
+      "weights": "/kaggle/working/y13_bench_slx_30e_turing_fixed_v2/l_bench_fixed/weights/best.pt",
+      "feature_map_dir": "/kaggle/working/y13_bench_slx_30e_turing_fixed_v2/feature_maps/l_bench_fixed",
+      "final_metrics": {
+        "epoch": "30",
+        "time": "493.401",
+        "train/box_loss": "2.97445",
+        "train/cls_loss": "4.84312",
+        "train/dfl_loss": "3.52417",
+        "metrics/precision(B)": "0.00254",
+        "metrics/recall(B)": "0.07827",
+        "metrics/mAP50(B)": "0.00761",
+        "metrics/mAP75(B)": "0.00022",
+        "metrics/mAP50-95(B)": "0.00215",
+        "val/box_loss": "3.04093",
+        "val/cls_loss": "4.22087",
+        "val/dfl_loss": "3.46713",
+        "lr/pg0": "4.3e-05",
+        "lr/pg1": "4.3e-05",
+        "lr/pg2": "4.3e-05"
+      }
+    },
+    "x": {
+      "variant": "x",
+      "batch": 12,
+      "imgsz": 640,
+      "epochs": 30,
+      "wall_seconds": 841.3232538849988,
+      "avg_epoch_seconds": 28.044108462833297,
+      "mAP50": 0.01877,
+      "mAP50_95": 0.00628,
+      "results_csv": "/kaggle/working/y13_bench_slx_30e_turing_fixed_v2/x_bench_fixed/results.csv",
+      "weights": "/kaggle/working/y13_bench_slx_30e_turing_fixed_v2/x_bench_fixed/weights/best.pt",
+      "feature_map_dir": "/kaggle/working/y13_bench_slx_30e_turing_fixed_v2/feature_maps/x_bench_fixed",
+      "final_metrics": {
+        "epoch": "30",
+        "time": "784.786",
+        "train/box_loss": "2.82647",
+        "train/cls_loss": "4.63436",
+        "train/dfl_loss": "3.22059",
+        "metrics/precision(B)": "0.00795",
+        "metrics/recall(B)": "0.11895",
+        "metrics/mAP50(B)": "0.01877",
+        "metrics/mAP75(B)": "0.00128",
+        "metrics/mAP50-95(B)": "0.00628",
+        "val/box_loss": "2.88161",
+        "val/cls_loss": "4.34075",
+        "val/dfl_loss": "3.23742",
+        "lr/pg0": "4.3e-05",
+        "lr/pg1": "4.3e-05",
+        "lr/pg2": "4.3e-05"
+      }
+    }
+  }
+}

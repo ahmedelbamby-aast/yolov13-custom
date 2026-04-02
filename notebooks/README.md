@@ -9,4 +9,4 @@ These notebooks use normal Ultralytics usage style:
 
 No project shell script calls are used inside notebook workflows.
 
-- `06_benchmark_flash.ipynb`: S/L/X benchmark with auto batch tuning and plots
+- `06_benchmark_flash.ipynb`: S/L/X fixed-largest-batch comparison (Turing flash vs fallback) with runtime and avg-epoch plots
