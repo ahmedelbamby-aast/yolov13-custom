@@ -31,12 +31,30 @@
 
 
 
+
+
+## Customization by Eng.Ahmed ElBamby 💜
+
+![Customized By](https://img.shields.io/badge/Customized%20By-Eng.Ahmed%20ElBamby-8A2BE2?style=for-the-badge)
+
+This fork includes a Kaggle-focused modernization layer built by **Eng.Ahmed ElBamby** to improve reliability and reproducibility for 2x Tesla T4 workflows:
+
+- Hardened DDP subprocess bootstrap to ensure local custom modules load correctly across ranks.
+- Improved distributed AMP synchronization path for better multi-GPU startup compatibility.
+- Added modular automation scripts under `kaggle/scripts` for setup, dependency install, GPU checks, DDP smoke tests, and packaging.
+- Added a Rich-powered colorful startup banner with owner attribution.
+- Added detailed engineering specs and implementation report under `kaggle/specs` and `kaggle/reports`.
+- Standardized output packaging to `/kaggle/working/yolov13.zip`.
+
+See `kaggle/QUICKSTART.md` for the full one-command workflow.
+
 <h2>Table of Contents</h2>
 
 - [Technical Briefing 💡](#technical-briefing-)
 - [Main Results 🏆](#main-results-)
   - [1. MS COCO Benchmark](#1-ms-coco-benchmark)
   - [2. Visualizations](#2-visualizations)
+- [Customization by Eng.Ahmed ElBamby 💜](#customization-by-engahmed-elbamby-)
 - [Quick Start 🚀](#quick-start-)
   - [1. Install Dependencies](#1-install-dependencies)
   - [2. Validation](#2-validation)
