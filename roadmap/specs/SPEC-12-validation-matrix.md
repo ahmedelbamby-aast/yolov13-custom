@@ -26,6 +26,11 @@ Standardize task-level verification before merge/release.
    - ONNX for each task where supported
    - TensorRT where supported and documented
 
+Phase 1 harness:
+
+- `kaggle/scripts/33_phase1_task_preflight_smoke.py`
+  - validates task preflight behavior on synthetic valid/invalid labels for segment/pose/obb.
+
 ## Matrix
 
 | Task | Train | Val | Predict | DDP | Export |

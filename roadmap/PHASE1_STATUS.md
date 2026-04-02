@@ -47,6 +47,14 @@ flowchart TD
 
 ## Next Steps
 
-1. Add task preflight validation checks for segment/pose/obb datasets.
-2. Run smoke verification checklist for correctness.
-3. Update roadmap/specs with completed evidence and artifacts.
+1. Run smoke verification checklist for correctness.
+2. Update roadmap/specs with completed evidence and artifacts.
+
+### Step 3 - Smoke harness prepared
+
+- File added: `kaggle/scripts/33_phase1_task_preflight_smoke.py`
+- Purpose:
+  - programmatically verify that preflight checks pass valid samples and fail malformed samples for
+    `segment`, `pose`, and `obb`.
+- Output artifact:
+  - `/kaggle/working/phase1_preflight_smoke/phase1_task_preflight_smoke.json`
