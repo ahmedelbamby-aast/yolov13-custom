@@ -4,12 +4,15 @@
 from __future__ import annotations
 
 import argparse
+import sys
 
 from _common import (
     add_extra_overrides_arg,
     add_flash_mode_arg,
     apply_flash_mode,
     load_yolo_and_flash_backend,
+    merge_kwarg_sources,
+    parse_unknown_cli_overrides,
     parse_extra_overrides,
     print_runtime_header,
 )
@@ -30,7 +33,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    args = build_parser().parse_args()
+    parser = build_parser()
+    args, unknown = parser.parse_known_args()
     apply_flash_mode(args.flash_mode)
 
     YOLO, flash_backend = load_yolo_and_flash_backend()
@@ -44,7 +48,9 @@ def main() -> None:
         "int8": args.int8,
         "verbose": args.verbose,
     }
-    kwargs.update(parse_extra_overrides(args.arg))
+    extra_overrides = parse_extra_overrides(args.arg)
+    unknown_overrides = parse_unknown_cli_overrides(unknown)
+    kwargs = merge_kwarg_sources(kwargs, extra_overrides, unknown_overrides)
     print_runtime_header("benchmark", flash_backend, kwargs)
 
     out = model.benchmark(**kwargs)
@@ -52,4 +58,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"[y13] benchmark failed: {e}", file=sys.stderr)
+        raise

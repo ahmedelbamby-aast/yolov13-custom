@@ -184,6 +184,10 @@ python scripts/train.py \
 
 You can pass any extra Ultralytics override via repeated `--arg KEY=VALUE`.
 
+You can also pass Ultralytics mode args directly in CLI style (`--key value` or `--key=value`).
+
+Reference: https://docs.ultralytics.com/modes/
+
 Example:
 
 ```bash
@@ -195,6 +199,20 @@ python scripts/train.py \
   --arg optimizer=AdamW \
   --arg lr0=0.001 \
   --arg patience=50
+```
+
+Direct mode-arg example:
+
+```bash
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/mydata/custom_det.yaml \
+  --epochs 300 \
+  --optimizer AdamW \
+  --lr0 0.001 \
+  --weight_decay 0.0005 \
+  --close_mosaic 10 \
+  --cos_lr true
 ```
 
 ## 7) Kaggle validation and utility pipelines

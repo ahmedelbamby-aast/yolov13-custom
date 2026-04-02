@@ -32,7 +32,12 @@ The scripts set env flags before importing `ultralytics`, then re-run backend se
 
 ## Generic Extra Overrides
 
-You can pass any additional Ultralytics argument with repeated `--arg KEY=VALUE`.
+You can pass any additional Ultralytics argument in either of two ways:
+
+- repeated `--arg KEY=VALUE`
+- direct unknown CLI args like native Ultralytics style: `--optimizer AdamW --lr0 0.001 --patience 50`
+
+This means scripts can accept the full set of mode arguments from Ultralytics docs, including future args, without changing script code.
 
 Examples:
 
@@ -53,6 +58,20 @@ Values are parsed as Python literals where possible:
 - numbers -> numeric
 - lists/dicts like `"[1,2]"`, `"{'a':1}"`
 - otherwise string
+
+Examples with direct mode args:
+
+```bash
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data coco8.yaml \
+  --epochs 50 \
+  --optimizer AdamW \
+  --lr0 0.001 \
+  --weight_decay 0.0005 \
+  --close_mosaic 10 \
+  --cos_lr true
+```
 
 ## Usage Examples
 
@@ -78,7 +97,9 @@ python scripts/val.py \
   --data path/to/custom.yaml \
   --split val \
   --imgsz 640 \
-  --flash-mode auto
+  --flash-mode auto \
+  --iou 0.7 \
+  --conf 0.001
 ```
 
 ### 3) Test alias
@@ -118,7 +139,8 @@ python scripts/benchmark.py \
   --data coco8.yaml \
   --imgsz 640 \
   --half \
-  --flash-mode turing
+  --flash-mode turing \
+  --verbose
 ```
 
 ## What the scripts print

@@ -68,6 +68,45 @@ def parse_extra_overrides(raw_items: list[str]) -> dict[str, Any]:
     return overrides
 
 
+def parse_unknown_cli_overrides(tokens: list[str]) -> dict[str, Any]:
+    """Parse unknown --key value/--key=value tokens into Ultralytics kwargs."""
+    overrides: dict[str, Any] = {}
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
+        if not token.startswith("--"):
+            raise ValueError(f"Unexpected token '{token}'. Use '--key value' or '--key=value'.")
+
+        key_token = token[2:]
+        if not key_token:
+            raise ValueError("Invalid token '--'.")
+
+        if "=" in key_token:
+            key, raw_value = key_token.split("=", 1)
+            overrides[key] = _parse_scalar(raw_value)
+            i += 1
+            continue
+
+        key = key_token
+        if i + 1 < len(tokens) and not tokens[i + 1].startswith("--"):
+            overrides[key] = _parse_scalar(tokens[i + 1])
+            i += 2
+        else:
+            overrides[key] = True
+            i += 1
+
+    return overrides
+
+
+def merge_kwarg_sources(*sources: dict[str, Any]) -> dict[str, Any]:
+    merged: dict[str, Any] = {}
+    for src in sources:
+        for k, v in src.items():
+            if v is not None:
+                merged[k] = v
+    return merged
+
+
 def load_yolo_and_flash_backend() -> tuple[Any, str]:
     """Import YOLO after flash env is set, then force backend re-eval."""
     from ultralytics import YOLO

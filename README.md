@@ -1,279 +1,178 @@
 <p align="center">
-    <img src="assets/icon.png" width="110" style="margin-bottom: 0.2;"/>
-<p>
+  <img src="assets/icon.png" width="110" alt="YOLOv13" />
+</p>
+
 <h2 align="center">YOLOv13: Real-Time Object Detection with Hypergraph-Enhanced Adaptive Visual Perception</h2>
 
 [![arXiv](https://img.shields.io/badge/arXiv-Paper-b31b1b?logo=arxiv&logoColor=white)](https://arxiv.org/abs/2506.17733)
 [![iMoonLab](https://img.shields.io/badge/iMoonLab-Homepage-blueviolet?logo=github&logoColor=white)](https://github.com/iMoonLab)
-[![HyperAI Demo](https://img.shields.io/badge/HyperAI-Demo-red?logo=hyperledger&logoColor=white)](https://app.hyper.ai/console/public/tutorials/NIC3cpjlw7u)
-  
+[![Fork](https://img.shields.io/badge/Fork-ahmedelbamby--aast/yolov13--custom-1f6feb?logo=github)](https://github.com/ahmedelbamby-aast/yolov13-custom)
+
 <div align="center">
-    <img src="assets/framework.png">
+  <img src="assets/framework.png" alt="YOLOv13 framework" />
 </div>
 
-## Updates
+This repository is a production-focused custom fork of YOLOv13. It keeps upstream model work while adding reliability, reproducibility, multi-task support, and developer tooling for real-world training/validation/export/benchmark workflows.
 
-- 2025/11/18: [A Demo and Tutorial of YOLOv13](https://app.hyper.ai/console/public/tutorials/NIC3cpjlw7u) is online. Thanks to [HyperAI](https://hyper.ai/cn)!
+## Table of Contents
 
-- 2025/07/19: [HuggingFace Spaces Demo](https://huggingface.co/spaces/atalaydenknalbant/Yolov13) is online. Thanks to [Atalay](https://github.com/atalaydenknalbant)!
+- [Overview](#overview)
+- [Update Timeline](#update-timeline)
+- [What This Fork Adds](#what-this-fork-adds)
+- [Quick Links](#quick-links)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Flash Backend Control](#flash-backend-control)
+- [Benchmarks and Reports](#benchmarks-and-reports)
+- [Repository Layout](#repository-layout)
+- [Related Projects](#related-projects)
+- [Citation](#citation)
+- [Known Runtime Warning](#known-runtime-warning)
 
-- 2025/06/27: [Converting YOLOv13](https://github.com/kaylorchen/ai_framework_demo) to Huawei Ascend (OM), Rockchip (RKNN) formats is supported. Thanks to [kaylorchen](https://github.com/kaylorchen)!
+## Overview
 
-- 2025/06/25: [FastAPI REST API](https://github.com/iMoonLab/yolov13/tree/main/examples/YOLOv13-FastAPI-REST-API) is supported. Thanks to [MohibShaikh](https://github.com/MohibShaikh)!
+YOLOv13 introduces HyperACE + FullPAD for stronger feature interaction and robust real-time detection. This fork extends the base project with:
 
-- 2025/06/24: 🔥 **The paper of YOLOv13 can be downloaded**: [🔗 YOLOv13: Real-Time Object Detection with Hypergraph-Enhanced Adaptive Visual Perception](https://arxiv.org/abs/2506.17733).
+- YOLOv13 multi-task configs (detect, segment, pose, obb)
+- task-aware dataset preflight validation
+- deterministic flash backend control (fallback vs turing)
+- modular developer scripts aligned with Ultralytics mode usage
+- Kaggle-ready automation for 2x T4 DDP workflows
 
-- 2025/06/24: [Android deployment](https://github.com/mpj1234/ncnn-yolov13-android/tree/main) is supported. Thanks to [mpj1234](https://github.com/mpj1234)!
+## Update Timeline
 
-- 2025/06/22: YOLOv13 model weights released.
+### Upstream milestones (iMoonLab)
 
-- 2025/06/21: The code of YOLOv13 has been open-sourced.
+- 2025-06-21: initial YOLOv13 code open-sourced
+- 2025-06-22: YOLOv13 weights released
+- 2025-06-24: paper and deployment integrations published
+- 2025-06-25 to 2025-11-18: API/demo/community deployment updates
 
+### Fork milestones (ahmedelbamby-aast)
 
+- 2026-04: phase-1 reliability updates (OBB metric compatibility + task preflight validation)
+- 2026-04: phase-2 YOLOv13 task-head configs for segment/pose/obb (`n/s/l/x`)
+- 2026-04: deterministic flash backend re-init and DDP env propagation
+- 2026-04: L-scale fallback vs turing benchmark suite with comparison plots
+- 2026-04: modular `scripts/` workflows for train/val/test/predict/export/benchmark with full mode-arg passthrough
 
+## What This Fork Adds
 
+- **Multi-task model configs** under `ultralytics/cfg/models/v13/` for detect/segment/pose/obb variants.
+- **Task-aware data preflight** in dataset checks and trainer/validator/world entry points.
+- **Flash backend control** with deterministic selection (`auto`, `fallback`, `turing`) and Turing support path.
+- **Developer scripts** that follow normal Ultralytics usage while supporting all mode arguments.
+- **Kaggle automation** for setup, GPU checks, DDP smoke, packaging, and benchmark reproducibility.
 
-## Customization by Eng.Ahmed ElBamby 💜
+## Quick Links
 
-![Customized By](https://img.shields.io/badge/Customized%20By-Eng.Ahmed%20ElBamby-8A2BE2?style=for-the-badge)
+- Full environment and run guide: `kaggle/QUICKSTART.md`
+- Developer scripts guide: `scripts/README.md`
+- L-task benchmark report: `kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md`
+- S/L/X benchmark reports:
+  - `kaggle/reports/BENCHMARK_SLX_30E.md`
+  - `kaggle/reports/BENCHMARK_SLX_30E_FIXED_BATCH_COMPARISON.md`
 
-This fork includes a Kaggle-focused modernization layer built by **Eng.Ahmed ElBamby** to improve reliability and reproducibility for 2x Tesla T4 workflows:
+## Installation
 
-- Hardened DDP subprocess bootstrap to ensure local custom modules load correctly across ranks.
-- Improved distributed AMP synchronization path for better multi-GPU startup compatibility.
-- Added modular automation scripts under `kaggle/scripts` for setup, dependency install, GPU checks, DDP smoke tests, and packaging.
-- Added a Rich-powered colorful startup banner with owner attribution.
-- Added detailed engineering specs and implementation report under `kaggle/specs` and `kaggle/reports`.
-- Standardized output packaging to `/kaggle/working/yolov13.zip`.
+### Local/Server (standard)
 
-See `kaggle/QUICKSTART.md` for the full one-command workflow.
-
-
-
-## Benchmark Update: S/L/X on 2xT4 (DDP)
-
-S/L/X benchmark coverage now includes two modes on Kaggle with **2x Tesla T4** using DDP:
-
-- **Auto-batch benchmark** (per-variant search for largest stable batch)
-  - Script: `kaggle/scripts/160_benchmark_slx_optimal_batch.py`
-  - Report: `kaggle/reports/BENCHMARK_SLX_30E.md`
-  - Artifacts: `kaggle/benchmarks/slx_30e`
-- **Fixed-largest-batch comparison** (**S=32, L=16, X=12**) with backend A/B:
-  - Script: `kaggle/scripts/170_benchmark_slx_fixed_batch.py`
-  - Report: `kaggle/reports/BENCHMARK_SLX_30E_FIXED_BATCH_COMPARISON.md`
-  - Artifacts: `kaggle/benchmarks/slx_30e_fixed`
-
-Both benchmark modes align `imgsz` to dataset image-size statistics, persist JSON metrics and plots, and sync feature-map previews to the repository (full outputs remain in `/kaggle/working`).
-
-Notebook entrypoint: `notebooks/06_benchmark_flash.ipynb`
-
-<h2>Table of Contents</h2>
-
-- [Technical Briefing 💡](#technical-briefing-)
-- [Main Results 🏆](#main-results-)
-  - [1. MS COCO Benchmark](#1-ms-coco-benchmark)
-  - [2. Visualizations](#2-visualizations)
-- [Customization by Eng.Ahmed ElBamby 💜](#customization-by-engahmed-elbamby-)
-- [Benchmark Update: S/L/X on 2xT4 (DDP)](#benchmark-update-slx-on-2xt4-ddp)
-- [Quick Start 🚀](#quick-start-)
-  - [1. Install Dependencies](#1-install-dependencies)
-  - [2. Validation](#2-validation)
-  - [3. Training](#3-training)
-  - [4. Prediction](#4-prediction)
-  - [5. Export](#5-export)
-- [Related Projects 🔗](#related-projects-)
-- [Cite YOLOv13 📝](#cite-yolov13-)
-
-
-
-## Technical Briefing 💡
-
-
-**Introducing YOLOv13**—the next-generation real-time detector with cutting-edge performance and efficiency. YOLOv13 family includes four variants: Nano, Small, Large, and X-Large, powered by:
-
-* **HyperACE: Hypergraph-based Adaptive Correlation Enhancement**
-
-  * Treats pixels in multi-scale feature maps as hypergraph vertices.
-  * Adopts a learnable hyperedge construction module to adaptively exploring high-order correlations between vertices.
-  * A message passing module with linear complexity is leveraged to effectively aggregate multi-scale features with the guidance of high-order correlations to achieve effective visual perception of complex scenarios.
-
-* **FullPAD: Full-Pipeline Aggregation-and-Distribution Paradigm**
-
-  * Uses the HyperACE to aggregate multi-scale features of the backbone and extract high-order correlations in the hypergraph space.
-  * FullPAD paradigm further leverages three separate tunnels to forward these correlation-enhanced features to the connection between the backbone and neck, the internal layers of the neck, and the connection between the neck and head, respectively. In this way, YOLOv13 achieves fine‑grained information flow and representational synergy across the entire pipeline.
-  * FullPAD significantly improves gradient propagation and enhances the detection performance.
-
-* **Model Lightweighting via DS-based Blocks**
-
-  * Replaces large-kernel convolutions with blocks building based on depthwise separable convolutions (DSConv, DS-Bottleneck, DS-C3k, DS-C3k2), preserving receptive field while greatly reducing parameters and computation.
-  * Achieves faster inference speed without sacrificing accuracy.
-
-> YOLOv13 seamlessly combines hypergraph computation with end-to-end information collaboration to deliver a more accurate, robust, and efficient real-time detection solution.
-
-
-
-## Main Results 🏆
-
-### 1. MS COCO Benchmark
-
-**Table 1. Quantitative comparison with other state-of-the-art real-time object detectors on the MS COCO dataset**
-
-
-| **Method** | **FLOPs (G)** | **Parameters(M)** | **AP<sub>50:95</sub><sup>val</sup>** | **AP<sub>50</sub><sup>val</sup>** | **AP<sub>75</sub><sup>val</sup>** | **Latency (ms)** |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| YOLOv6-3.0-N | 11.4 | 4.7 | 37.0 | 52.7 | – | 2.74 |
-| Gold-YOLO-N | 12.1 | 5.6 | 39.6 | 55.7 | – | 2.97 |
-| YOLOv8-N | 8.7 | 3.2 | 37.4 | 52.6 | 40.5 | 1.77 |
-| YOLOv10-N | 6.7 | 2.3 | 38.5 | 53.8 | 41.7 | 1.84 |
-| YOLO11-N | 6.5 | 2.6 | 38.6 | 54.2 | 41.6 | 1.53 |
-| YOLOv12-N | 6.5 | 2.6 | 40.1 | 56.0 | 43.4 | 1.83 |
-| **YOLOv13-N** | **6.4** | **2.5** | **41.6** | **57.8** | **45.1** | **1.97** |
-|           |           |            |                 |           | 
-| YOLOv6-3.0-S | 45.3 | 18.5 | 44.3 | 61.2 | – | 3.42 |
-| Gold-YOLO-S | 46.0 | 21.5 | 45.4 | 62.5 | – | 3.82 |
-| YOLOv8-S | 28.6 | 11.2 | 45.0 | 61.8 | 48.7 | 2.33 |
-| RT-DETR-R18 | 60.0 | 20.0 | 46.5 | 63.8 | – | 4.58 |
-| RT-DETRv2-R18 | 60.0 | 20.0 | 47.9 | 64.9 | – | 4.58 |
-| YOLOv9-S | 26.4 | 7.1 | 46.8 | 63.4 | 50.7 | 3.44 |
-| YOLOv10-S | 21.6 | 7.2 | 46.3 | 63.0 | 50.4 | 2.53 |
-| YOLO11-S | 21.5 | 9.4 | 45.8 | 62.6 | 49.8 | 2.56 |
-| YOLOv12-S | 21.4 | 9.3 | 47.1 | 64.2 | 51.0 | 2.82 |
-| **YOLOv13-S** | **20.8** | **9.0** | **48.0** | **65.2** | **52.0** | **2.98** |
-|           |           |            |                 |           | 
-| YOLOv6-3.0-L | 150.7 | 59.6 | 51.8 | 69.2 | – | 9.01 |
-| Gold-YOLO-L | 151.7 | 75.1 | 51.8 | 68.9 | – | 10.69 |
-| YOLOv8-L | 165.2 | 43.7 | 53.0 | 69.8 | 57.7 | 8.13 |
-| RT-DETR-R50 | 136.0 | 42.0 | 53.1 | 71.3 | – | 6.93 |
-| RT-DETRv2-R50 | 136.0 | 42.0 | 53.4 | 71.6 | – | 6.93 |
-| YOLOv9-C | 102.1 | 25.3 | 53.0 | 70.2 | 57.8 | 6.64 |
-| YOLOv10-L | 120.3 | 24.4 | 53.2 | 70.1 | 57.2 | 7.31 |
-| YOLO11-L | 86.9 | 25.3 | 52.3 | 69.2 | 55.7 | 6.23 |
-| YOLOv12-L | 88.9 | 26.4 | 53.0 | 70.0 | 57.9 | 7.10 |
-| **YOLOv13-L** | **88.4** | **27.6** | **53.4** | **70.9** | **58.1** | **8.63** |
-|           |           |            |                 |           | 
-| YOLOv8-X | 257.8 | 68.2 | 54.0 | 71.0 | 58.8 | 12.83 |
-| RT-DETR-R101 | 259.0 | 76.0 | 54.3 | 72.7 | – | 13.51 |
-| RT-DETRv2-R101| 259.0 | 76.0 | 54.3 | 72.8 | – | 13.51 |
-| YOLOv10-X | 160.4 | 29.5 | 54.4 | 71.3 | 59.3 | 10.70 |
-| YOLO11-X | 194.9 | 56.9 | 54.2 | 71.0 | 59.1 | 11.35 |
-| YOLOv12-X | 199.0 | 59.1 | 54.4 | 71.1 | 59.3 | 12.46 |
-| **YOLOv13-X** | **199.2** | **64.0** | **54.8** | **72.0** | **59.8** | **14.67** |
-
-
-### 2. Visualizations
-
-<div>
-    <img src="assets/vis.png" width="100%" height="100%">
-</div>
-
-**Visualization examples of YOLOv10-N/S, YOLO11-N/S, YOLOv12-N/S, and YOLOv13-N/S.**
-
-<div>
-    <img src="assets/hyperedge.png" width="60%" height="60%">
-</div>
-
-**Representative visualization examples of adaptive hyperedges. The hyperedges in the first and second columns mainly focus on the high-order interactions among objects in the foreground. The third column mainly focuses on the high-order interactions between the background and part of the foreground. The visualization of these hyperedges can intuitively reflect the high-order visual associations modeled by the YOLOv13.**
-
-
-
-## Quick Start 🚀
-
-### 1. Install Dependencies
-
-```
-wget https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.3/flash_attn-2.7.3+cu11torch2.2cxx11abiFALSE-cp311-cp311-linux_x86_64.whl
-conda create -n yolov13 python=3.11
-conda activate yolov13
-pip install -r requirements.txt
+```bash
+git clone https://github.com/ahmedelbamby-aast/yolov13-custom.git
+cd yolov13-custom
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip setuptools wheel
 pip install -e .
 ```
-YOLOv13 suppports Flash Attention acceleration.
 
-### 2. Validation
-[`YOLOv13-N`](https://github.com/iMoonLab/yolov13/releases/download/yolov13/yolov13n.pt)
-[`YOLOv13-S`](https://github.com/iMoonLab/yolov13/releases/download/yolov13/yolov13s.pt)
-[`YOLOv13-L`](https://github.com/iMoonLab/yolov13/releases/download/yolov13/yolov13l.pt)
-[`YOLOv13-X`](https://github.com/iMoonLab/yolov13/releases/download/yolov13/yolov13x.pt)
+### Kaggle (recommended path)
 
-Use the following code to validate the YOLOv13 models on the COCO dataset. Make sure to replace `{n/s/l/x}` with the desired model scale (nano, small, plus, or ultra).
+Follow `kaggle/QUICKSTART.md` for full bootstrap, GPU setup, and pipelines.
+
+## Usage
+
+You can use either the native Ultralytics API or the modular scripts.
+
+### Native Ultralytics API
+
 ```python
 from ultralytics import YOLO
 
-model = YOLO('yolov13{n/s/l/x}.pt')  # Replace with the desired model scale
+model = YOLO("ultralytics/cfg/models/v13/yolov13l.yaml")
+model.train(data="coco8.yaml", epochs=100, imgsz=640)
+model.val(data="coco8.yaml")
+model.predict(source="path/to/images", save=True)
+model.export(format="onnx")
 ```
 
-### 3. Training
+### Modular scripts (dev-friendly)
 
-Use the following code to train the YOLOv13 models. Make sure to replace `yolov13n.yaml` with the desired model configuration file path, and `coco.yaml` with your coco dataset configuration file.
-```python
-from ultralytics import YOLO
-
-model = YOLO('yolov13n.yaml')
-
-# Train the model
-results = model.train(
-  data='coco.yaml',
-  epochs=600, 
-  batch=256, 
-  imgsz=640,
-  scale=0.5,  # S:0.9; L:0.9; X:0.9
-  mosaic=1.0,
-  mixup=0.0,  # S:0.05; L:0.15; X:0.2
-  copy_paste=0.1,  # S:0.15; L:0.5; X:0.6
-  device="0,1,2,3",
-)
-
-# Evaluate model performance on the validation set
-metrics = model.val('coco.yaml')
-
-# Perform object detection on an image
-results = model("path/to/your/image.jpg")
-results[0].show()
-
+```bash
+python scripts/train.py --model ultralytics/cfg/models/v13/yolov13l.yaml --data coco8.yaml --epochs 100
+python scripts/val.py --model runs/train/exp/weights/best.pt --data coco8.yaml
+python scripts/test.py --model runs/train/exp/weights/best.pt --data coco8.yaml --split test
+python scripts/predict.py --model runs/train/exp/weights/best.pt --source path/to/images --save
+python scripts/export.py --model runs/train/exp/weights/best.pt --format onnx
+python scripts/benchmark.py --model runs/train/exp/weights/best.pt --data coco8.yaml --half
 ```
 
+These scripts support all Ultralytics mode arguments by passthrough:
 
-### 4. Prediction
-Use the following code to perform object detection using the YOLOv13 models. Make sure to replace `{n/s/l/x}` with the desired model scale.
-```python
-from ultralytics import YOLO
+- direct style: `--optimizer AdamW --lr0 0.001 --patience 50`
+- key/value style: `--arg optimizer=AdamW --arg lr0=0.001`
 
-model = YOLO('yolov13{n/s/l/x}.pt')  # Replace with the desired model scale
-model.predict()
+Reference modes: https://docs.ultralytics.com/modes/
+
+## Flash Backend Control
+
+### Per-script toggle
+
+All scripts accept:
+
+- `--flash-mode auto`
+- `--flash-mode fallback`
+- `--flash-mode turing`
+
+### Environment toggle
+
+```bash
+export Y13_USE_TURING_FLASH=1
+export Y13_DISABLE_FLASH=0
+# export Y13_DISABLE_FLASH=1  # force fallback
 ```
 
-### 5. Export
-Use the following code to export the YOLOv13 models to ONNX or TensorRT format. Make sure to replace `{n/s/l/x}` with the desired model scale.
-```python
-from ultralytics import YOLO
-model = YOLO('yolov13{n/s/l/x}.pt')  # Replace with the desired model scale
-model.export(format="engine", half=True)  # or format="onnx"
-```
+## Benchmarks and Reports
 
-### 6. Developer Scripts (modular workflows)
+- L-scale task comparison (detect/segment/pose/obb, fallback vs turing):
+  - script: `kaggle/scripts/181_benchmark_l_flash_tasks.sh`
+  - artifacts: `kaggle/benchmarks/l_flash_tasks/`
+  - report: `kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md`
 
-For developer-friendly modular workflows (train/val/test/predict/export/benchmark) with custom-data support and Flash backend toggles, see:
+- S/L/X comparison suites:
+  - scripts: `kaggle/scripts/160_benchmark_slx_optimal_batch.py`, `kaggle/scripts/170_benchmark_slx_fixed_batch.py`
+  - reports under `kaggle/reports/`
 
-- `scripts/README.md`
+## Repository Layout
 
-Included scripts:
+- `ultralytics/`: model code, configs, training/validation/export logic
+- `scripts/`: modular developer workflows
+- `kaggle/scripts/`: automation and validation pipelines
+- `kaggle/reports/`: benchmark and implementation reports
+- `kaggle/benchmarks/`: benchmark metrics and plots
+- `roadmap/`: specs, plans, and implementation tracking
 
-- `scripts/train.py`
-- `scripts/val.py`
-- `scripts/test.py`
-- `scripts/predict.py`
-- `scripts/export.py`
-- `scripts/benchmark.py`
+## Related Projects
 
-## Related Projects 🔗
+- Base framework: [Ultralytics](https://github.com/ultralytics/ultralytics)
+- Upstream YOLOv13: [iMoonLab/yolov13](https://github.com/iMoonLab/yolov13)
+- Hypergraph references:
+  - [Hypergraph Neural Networks](https://arxiv.org/abs/1809.09401)
+  - [HGNN+](https://ieeexplore.ieee.org/abstract/document/9795251)
+  - [SoftHGNN](https://arxiv.org/abs/2505.15325)
 
-- The code is based on [Ultralytics](https://github.com/ultralytics/ultralytics). Thanks for their excellent work!
-- Other wonderful works about Hypergraph Computation:
-  - "Hypergraph Neural Networks": [[paper](https://arxiv.org/abs/1809.09401)] [[code](https://github.com/iMoonLab/HGNN)]
-  - "HGNN+: General Hypergraph Nerual Networks": [[paper](https://ieeexplore.ieee.org/abstract/document/9795251)] [[code](https://github.com/iMoonLab/DeepHypergraph)]
-  - "SoftHGNN: Soft Hypergraph Neural Networks for General Visual Recognition": [[paper](https://arxiv.org/abs/2505.15325)] [[code](https://github.com/Mengqi-Lei/SoftHGNN)]
+## Citation
 
-## Cite YOLOv13 📝
 ```bibtex
 @article{yolov13,
   title={YOLOv13: Real-Time Object Detection with Hypergraph-Enhanced Adaptive Visual Perception},
@@ -283,17 +182,12 @@ Included scripts:
 }
 ```
 
-
-
 ## Known Runtime Warning
 
-You may still see repeated logs similar to:
+You may still see repeated logs such as:
+
 - `Unable to register cuDNN factory`
 - `Unable to register cuBLAS factory`
 - `computation placer already registered`
 
-These are typically produced by upstream CUDA/XLA/TensorFlow-linked binaries loaded in the runtime and are usually non-fatal for PyTorch training.
-
-Current status in this repo:
-- Training, DDP, export, and benchmark runs complete successfully despite these warnings.
-- We track this as an environment-level cleanup target for future hardening.
+These are usually environment-level CUDA/XLA/TensorFlow-linked warnings and are non-fatal for PyTorch training in this repo.
