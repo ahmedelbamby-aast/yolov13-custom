@@ -11,6 +11,12 @@ Provide a modular one-command flow for setup, checks, smoke tests, and project p
    - `30_gpu_check.sh`
    - `40_ddp_smoke.sh`
    - `50_package_zip.sh`
+   - `60_ddp_train_5epochs.sh`
+   - `70_export_onnx_tensorrt.sh`
+   - `80_mode_matrix.sh`
+   - `90_visualize_layers.sh`
+   - `95_issue_audit_report.py`
+   - `100_full_validation.sh`
 2. Add orchestrator `run_all.sh` with strict ordering.
 3. Generate output archive at `/kaggle/working/yolov13.zip`.
 4. Keep all artifacts and docs synchronized with git and remote repo.
@@ -33,6 +39,9 @@ run_all.sh
 - [x] Orchestrator script.
 - [x] Quickstart guide.
 - [x] End-to-end pipeline execution report.
+- [x] ONNX + TensorRT export automation.
+- [x] Layer visualization automation.
+- [x] Train/val/predict/export mode coverage harness.
 
 ## Edge Cases
 - Incompatible wheel entries (e.g., local flash-attn filename).

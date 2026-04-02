@@ -34,3 +34,12 @@ Prepare this repo for stable training workflows on Kaggle with 2x T4 GPUs, inclu
 - `RUN_DDP_SMOKE=0 bash kaggle/scripts/run_all.sh` completed and produced `/kaggle/working/yolov13.zip`.
 - `bash kaggle/scripts/40_ddp_smoke.sh` completed successfully on `device=0,1` (2x Tesla T4).
 - DDP run used local patched code path and generated run artifacts under `/kaggle/working/y13_runs/ddp_smoke`.
+
+
+## Extended Validation Results
+- Upstream issue triage performed across 73 issues and documented in `kaggle/reports/UPSTREAM_ISSUES_AUDIT.md`.
+- Real DDP training completed for 5 epochs on 2x Tesla T4 (`device=0,1`): `/kaggle/working/y13_runs/ddp_5epochs`.
+- ONNX export succeeded: `/kaggle/working/y13_runs/ddp_5epochs/weights/best.onnx`.
+- TensorRT export succeeded: `/kaggle/working/y13_runs/ddp_5epochs/weights/best.engine`.
+- Layer feature-map visualization generated with `visualize=True`: `/kaggle/working/y13_runs/layer_visuals/predict_visualize`.
+- Mode coverage script validated val/predict/export argument paths: `kaggle/scripts/80_mode_matrix.sh`.

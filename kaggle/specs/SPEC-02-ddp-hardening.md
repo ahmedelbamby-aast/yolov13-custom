@@ -33,6 +33,9 @@ train(device='0,1')
 - [x] Harden save-dir cleanup.
 - [x] Patch AMP broadcast type in trainer.
 - [x] Confirm DDP smoke run success.
+- [x] Confirm DDP 5-epoch run success.
+- [x] Add non-finite loss guard for distributed stability.
+- [x] Apply DDP bucket-view mitigation for stride mismatch warnings.
 
 ## Edge Cases
 - Editable install absent but source tree must be imported.

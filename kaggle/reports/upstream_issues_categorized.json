@@ -1,0 +1,676 @@
+[
+  {
+    "number": 1,
+    "state": "open",
+    "title": "？？？serious？",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/1"
+  },
+  {
+    "number": 2,
+    "state": "open",
+    "title": "wow, a new version for yolo series.",
+    "categories": [
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/2"
+  },
+  {
+    "number": 3,
+    "state": "open",
+    "title": "Support Android to deploy yolov13 model",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/3"
+  },
+  {
+    "number": 4,
+    "state": "open",
+    "title": "牛逼",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/4"
+  },
+  {
+    "number": 5,
+    "state": "open",
+    "title": "牛的",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/5"
+  },
+  {
+    "number": 6,
+    "state": "open",
+    "title": "强",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/6"
+  },
+  {
+    "number": 7,
+    "state": "closed",
+    "title": "Any advise for oriented object detection?",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/7"
+  },
+  {
+    "number": 8,
+    "state": "open",
+    "title": "Why are the comparison results different from those reported in their paper?",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/8"
+  },
+  {
+    "number": 9,
+    "state": "open",
+    "title": "Release YOLOv13 checkpoints on Hugging Face",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/9"
+  },
+  {
+    "number": 10,
+    "state": "open",
+    "title": "厉害，希望越做越好继续创造新的SOTA",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/10"
+  },
+  {
+    "number": 11,
+    "state": "closed",
+    "title": "挤牙膏式的yolo又更新了",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/11"
+  },
+  {
+    "number": 12,
+    "state": "open",
+    "title": "无法下载权重",
+    "categories": [
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/12"
+  },
+  {
+    "number": 15,
+    "state": "open",
+    "title": "多卡训练yolov13报错，其他的yolo版本没有该问题",
+    "categories": [
+      "data"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/15"
+  },
+  {
+    "number": 16,
+    "state": "closed",
+    "title": "yolov13训练显存占用问题",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/16"
+  },
+  {
+    "number": 17,
+    "state": "open",
+    "title": "how you get the mAP values of yolov12",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/17"
+  },
+  {
+    "number": 18,
+    "state": "open",
+    "title": "predict result is none",
+    "categories": [
+      "data",
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/18"
+  },
+  {
+    "number": 20,
+    "state": "open",
+    "title": "I can't verify the result",
+    "categories": [
+      "data",
+      "model",
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/20"
+  },
+  {
+    "number": 21,
+    "state": "closed",
+    "title": "AttributeError: Can't get attribute 'DSC3k2' on <module 'ultralytics.nn.modules.block' from '/opt/conda/lib/python3.10/site-packages/ultralytics/nn/modules/block.py'>",
+    "categories": [
+      "data",
+      "model",
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/21"
+  },
+  {
+    "number": 22,
+    "state": "open",
+    "title": "加载很慢",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/22"
+  },
+  {
+    "number": 23,
+    "state": "open",
+    "title": "The model training result is relatively poor",
+    "categories": [
+      "data",
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/23"
+  },
+  {
+    "number": 24,
+    "state": "closed",
+    "title": "export yolov13 pt module to onnx file in windows",
+    "categories": [
+      "export"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/24"
+  },
+  {
+    "number": 25,
+    "state": "open",
+    "title": "YOLOv13-M",
+    "categories": [
+      "ddp",
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/25"
+  },
+  {
+    "number": 26,
+    "state": "open",
+    "title": "可以使用权重文件预测但似乎不能参与训练",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/26"
+  },
+  {
+    "number": 27,
+    "state": "open",
+    "title": "Representative visualization examples of adaptive hyperedges.",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/27"
+  },
+  {
+    "number": 28,
+    "state": "open",
+    "title": "How do you calculate the FLOPs?",
+    "categories": [
+      "ddp"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/28"
+  },
+  {
+    "number": 29,
+    "state": "closed",
+    "title": "Floating point exception (core dumped) on training start.",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/29"
+  },
+  {
+    "number": 31,
+    "state": "open",
+    "title": "reproducing benchmarking results",
+    "categories": [
+      "data"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/31"
+  },
+  {
+    "number": 32,
+    "state": "open",
+    "title": "Cannot Train Yolov13 error on attribute DSC3k2",
+    "categories": [
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/32"
+  },
+  {
+    "number": 33,
+    "state": "open",
+    "title": "Loss function for YOLOv13",
+    "categories": [
+      "data",
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/33"
+  },
+  {
+    "number": 34,
+    "state": "open",
+    "title": "支持分割任务吗",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/34"
+  },
+  {
+    "number": 35,
+    "state": "open",
+    "title": "How to set a customized save name or path for my model?",
+    "categories": [
+      "data"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/35"
+  },
+  {
+    "number": 36,
+    "state": "open",
+    "title": "颜色通道",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/36"
+  },
+  {
+    "number": 37,
+    "state": "open",
+    "title": "The model frequently encounters NaN (Not a Number) loss during the training process.",
+    "categories": [
+      "ddp"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/37"
+  },
+  {
+    "number": 38,
+    "state": "open",
+    "title": "训练了分割模型，预测时报错",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/38"
+  },
+  {
+    "number": 39,
+    "state": "open",
+    "title": "已经安装flash-attn，仍提示FlashAttention is not available",
+    "categories": [
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/39"
+  },
+  {
+    "number": 40,
+    "state": "open",
+    "title": "图片尺寸",
+    "categories": [
+      "ddp"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/40"
+  },
+  {
+    "number": 41,
+    "state": "open",
+    "title": "Inference Speed Reproduction on T4 GPU",
+    "categories": [
+      "export",
+      "model",
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/41"
+  },
+  {
+    "number": 42,
+    "state": "open",
+    "title": "Hugging Face Spaces Demo for YOLOv13",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/42"
+  },
+  {
+    "number": 43,
+    "state": "open",
+    "title": "YOLOv13 is no better than YOLOv7",
+    "categories": [
+      "data"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/43"
+  },
+  {
+    "number": 44,
+    "state": "open",
+    "title": "How to visualize the hyperedge",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/44"
+  },
+  {
+    "number": 45,
+    "state": "open",
+    "title": "How to visualize the hyperedge",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/45"
+  },
+  {
+    "number": 46,
+    "state": "open",
+    "title": "yolov13的分割结果多了两个值",
+    "categories": [
+      "data"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/46"
+  },
+  {
+    "number": 47,
+    "state": "open",
+    "title": "yolov13-cls什么时候出呢？",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/47"
+  },
+  {
+    "number": 48,
+    "state": "open",
+    "title": "muti-gpus train warning   impair performance loss nan",
+    "categories": [
+      "ddp",
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/48"
+  },
+  {
+    "number": 49,
+    "state": "closed",
+    "title": "An error occurs during the validation phase after each epoch when training the OBB model.",
+    "categories": [
+      "model",
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/49"
+  },
+  {
+    "number": 50,
+    "state": "open",
+    "title": "这个模型可以正常导出为pb吗？我似乎无法正常导出pb只能导出onnx",
+    "categories": [
+      "export"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/50"
+  },
+  {
+    "number": 51,
+    "state": "open",
+    "title": "训练时候显存过高怎么解决呢？",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/51"
+  },
+  {
+    "number": 52,
+    "state": "open",
+    "title": "请问如何设置宽高大小不一致的情况？",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/52"
+  },
+  {
+    "number": 53,
+    "state": "open",
+    "title": "训练好慢，发出警告UserWarning: Grad strides do not match bucket view strides",
+    "categories": [
+      "ddp"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/53"
+  },
+  {
+    "number": 54,
+    "state": "open",
+    "title": "请问什么时候能出一个C++ tensorrt 的推理端demo。现在只有python的",
+    "categories": [
+      "export",
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/54"
+  },
+  {
+    "number": 55,
+    "state": "open",
+    "title": "可以发布一个带有p2检测头的版本嘛？",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/55"
+  },
+  {
+    "number": 56,
+    "state": "open",
+    "title": "Fail to reproduce the latency of v13n on T4",
+    "categories": [
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/56"
+  },
+  {
+    "number": 57,
+    "state": "closed",
+    "title": "在训练时候设置了模型大小如l，但是出现以下情况，请问这是怎么回事？",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/57"
+  },
+  {
+    "number": 58,
+    "state": "closed",
+    "title": "在训练过程中设置了模型大小为什么会出现以下的情况，请问有人知道吗？",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/58"
+  },
+  {
+    "number": 59,
+    "state": "open",
+    "title": "It’s not just me—it’s us! We’re desperately craving an POSE,SEG,OBB model!",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/59"
+  },
+  {
+    "number": 60,
+    "state": "open",
+    "title": "May I ask if the reasoning speed is only 7.5 frames per second? Is this speed normal? I feel it's too slow. What's your reasoning speed, everyone?",
+    "categories": [
+      "data",
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/60"
+  },
+  {
+    "number": 61,
+    "state": "open",
+    "title": "The output size issue of the ONNX exported model",
+    "categories": [
+      "export"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/61"
+  },
+  {
+    "number": 62,
+    "state": "open",
+    "title": "Is it support segmentation and obb detection?",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/62"
+  },
+  {
+    "number": 63,
+    "state": "open",
+    "title": "训练自己数据集有问题",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/63"
+  },
+  {
+    "number": 64,
+    "state": "open",
+    "title": "请问v13正负样本匹配的策略是什么？",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/64"
+  },
+  {
+    "number": 65,
+    "state": "open",
+    "title": "Question about copy_paste augmentation and segments setting in YOLOv13 training",
+    "categories": [
+      "data",
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/65"
+  },
+  {
+    "number": 66,
+    "state": "closed",
+    "title": "想看看yolov13-obb的效果",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/66"
+  },
+  {
+    "number": 67,
+    "state": "open",
+    "title": "Does YOLOv13 support panoptic segmentation?",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/67"
+  },
+  {
+    "number": 68,
+    "state": "open",
+    "title": "python version",
+    "categories": [
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/68"
+  },
+  {
+    "number": 69,
+    "state": "open",
+    "title": "ERROR: Graphs differed across invocations!",
+    "categories": [
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/69"
+  },
+  {
+    "number": 70,
+    "state": "closed",
+    "title": "你凭什么使用yolo这个名字",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/70"
+  },
+  {
+    "number": 72,
+    "state": "open",
+    "title": "same error with segment",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/72"
+  },
+  {
+    "number": 73,
+    "state": "closed",
+    "title": "按照yolov12的配置增加M模型m: [0.50, 1.00, 512] 后报错",
+    "categories": [
+      "model",
+      "env"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/73"
+  },
+  {
+    "number": 74,
+    "state": "open",
+    "title": "yolov13不支持obb定向框，还是配置错误",
+    "categories": [
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/74"
+  },
+  {
+    "number": 75,
+    "state": "open",
+    "title": "yolov13的pose训练问题，步骤如下",
+    "categories": [
+      "data",
+      "model"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/75"
+  },
+  {
+    "number": 76,
+    "state": "closed",
+    "title": "是不是只有检测的n尺寸模型是有效的？",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/76"
+  },
+  {
+    "number": 77,
+    "state": "open",
+    "title": "If I want to reproduce the map index of the paper on the coco data set, I still need to load the pre-trained weights when training from scratch？",
+    "categories": [
+      "data"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/77"
+  },
+  {
+    "number": 78,
+    "state": "open",
+    "title": "Hyperlayer visualization",
+    "categories": [
+      "other"
+    ],
+    "url": "https://github.com/iMoonLab/yolov13/issues/78"
+  }
+]
