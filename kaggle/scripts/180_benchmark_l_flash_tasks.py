@@ -213,6 +213,48 @@ def _plot_metric_grouped(compare: dict, out_dir: Path):
     plt.close(fig)
 
 
+def _plot_avg_epoch_grouped(compare: dict, out_dir: Path):
+    tasks = list(TASKS.keys())
+    fb = [compare["fallback"]["tasks"][t]["avg_epoch_seconds"] for t in tasks]
+    tu = [compare["turing"]["tasks"][t]["avg_epoch_seconds"] for t in tasks]
+
+    x = range(len(tasks))
+    width = 0.36
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.bar([i - width / 2 for i in x], fb, width=width, label="Fallback", color="#adb5bd")
+    ax.bar([i + width / 2 for i in x], tu, width=width, label="Turing", color="#06d6a0")
+    ax.set_title("YOLOv13-L Avg Epoch Time by Task")
+    ax.set_ylabel("Seconds / Epoch")
+    ax.set_xticks(list(x), [t.upper() for t in tasks])
+    ax.grid(axis="y", linestyle="--", alpha=0.25)
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(out_dir / "l_tasks_avg_epoch_grouped.png", dpi=220)
+    plt.close(fig)
+
+
+def _plot_wall_delta_pct(compare: dict, out_dir: Path):
+    tasks = list(TASKS.keys())
+    deltas = []
+    for task_name in tasks:
+        fb = compare["fallback"]["tasks"][task_name]["wall_seconds"]
+        tu = compare["turing"]["tasks"][task_name]["wall_seconds"]
+        deltas.append(((tu - fb) / fb) * 100.0 if fb > 0 else 0.0)
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    bars = ax.bar([t.upper() for t in tasks], deltas, color="#457b9d")
+    ax.axhline(0.0, color="#e63946", linestyle="--", linewidth=1)
+    ax.set_title("YOLOv13-L Wall-Time Delta (Turing vs Fallback)")
+    ax.set_ylabel("Delta % (negative is faster)")
+    ax.grid(axis="y", linestyle="--", alpha=0.25)
+    for b, d in zip(bars, deltas):
+        ax.text(b.get_x() + b.get_width() / 2, d + (0.3 if d >= 0 else -0.8), f"{d:.2f}%", ha="center", fontsize=9)
+    fig.tight_layout()
+    fig.savefig(out_dir / "l_tasks_wall_delta_pct.png", dpi=220)
+    plt.close(fig)
+
+
 def _plot_curves(compare: dict, out_dir: Path):
     tasks = list(TASKS.keys())
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5), sharex=False)
@@ -243,6 +285,10 @@ def _plot_curves(compare: dict, out_dir: Path):
 
 
 def _write_report(compare: dict, out_dir: Path, repo_report: Path):
+    total_fb = sum(compare["fallback"]["tasks"][t]["wall_seconds"] for t in TASKS)
+    total_tu = sum(compare["turing"]["tasks"][t]["wall_seconds"] for t in TASKS)
+    overall_speedup = (total_fb / total_tu) if total_tu > 0 else 0.0
+
     lines = [
         "# YOLOv13-L Flash Backend Task Comparison",
         "",
@@ -254,24 +300,31 @@ def _write_report(compare: dict, out_dir: Path, repo_report: Path):
         "## Backend Detection",
         f"- Fallback suite backend: `{compare['fallback']['flash_backend']}`",
         f"- Turing suite backend: `{compare['turing']['flash_backend']}`",
+        f"- Total fallback wall time (all tasks): `{total_fb:.2f}s`",
+        f"- Total turing wall time (all tasks): `{total_tu:.2f}s`",
+        f"- Overall speedup (fallback/turing): `{overall_speedup:.4f}x`",
         "",
         "## Results",
         "",
-        "| Task | Batch | Fallback wall (s) | Turing wall (s) | Speedup (fb/tu) | Metric key | Fallback metric | Turing metric |",
-        "|---|---:|---:|---:|---:|---|---:|---:|",
+        "| Task | Batch | Fallback wall (s) | Turing wall (s) | Delta % (tu-fb)/fb | Speedup (fb/tu) | Metric key | Fallback metric | Turing metric |",
+        "|---|---:|---:|---:|---:|---:|---|---:|---:|",
     ]
 
     for task_name in TASKS:
         fb = compare["fallback"]["tasks"][task_name]
         tu = compare["turing"]["tasks"][task_name]
         speedup = (fb["wall_seconds"] / tu["wall_seconds"]) if tu["wall_seconds"] > 0 else 0.0
+        delta_pct = (
+            ((tu["wall_seconds"] - fb["wall_seconds"]) / fb["wall_seconds"] * 100.0) if fb["wall_seconds"] > 0 else 0.0
+        )
         metric_key = tu["metric_key"] or fb["metric_key"] or "n/a"
         lines.append(
-            "| {task} | {batch} | {fbw:.2f} | {tuw:.2f} | {sp:.4f}x | {mk} | {fbm:.4f} | {tum:.4f} |".format(
+            "| {task} | {batch} | {fbw:.2f} | {tuw:.2f} | {dp:.2f}% | {sp:.4f}x | {mk} | {fbm:.4f} | {tum:.4f} |".format(
                 task=task_name,
                 batch=fb["batch"],
                 fbw=fb["wall_seconds"],
                 tuw=tu["wall_seconds"],
+                dp=delta_pct,
                 sp=speedup,
                 mk=metric_key,
                 fbm=fb["metric_value"],
@@ -283,6 +336,8 @@ def _write_report(compare: dict, out_dir: Path, repo_report: Path):
         "",
         "## Visualizations",
         f"- Grouped wall time: `{out_dir / 'l_tasks_wall_time_grouped.png'}`",
+        f"- Grouped avg epoch time: `{out_dir / 'l_tasks_avg_epoch_grouped.png'}`",
+        f"- Wall-time delta percent: `{out_dir / 'l_tasks_wall_delta_pct.png'}`",
         f"- Speedup bars: `{out_dir / 'l_tasks_speedup.png'}`",
         f"- Final primary metric grouped bars: `{out_dir / 'l_tasks_primary_metric_grouped.png'}`",
         f"- Per-task metric curves: `{out_dir / 'l_tasks_metric_curves.png'}`",
@@ -296,11 +351,33 @@ def _write_report(compare: dict, out_dir: Path, repo_report: Path):
     repo_report.write_text(text, encoding="utf-8")
 
 
-def _sync_repo_artifacts(output_root: Path, repo_artifacts_root: Path):
+def _sync_repo_artifacts(output_root: Path, repo_artifacts_root: Path, epochs: int):
     repo_artifacts_root.parent.mkdir(parents=True, exist_ok=True)
     if repo_artifacts_root.exists():
         shutil.rmtree(repo_artifacts_root)
-    shutil.copytree(output_root, repo_artifacts_root)
+
+    (repo_artifacts_root / "plots").mkdir(parents=True, exist_ok=True)
+    for p in sorted((output_root / "plots").glob("*.png")):
+        shutil.copy2(p, repo_artifacts_root / "plots" / p.name)
+
+    compare_src = output_root / "compare_summary.json"
+    if compare_src.exists():
+        shutil.copy2(compare_src, repo_artifacts_root / "compare_summary.json")
+
+    for backend_name in BACKENDS:
+        src_backend = output_root / backend_name
+        dst_backend = repo_artifacts_root / backend_name
+        dst_backend.mkdir(parents=True, exist_ok=True)
+
+        for name in ["suite_summary.json", "segment_metrics.json", "pose_metrics.json", "obb_metrics.json"]:
+            src = src_backend / name
+            if src.exists():
+                shutil.copy2(src, dst_backend / name)
+
+        for task_name in TASKS:
+            src_csv = src_backend / f"{task_name}_l_{epochs}e" / "results.csv"
+            if src_csv.exists():
+                shutil.copy2(src_csv, dst_backend / f"{task_name}_results.csv")
 
 
 def main():
@@ -308,32 +385,39 @@ def main():
     imgsz = int(os.getenv("Y13_BENCH_IMGSZ", "640"))
     workers = int(os.getenv("Y13_BENCH_WORKERS", "4"))
     output_root = Path(os.getenv("Y13_BENCH_OUT_ROOT", "/kaggle/working/phase2_l_flash_compare"))
+    reuse_existing = os.getenv("Y13_BENCH_REUSE", "0") == "1"
     plots_dir = output_root / "plots"
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    fallback = run_suite(
-        backend_name="fallback",
-        use_turing_flash=BACKENDS["fallback"]["use_turing_flash"],
-        disable_flash=BACKENDS["fallback"]["disable_flash"],
-        epochs=epochs,
-        imgsz=imgsz,
-        workers=workers,
-        output_root=output_root,
-    )
-    turing = run_suite(
-        backend_name="turing",
-        use_turing_flash=BACKENDS["turing"]["use_turing_flash"],
-        disable_flash=BACKENDS["turing"]["disable_flash"],
-        epochs=epochs,
-        imgsz=imgsz,
-        workers=workers,
-        output_root=output_root,
-    )
+    if reuse_existing:
+        fallback = json.loads((output_root / "fallback" / "suite_summary.json").read_text(encoding="utf-8"))
+        turing = json.loads((output_root / "turing" / "suite_summary.json").read_text(encoding="utf-8"))
+    else:
+        fallback = run_suite(
+            backend_name="fallback",
+            use_turing_flash=BACKENDS["fallback"]["use_turing_flash"],
+            disable_flash=BACKENDS["fallback"]["disable_flash"],
+            epochs=epochs,
+            imgsz=imgsz,
+            workers=workers,
+            output_root=output_root,
+        )
+        turing = run_suite(
+            backend_name="turing",
+            use_turing_flash=BACKENDS["turing"]["use_turing_flash"],
+            disable_flash=BACKENDS["turing"]["disable_flash"],
+            epochs=epochs,
+            imgsz=imgsz,
+            workers=workers,
+            output_root=output_root,
+        )
 
     compare = {"fallback": fallback, "turing": turing}
     (output_root / "compare_summary.json").write_text(json.dumps(compare, indent=2), encoding="utf-8")
 
     _plot_runtime_grouped(compare, plots_dir)
+    _plot_avg_epoch_grouped(compare, plots_dir)
+    _plot_wall_delta_pct(compare, plots_dir)
     _plot_speedup(compare, plots_dir)
     _plot_metric_grouped(compare, plots_dir)
     _plot_curves(compare, plots_dir)
@@ -343,7 +427,7 @@ def main():
     repo_report = repo_root / "kaggle" / "reports" / "BENCHMARK_L_FLASH_TASKS_COMPARISON.md"
 
     _write_report(compare, plots_dir, repo_report)
-    _sync_repo_artifacts(output_root, repo_artifacts_root)
+    _sync_repo_artifacts(output_root, repo_artifacts_root, epochs=epochs)
 
     print(
         json.dumps(
