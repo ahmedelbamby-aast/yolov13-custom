@@ -22,7 +22,7 @@ while keeping detect behavior unchanged.
    - `yolov13-seg.yaml`
    - `yolov13-pose.yaml`
    - `yolov13-obb.yaml`
-2. Add scale wrappers (`s/l/x`) for each task.
+2. Add scale wrappers (`n/s/l/x`) for each task.
 3. Run model construction sanity for all new configs.
 4. Run short smoke train (1 epoch) per task on tiny datasets.
 5. Capture artifacts and update roadmap/spec docs.
@@ -43,3 +43,9 @@ flowchart TD
 - New v13 task config files.
 - Smoke run evidence report.
 - Updated roadmap/spec status files.
+
+## Decision Log
+
+- Chosen path: ship safe `n/s/l/x` first.
+- `m` and `xl` are deferred because initial validation showed channel-shape incompatibilities that require deeper graph retuning.
+- Turing FlashAttention compatibility principle preserved (no head changes that alter flash backend selection logic).

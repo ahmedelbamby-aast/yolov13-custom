@@ -17,6 +17,12 @@ Define how YOLOv13 will support `segment`, `pose`, and `obb` tasks while preserv
 3. `ultralytics/cfg/models/v13/yolov13-obb.yaml`
 4. Optional scale wrappers for `n/s/l/x` per task.
 
+Implementation status:
+
+- Base task YAMLs created.
+- Scale wrappers created for `n/s/l/x` for each task type.
+- `m` and `xl` marked deferred for a later architecture-retuning milestone.
+
 ## Design
 
 ```mermaid

@@ -88,7 +88,13 @@ flowchart TD
 Phase progress snapshot:
 
 - Phase 1: completed (compatibility + task preflight + smoke evidence)
-- Phase 2: planned (`roadmap/PHASE2_PLAN.md`)
+- Phase 2: in progress (`roadmap/PHASE2_PLAN.md`)
+
+Current Phase 2 status:
+
+- v13 task base configs added for `segment`, `pose`, `obb`.
+- safe scale variants added for `n/s/l/x` across all three tasks.
+- `m` and `xl` deferred pending dedicated channel-graph retuning.
 
 ```mermaid
 gantt
