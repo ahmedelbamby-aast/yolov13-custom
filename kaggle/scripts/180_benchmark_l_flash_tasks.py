@@ -11,23 +11,53 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 TASKS = {
+    "detect": {
+        "model": "ultralytics/cfg/models/v13/yolov13l.yaml",
+        "data": "coco8.yaml",
+        "batch": 16,
+        "imgsz": 640,
+        "metric_priority": [
+            "metrics/mAP50-95(B)",
+            "metrics/mAP50(B)",
+            "metrics/precision(B)",
+            "metrics/recall(B)",
+        ],
+    },
     "segment": {
         "model": "ultralytics/cfg/models/v13/yolov13l-seg.yaml",
         "data": "coco8-seg.yaml",
         "batch": 16,
-        "metric_priority": ["metrics/mAP50-95(M)", "metrics/mAP50(M)", "metrics/mAP50-95(B)", "metrics/mAP50(B)"],
+        "imgsz": 640,
+        "metric_priority": [
+            "metrics/mAP50(M)",
+            "metrics/mAP50-95(M)",
+            "metrics/mAP50(B)",
+            "metrics/mAP50-95(B)",
+        ],
     },
     "pose": {
         "model": "ultralytics/cfg/models/v13/yolov13l-pose.yaml",
         "data": "coco8-pose.yaml",
         "batch": 16,
-        "metric_priority": ["metrics/mAP50-95(P)", "metrics/mAP50(P)", "metrics/mAP50-95(B)", "metrics/mAP50(B)"],
+        "imgsz": 640,
+        "metric_priority": [
+            "metrics/mAP50(P)",
+            "metrics/mAP50-95(P)",
+            "metrics/mAP50(B)",
+            "metrics/mAP50-95(B)",
+        ],
     },
     "obb": {
         "model": "ultralytics/cfg/models/v13/yolov13l-obb.yaml",
         "data": "dota8.yaml",
-        "batch": 8,
-        "metric_priority": ["metrics/mAP50-95(B)", "metrics/mAP50(B)"],
+        "batch": 4,
+        "imgsz": 1024,
+        "metric_priority": [
+            "metrics/mAP50(B)",
+            "metrics/mAP50-95(B)",
+            "metrics/precision(B)",
+            "metrics/recall(B)",
+        ],
     },
 }
 
@@ -48,7 +78,14 @@ def _read_rows(csv_path: Path) -> list[dict]:
     if not csv_path.exists():
         return []
     with csv_path.open("r", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+        rows = []
+        for row in csv.DictReader(f):
+            rows.append({(k.strip() if isinstance(k, str) else k): v for k, v in row.items()})
+        return rows
+
+
+def _metric_series(rows: list[dict], metric_key: str) -> list[float]:
+    return [_ffloat(r.get(metric_key, 0.0)) for r in rows]
 
 
 def _pick_metric(task_name: str, rows: list[dict]) -> str:
@@ -56,12 +93,22 @@ def _pick_metric(task_name: str, rows: list[dict]) -> str:
         return ""
     keys = rows[-1].keys()
     for k in TASKS[task_name]["metric_priority"]:
+        if k in keys and max(_metric_series(rows, k), default=0.0) > 0.0:
+            return k
+    for k in TASKS[task_name]["metric_priority"]:
         if k in keys:
             return k
     for k in keys:
         if k.startswith("metrics/"):
             return k
     return ""
+
+
+def _metric_value(rows: list[dict], metric_key: str) -> float:
+    if not rows or not metric_key:
+        return 0.0
+    vals = _metric_series(rows, metric_key)
+    return max(vals) if vals else 0.0
 
 
 def _configure_backend(use_turing_flash: bool, disable_flash: bool):
@@ -81,7 +128,7 @@ def run_suite(
     use_turing_flash: bool,
     disable_flash: bool,
     epochs: int,
-    imgsz: int,
+    default_imgsz: int,
     workers: int,
     output_root: Path,
 ) -> dict:
@@ -100,7 +147,7 @@ def run_suite(
         YOLO(cfg["model"]).train(
             data=cfg["data"],
             epochs=epochs,
-            imgsz=imgsz,
+            imgsz=cfg.get("imgsz", default_imgsz),
             batch=cfg["batch"],
             workers=workers,
             device="0,1",
@@ -125,13 +172,14 @@ def run_suite(
             "data": cfg["data"],
             "batch": cfg["batch"],
             "epochs": epochs,
-            "imgsz": imgsz,
+            "imgsz": cfg.get("imgsz", default_imgsz),
             "wall_seconds": wall_seconds,
             "avg_epoch_seconds": wall_seconds / max(1, epochs),
             "results_csv": str(run_dir / "results.csv"),
             "weights": str(run_dir / "weights" / "best.pt"),
             "metric_key": metric_key,
-            "metric_value": _ffloat(final.get(metric_key, 0.0)) if metric_key else 0.0,
+            "metric_value": _metric_value(rows, metric_key),
+            "metric_final": _ffloat(final.get(metric_key, 0.0)) if metric_key else 0.0,
             "final_metrics": final,
         }
         tasks_out[task_name] = item
@@ -280,7 +328,9 @@ def _plot_wall_delta_pct(compare: dict, out_dir: Path):
 
 def _plot_curves(compare: dict, out_dir: Path):
     tasks = list(TASKS.keys())
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.5), sharex=False)
+    fig, axes = plt.subplots(1, len(tasks), figsize=(5 * len(tasks), 4.5), sharex=False)
+    if len(tasks) == 1:
+        axes = [axes]
 
     for ax, task_name in zip(axes, tasks):
         for backend_name, color in (("fallback", "#6c757d"), ("turing", "#2a9d8f")):
@@ -317,8 +367,9 @@ def _write_report(compare: dict, out_dir: Path, repo_report: Path):
         "",
         "## Scope",
         "- Model scale: `l` only for all benchmarks.",
-        "- Tasks: `segment`, `pose`, `obb`.",
+        "- Tasks: `detect`, `segment`, `pose`, `obb`.",
         "- Backends compared: `fallback` vs `flash_attn_turing`.",
+        "- `imgsz` is task-specific.",
         "",
         "## Backend Detection",
         f"- Fallback suite backend: `{compare['fallback']['flash_backend']}`",
@@ -329,8 +380,8 @@ def _write_report(compare: dict, out_dir: Path, repo_report: Path):
         "",
         "## Results",
         "",
-        "| Task | Batch | Fallback wall (s) | Turing wall (s) | Delta % (tu-fb)/fb | Speedup (fb/tu) | Metric key | Fallback metric | Turing metric |",
-        "|---|---:|---:|---:|---:|---:|---|---:|---:|",
+        "| Task | Batch | ImgSz | Fallback wall (s) | Turing wall (s) | Delta % (tu-fb)/fb | Speedup (fb/tu) | Metric key | Fallback metric (peak) | Turing metric (peak) |",
+        "|---|---:|---:|---:|---:|---:|---:|---|---:|---:|",
     ]
 
     for task_name in TASKS:
@@ -342,9 +393,10 @@ def _write_report(compare: dict, out_dir: Path, repo_report: Path):
         )
         metric_key = tu["metric_key"] or fb["metric_key"] or "n/a"
         lines.append(
-            "| {task} | {batch} | {fbw:.2f} | {tuw:.2f} | {dp:.2f}% | {sp:.4f}x | {mk} | {fbm:.4f} | {tum:.4f} |".format(
+            "| {task} | {batch} | {imgsz} | {fbw:.2f} | {tuw:.2f} | {dp:.2f}% | {sp:.4f}x | {mk} | {fbm:.4f} | {tum:.4f} |".format(
                 task=task_name,
                 batch=fb["batch"],
+                imgsz=fb["imgsz"],
                 fbw=fb["wall_seconds"],
                 tuw=tu["wall_seconds"],
                 dp=delta_pct,
@@ -398,6 +450,10 @@ def _sync_repo_artifacts(output_root: Path, repo_artifacts_root: Path, epochs: i
             if src.exists():
                 shutil.copy2(src, dst_backend / name)
 
+        detect_metrics = src_backend / "detect_metrics.json"
+        if detect_metrics.exists():
+            shutil.copy2(detect_metrics, dst_backend / "detect_metrics.json")
+
         for task_name in TASKS:
             src_csv = src_backend / f"{task_name}_l_{epochs}e" / "results.csv"
             if src_csv.exists():
@@ -405,7 +461,7 @@ def _sync_repo_artifacts(output_root: Path, repo_artifacts_root: Path, epochs: i
 
 
 def main():
-    epochs = int(os.getenv("Y13_BENCH_EPOCHS", "5"))
+    epochs = int(os.getenv("Y13_BENCH_EPOCHS", "30"))
     imgsz = int(os.getenv("Y13_BENCH_IMGSZ", "640"))
     workers = int(os.getenv("Y13_BENCH_WORKERS", "4"))
     output_root = Path(os.getenv("Y13_BENCH_OUT_ROOT", "/kaggle/working/phase2_l_flash_compare"))
@@ -422,7 +478,7 @@ def main():
             use_turing_flash=BACKENDS["fallback"]["use_turing_flash"],
             disable_flash=BACKENDS["fallback"]["disable_flash"],
             epochs=epochs,
-            imgsz=imgsz,
+            default_imgsz=imgsz,
             workers=workers,
             output_root=output_root,
         )
@@ -431,7 +487,7 @@ def main():
             use_turing_flash=BACKENDS["turing"]["use_turing_flash"],
             disable_flash=BACKENDS["turing"]["disable_flash"],
             epochs=epochs,
-            imgsz=imgsz,
+            default_imgsz=imgsz,
             workers=workers,
             output_root=output_root,
         )
