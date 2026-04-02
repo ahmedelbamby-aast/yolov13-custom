@@ -1,0 +1,30 @@
+{
+  "variant": "l",
+  "batch": 16,
+  "imgsz": 640,
+  "epochs": 30,
+  "wall_seconds": 544.7938693560009,
+  "mAP50": 0.00761,
+  "mAP50_95": 0.00215,
+  "results_csv": "/kaggle/working/y13_bench_slx_30e/l_bench/results.csv",
+  "weights": "/kaggle/working/y13_bench_slx_30e/l_bench/weights/best.pt",
+  "feature_map_dir": "/kaggle/working/y13_bench_slx_30e/feature_maps/l_bench",
+  "final_metrics": {
+    "epoch": "30",
+    "time": "495.696",
+    "train/box_loss": "2.97445",
+    "train/cls_loss": "4.84312",
+    "train/dfl_loss": "3.52417",
+    "metrics/precision(B)": "0.00254",
+    "metrics/recall(B)": "0.07827",
+    "metrics/mAP50(B)": "0.00761",
+    "metrics/mAP75(B)": "0.00022",
+    "metrics/mAP50-95(B)": "0.00215",
+    "val/box_loss": "3.04093",
+    "val/cls_loss": "4.22087",
+    "val/dfl_loss": "3.46713",
+    "lr/pg0": "4.3e-05",
+    "lr/pg1": "4.3e-05",
+    "lr/pg2": "4.3e-05"
+  }
+}
