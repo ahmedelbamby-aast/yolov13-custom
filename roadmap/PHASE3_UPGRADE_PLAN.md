@@ -19,6 +19,9 @@ Upgrade this custom fork from `ultralytics==8.3.63` toward the latest upstream r
 - Started Phase 3 branch and pushed first upgrade commit.
 - Added Muon-family optimizer support (`MuSGD` + `Muon`) and integrated optimizer selection into trainer.
 - Verified with a real 1-epoch Kaggle run using `optimizer=MuSGD`.
+- Upgraded package version surface to `ultralytics==8.4.33` in `ultralytics/__init__.py`.
+- Synced project metadata and dependency baselines in `pyproject.toml` to latest upstream format.
+- Refreshed `requirements.txt` runtime pins for current fork workflows.
 
 ## Upgrade workstreams
 
