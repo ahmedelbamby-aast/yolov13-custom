@@ -52,7 +52,14 @@ repo_root = Path(r"{PROJECT_ROOT}")
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
+import os
+
 overrides = {overrides}
+
+if "use_turing_flash" in overrides:
+    os.environ["Y13_USE_TURING_FLASH"] = "1" if overrides["use_turing_flash"] else "0"
+if "force_disable_flash" in overrides:
+    os.environ["Y13_DISABLE_FLASH"] = "1" if overrides["force_disable_flash"] else "0"
 
 if __name__ == "__main__":
     from {module} import {name}
@@ -66,7 +73,7 @@ if __name__ == "__main__":
     cfg = DEFAULT_CFG_DICT.copy()
     cfg.update(save_dir='')
     trainer = {name}(cfg=cfg, overrides=overrides)
-    trainer.args.model = "{getattr(trainer.hub_session, 'model_url', trainer.args.model)}"
+    trainer.args.model = "{getattr(trainer.hub_session, "model_url", trainer.args.model)}"
     trainer.train()
 """
 

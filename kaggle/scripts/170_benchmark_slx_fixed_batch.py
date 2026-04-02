@@ -117,12 +117,23 @@ def plot_summary(run_root: Path, results: dict, title_suffix: str):
     plt.close(fig)
 
 
-def run(data_yaml: str = "coco128.yaml", epochs: int = 30, workers: int = 4, use_turing_flash: bool = True, force_disable_flash: bool = False, run_name: str = "y13_bench_slx_30e_turing_fixed") -> dict:
+def run(
+    data_yaml: str = "coco128.yaml",
+    epochs: int = 30,
+    workers: int = 4,
+    use_turing_flash: bool = True,
+    force_disable_flash: bool = False,
+    run_name: str = "y13_bench_slx_30e_turing_fixed",
+) -> dict:
     os.environ["Y13_USE_TURING_FLASH"] = "1" if use_turing_flash else "0"
     os.environ["Y13_DISABLE_FLASH"] = "1" if force_disable_flash else "0"
 
-    from ultralytics import YOLO
     from ultralytics.nn.modules import block
+
+    if hasattr(block, "configure_flash_backend"):
+        block.configure_flash_backend(disable_flash=force_disable_flash, use_turing_flash=use_turing_flash)
+
+    from ultralytics import YOLO
 
     run_root = Path("/kaggle/working") / run_name
     run_root.mkdir(parents=True, exist_ok=True)
@@ -174,7 +185,9 @@ def run(data_yaml: str = "coco128.yaml", epochs: int = 30, workers: int = 4, use
         (run_root / f"{v}_metrics.json").write_text(json.dumps(item, indent=2), encoding="utf-8")
 
     backend = getattr(block, "FLASH_BACKEND", "unknown")
-    title_suffix = "Turing Flash fixed batches" if use_turing_flash and not force_disable_flash else "Fallback fixed batches"
+    title_suffix = (
+        "Turing Flash fixed batches" if use_turing_flash and not force_disable_flash else "Fallback fixed batches"
+    )
     plot_summary(run_root, results, title_suffix)
 
     summary = {

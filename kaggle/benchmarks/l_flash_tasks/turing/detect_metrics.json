@@ -1,0 +1,33 @@
+{
+  "task": "detect",
+  "model": "ultralytics/cfg/models/v13/yolov13l.yaml",
+  "data": "coco8.yaml",
+  "batch": 16,
+  "epochs": 30,
+  "imgsz": 640,
+  "wall_seconds": 144.41965805700056,
+  "avg_epoch_seconds": 4.813988601900019,
+  "results_csv": "/kaggle/working/phase2_l_flash_compare_v2/turing/detect_l_30e/results.csv",
+  "weights": "/kaggle/working/phase2_l_flash_compare_v2/turing/detect_l_30e/weights/best.pt",
+  "metric_key": "metrics/mAP50-95(B)",
+  "metric_value": 0.0,
+  "metric_final": 0.0,
+  "final_metrics": {
+    "epoch": "30",
+    "time": "100.731",
+    "train/box_loss": "2.81214",
+    "train/cls_loss": "5.39672",
+    "train/dfl_loss": "4.21288",
+    "metrics/precision(B)": "0",
+    "metrics/recall(B)": "0",
+    "metrics/mAP50(B)": "0",
+    "metrics/mAP75(B)": "0",
+    "metrics/mAP50-95(B)": "0",
+    "val/box_loss": "3.37492",
+    "val/cls_loss": "5.32416",
+    "val/dfl_loss": "4.15694",
+    "lr/pg0": "1.247e-05",
+    "lr/pg1": "1.247e-05",
+    "lr/pg2": "1.247e-05"
+  }
+}
