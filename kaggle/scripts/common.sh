@@ -9,7 +9,7 @@ export Y13_WORKDIR="${Y13_WORKDIR:-/kaggle/work_here}"
 export Y13_OUTPUT_DIR="${Y13_OUTPUT_DIR:-/kaggle/working}"
 
 # Flash backend controls
-export Y13_USE_TURING_FLASH="${Y13_USE_TURING_FLASH:-0}"
+export Y13_USE_TURING_FLASH="${Y13_USE_TURING_FLASH:-1}"
 export Y13_INSTALL_TURING_FLASH="${Y13_INSTALL_TURING_FLASH:-0}"
 export Y13_DISABLE_FLASH="${Y13_DISABLE_FLASH:-0}"
 

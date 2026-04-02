@@ -36,7 +36,7 @@ for line in lines:
         print(f'[warn] failed to install: {line}')
 PY
 
-if [[ "${Y13_INSTALL_TURING_FLASH:-0}" == "1" ]]; then
+if [[ "${Y13_INSTALL_TURING_FLASH:-0}" == "1" || "${Y13_USE_TURING_FLASH:-0}" == "1" ]]; then
   bash "${SCRIPT_DIR}/25_install_turing_flash.sh"
 fi
 

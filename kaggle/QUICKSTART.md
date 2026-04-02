@@ -21,8 +21,9 @@ This pipeline will:
 
 ## Optional Flash Backend Flags (T4/Turing)
 ```bash
-export Y13_INSTALL_TURING_FLASH=1   # optional install/build step
-export Y13_USE_TURING_FLASH=1       # runtime backend attempt
+# default runtime uses Turing flash on T4
+export Y13_INSTALL_TURING_FLASH=1   # one-time install/build
+# export Y13_USE_TURING_FLASH=0     # disable if needed
 # export Y13_DISABLE_FLASH=1        # force fallback backend
 ```
 

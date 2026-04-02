@@ -14,5 +14,5 @@ Notebooks:
 
 Optional flash backend flags:
 - `Y13_INSTALL_TURING_FLASH=1` build/install Turing flash extension
-- `Y13_USE_TURING_FLASH=1` enable turing flash backend at runtime
+- `Y13_USE_TURING_FLASH=0` disable turing flash backend at runtime (default is enabled)
 - `Y13_DISABLE_FLASH=1` force fallback backend

@@ -1197,6 +1197,9 @@ try:
             except Exception as e:
                 FLASH_ERROR = str(e)
 
+    else:
+        logger.info(f"Flash backend selected: {FLASH_BACKEND}")
+
     if not USE_FLASH_ATTN:
         if disable_flash:
             logger.info("Flash attention disabled by Y13_DISABLE_FLASH=1, using fallback attention backend.")
@@ -1256,8 +1259,8 @@ class AAttn(nn.Module):
 
         qk = self.qk(x).flatten(2).transpose(1, 2)
         v = self.v(x)
-        pp = self.pe(v)
-        v = v.flatten(2).transpose(1, 2)
+        pp = self.pe(v).contiguous()
+        v = v.flatten(2).transpose(1, 2).contiguous()
 
         if self.area > 1:
             qk = qk.reshape(B * self.area, N // self.area, C * 2)
@@ -1276,9 +1279,9 @@ class AAttn(nn.Module):
                 v.contiguous().half()
             ).to(q.dtype)
         else:
-            q = q.transpose(1, 2).view(B, self.num_heads, self.head_dim, N)
-            k = k.transpose(1, 2).view(B, self.num_heads, self.head_dim, N)
-            v = v.transpose(1, 2).view(B, self.num_heads, self.head_dim, N)
+            q = q.transpose(1, 2).reshape(B, self.num_heads, self.head_dim, N).contiguous()
+            k = k.transpose(1, 2).reshape(B, self.num_heads, self.head_dim, N).contiguous()
+            v = v.transpose(1, 2).reshape(B, self.num_heads, self.head_dim, N).contiguous()
 
             attn = (q.transpose(-2, -1) @ k) * (self.head_dim ** -0.5)
             max_attn = attn.max(dim=-1, keepdim=True).values
@@ -1286,12 +1289,12 @@ class AAttn(nn.Module):
             attn = exp_attn / exp_attn.sum(dim=-1, keepdim=True)
             x = (v @ attn.transpose(-2, -1))
 
-            x = x.permute(0, 3, 1, 2)
+            x = x.permute(0, 3, 1, 2).contiguous()
 
         if self.area > 1:
             x = x.reshape(B // self.area, N * self.area, C)
             B, N, _ = x.shape
-        x = x.reshape(B, H, W, C).permute(0, 3, 1, 2)
+        x = x.reshape(B, H, W, C).permute(0, 3, 1, 2).contiguous()
 
         return self.proj(x + pp)
     

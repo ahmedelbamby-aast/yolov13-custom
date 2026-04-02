@@ -22,10 +22,16 @@ else
   git -C "${WORKTREE}" pull --ff-only || true
 fi
 
+git -C "${WORKTREE}" submodule update --init --recursive
+
+export CXX=g++
+export CC=gcc
+export MAX_JOBS=2
+
 uv pip install --python "${PY}" ninja setuptools wheel
 
 set +e
-uv pip install --python "${PY}" -v "${WORKTREE}"
+uv pip install --python "${PY}" -v --no-build-isolation "${WORKTREE}"
 rc=$?
 set -e
 
