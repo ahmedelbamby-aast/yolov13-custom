@@ -69,86 +69,17 @@ bash kaggle/scripts/32_cuda_sanity_report.sh
 
 Default behavior in this repo prefers Turing flash on T4 when available.
 
-### 4.1 Install / build Turing FlashAttention
-
-The repo supports installing `ssiu/flash-attention-turing` through:
-
-- `kaggle/scripts/20_install_deps.sh` (auto-calls `25_install_turing_flash.sh` when flags are enabled)
-- or direct call to `kaggle/scripts/25_install_turing_flash.sh`
-
-Recommended setup sequence:
-
 ```bash
-cd /kaggle/work_here/yolov13
-source .venv/bin/activate
-
-# enable install + runtime preference
+# optional one-time install/build of turing flash
 export Y13_INSTALL_TURING_FLASH=1
-export Y13_USE_TURING_FLASH=1
-export Y13_DISABLE_FLASH=0
 
-# install project deps and (if enabled) build flash-attention-turing
-bash kaggle/scripts/20_install_deps.sh
-```
+# flash runtime control
+export Y13_USE_TURING_FLASH=1   # enable turing path
+export Y13_DISABLE_FLASH=0      # do not force fallback
 
-Notes:
-
-- installer worktree path: `/kaggle/work_here/flash-attention-turing`
-- build is best-effort; if it fails, repo falls back to non-flash attention path
-- you can rerun only Turing install with:
-
-```bash
-cd /kaggle/work_here/yolov13
-export Y13_INSTALL_TURING_FLASH=1
-bash kaggle/scripts/25_install_turing_flash.sh
-```
-
-### 4.2 Verify installation and backend resolution
-
-```bash
-cd /kaggle/work_here/yolov13
-source .venv/bin/activate
-
-# verify Python package import
-python - <<'PY'
-import importlib
-mod = importlib.import_module('flash_attn_turing')
-print('flash_attn_turing import ok:', mod is not None)
-PY
-
-# verify backend picked by repo attention selector
-Y13_USE_TURING_FLASH=1 Y13_DISABLE_FLASH=0 python - <<'PY'
-from ultralytics.nn.modules import block
-block.configure_flash_backend(disable_flash=False, use_turing_flash=True)
-print('FLASH_BACKEND =', getattr(block, 'FLASH_BACKEND', 'unknown'))
-PY
-```
-
-Expected backend on T4 with successful build:
-
-- `FLASH_BACKEND = flash_attn_turing`
-
-### 4.3 Runtime controls during train/val/test/export/benchmark
-
-```bash
-# preferred Turing path
-export Y13_USE_TURING_FLASH=1
-export Y13_DISABLE_FLASH=0
-
-# force fallback (debug / compare)
+# force fallback backend
 # export Y13_DISABLE_FLASH=1
 ```
-
-For script-level control, pass `--flash-mode`:
-
-- old style: `scripts/train.py`, `scripts/val.py`, `scripts/test.py`, `scripts/export.py`, `scripts/benchmark.py`
-- new API-style: `scripts/api_style/*.py`
-
-Modes:
-
-- `--flash-mode turing`
-- `--flash-mode auto`
-- `--flash-mode fallback`
 
 ## 5) Core developer workflows (recommended)
 
@@ -549,65 +480,6 @@ If you want the integrated final-run package (train + feature-map projection + `
 ```bash
 cd /kaggle/work_here/yolov13
 bash kaggle/scripts/run_custom_time2_tmp.sh
-```
-
-### 6.2.1) Fix class-ID mismatch quickly (new helper script)
-
-If you see warnings like:
-
-- `Label class 9 exceeds dataset class count 2`
-
-then your `data.yaml` was reduced (e.g., to 2 classes) but label `.txt` files still contain old IDs.
-
-Use `kaggle/scripts/38_class_remap.py` to keep selected classes and remap them to `0..N-1`.
-
-Keep classes by **name** (recommended):
-
-```bash
-cd /kaggle/work_here/yolov13
-source .venv/bin/activate
-
-python kaggle/scripts/38_class_remap.py \
-  --data /kaggle/work_here/datasets/my_detect/data.yaml \
-  --include-name student \
-  --include-name teacher
-```
-
-Keep classes by **original ID**:
-
-```bash
-python kaggle/scripts/38_class_remap.py \
-  --data /kaggle/work_here/datasets/my_detect/data.yaml \
-  --include-id 8 \
-  --include-id 9
-```
-
-Preview only (no write):
-
-```bash
-python kaggle/scripts/38_class_remap.py \
-  --data /kaggle/work_here/datasets/my_detect/data.yaml \
-  --include-name student \
-  --include-name teacher \
-  --dry-run
-```
-
-What the script does:
-
-- rewrites all `labels/*.txt` across train/val/valid/test
-- drops boxes from non-selected classes
-- remaps selected classes to contiguous IDs starting at 0
-- updates `data.yaml` `names` and `nc`
-- deletes stale `*.cache` files by default (use `--keep-cache` to disable)
-
-After remap, rerun val first (single GPU) before DDP:
-
-```bash
-CUDA_LAUNCH_BLOCKING=1 python scripts/val.py \
-  --model ultralytics/cfg/models/v13/yolov13l.yaml \
-  --data /kaggle/work_here/datasets/my_detect/data.yaml \
-  --split val \
-  --device 0
 ```
 
 ## 6.3) Full pipeline example (old-style scripts)
