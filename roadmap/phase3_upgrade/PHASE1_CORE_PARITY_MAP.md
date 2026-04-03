@@ -67,6 +67,11 @@ Reference baseline: `upstream/main`
   - safer class-name remap for active classes only.
 - `ultralytics/utils/dist.py` received low-risk parity-level typing updates while preserving custom DDP flash env
   propagation and robust override serialization.
+- `ultralytics/engine/trainer.py` `get_dataset()` moved closer to upstream behavior while preserving custom task-aware
+  det dataset validation:
+  - `ul://` and `.ndjson` conversion path support
+  - safer suffix parsing with `rsplit('.', 1)`
+  - `single_cls` class-name override handling.
 - Added phase1 regression evidence:
   - `roadmap/artifacts/phase3_task_preflight_smoke.json` (`6/6` pass)
   - `roadmap/artifacts/phase3_model_load_matrix.json` (`16/16` pass)

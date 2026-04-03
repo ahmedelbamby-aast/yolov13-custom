@@ -574,9 +574,17 @@ class BaseTrainer:
         Returns None if data format is not recognized.
         """
         try:
+            data_str = str(self.args.data)
+            if data_str.endswith(".ndjson") or (data_str.startswith("ul://") and "/datasets/" in data_str):
+                import asyncio
+
+                from ultralytics.data.converter import convert_ndjson_to_yolo
+
+                self.args.data = str(asyncio.run(convert_ndjson_to_yolo(check_file(self.args.data))))
+
             if self.args.task == "classify":
                 data = check_cls_dataset(self.args.data)
-            elif self.args.data.split(".")[-1] in {"yaml", "yml"} or self.args.task in {
+            elif str(self.args.data).rsplit(".", 1)[-1] in {"yaml", "yml"} or self.args.task in {
                 "detect",
                 "segment",
                 "pose",
@@ -587,6 +595,10 @@ class BaseTrainer:
                     self.args.data = data["yaml_file"]  # for validating 'yolo train data=url.zip' usage
         except Exception as e:
             raise RuntimeError(emojis(f"Dataset '{clean_url(self.args.data)}' error ❌ {e}")) from e
+        if self.args.single_cls:
+            LOGGER.info("Overriding class names with single class.")
+            data["names"] = {0: "item"}
+            data["nc"] = 1
         self.data = data
         return data["train"], data.get("val") or data.get("test")
 
