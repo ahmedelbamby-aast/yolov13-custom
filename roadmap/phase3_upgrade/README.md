@@ -24,3 +24,8 @@ Execution principles:
 - Push incremental commits after each milestone.
 - Preserve custom behavior with explicit acceptance checks.
 - Prefer upstream behavior by default, then layer custom deltas with minimal drift.
+
+Current status:
+
+- Phase 1 is active and substantially advanced with regression artifacts committed.
+- Next execution step: continue into Phase 2 custom-feature replay hardening on top of Phase 1 baseline.
