@@ -67,3 +67,7 @@ Reference baseline: `upstream/main`
   - safer class-name remap for active classes only.
 - `ultralytics/utils/dist.py` received low-risk parity-level typing updates while preserving custom DDP flash env
   propagation and robust override serialization.
+- Added phase1 regression evidence:
+  - `roadmap/artifacts/phase3_task_preflight_smoke.json` (`6/6` pass)
+  - `roadmap/artifacts/phase3_model_load_matrix.json` (`16/16` pass)
+  - `roadmap/artifacts/phase3_task_val_smoke.json` (`8/8` pass across fallback+turing).

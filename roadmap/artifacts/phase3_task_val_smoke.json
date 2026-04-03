@@ -1,0 +1,263 @@
+{
+  "generated_at": 1775176543.3582249,
+  "runs": [
+    {
+      "mode": "fallback",
+      "backend": "fallback",
+      "task": "detect",
+      "model": "ultralytics/cfg/models/v13/yolov13n.yaml",
+      "data": "coco8.yaml",
+      "imgsz": 64,
+      "status": "ok",
+      "elapsed_s": 11.90564480499961,
+      "metric_keys": [
+        "fitness",
+        "metrics/mAP50(B)",
+        "metrics/mAP50-95(B)",
+        "metrics/mAP75(B)",
+        "metrics/precision(B)",
+        "metrics/recall(B)"
+      ],
+      "has_map75B": true,
+      "metrics": {
+        "metrics/precision(B)": 0.0,
+        "metrics/recall(B)": 0.0,
+        "metrics/mAP50(B)": 0.0,
+        "metrics/mAP75(B)": 0.0,
+        "metrics/mAP50-95(B)": 0.0,
+        "fitness": 0.0
+      }
+    },
+    {
+      "mode": "fallback",
+      "backend": "fallback",
+      "task": "segment",
+      "model": "ultralytics/cfg/models/v13/yolov13n-seg.yaml",
+      "data": "coco8-seg.yaml",
+      "imgsz": 64,
+      "status": "ok",
+      "elapsed_s": 4.258146600997861,
+      "metric_keys": [
+        "fitness",
+        "metrics/mAP50(B)",
+        "metrics/mAP50(M)",
+        "metrics/mAP50-95(B)",
+        "metrics/mAP50-95(M)",
+        "metrics/mAP75(B)",
+        "metrics/mAP75(M)",
+        "metrics/precision(B)",
+        "metrics/precision(M)",
+        "metrics/recall(B)",
+        "metrics/recall(M)"
+      ],
+      "has_map75B": true,
+      "metrics": {
+        "metrics/precision(B)": 0.0,
+        "metrics/recall(B)": 0.0,
+        "metrics/mAP50(B)": 0.0,
+        "metrics/mAP75(B)": 0.0,
+        "metrics/mAP50-95(B)": 0.0,
+        "metrics/precision(M)": 0.0,
+        "metrics/recall(M)": 0.0,
+        "metrics/mAP50(M)": 0.0,
+        "metrics/mAP75(M)": 0.0,
+        "metrics/mAP50-95(M)": 0.0,
+        "fitness": 0.0
+      }
+    },
+    {
+      "mode": "fallback",
+      "backend": "fallback",
+      "task": "pose",
+      "model": "ultralytics/cfg/models/v13/yolov13n-pose.yaml",
+      "data": "coco8-pose.yaml",
+      "imgsz": 64,
+      "status": "ok",
+      "elapsed_s": 3.9048718710000685,
+      "metric_keys": [
+        "fitness",
+        "metrics/mAP50(B)",
+        "metrics/mAP50(P)",
+        "metrics/mAP50-95(B)",
+        "metrics/mAP50-95(P)",
+        "metrics/mAP75(B)",
+        "metrics/mAP75(P)",
+        "metrics/precision(B)",
+        "metrics/precision(P)",
+        "metrics/recall(B)",
+        "metrics/recall(P)"
+      ],
+      "has_map75B": true,
+      "metrics": {
+        "metrics/precision(B)": 0.0,
+        "metrics/recall(B)": 0.0,
+        "metrics/mAP50(B)": 0.0,
+        "metrics/mAP75(B)": 0.0,
+        "metrics/mAP50-95(B)": 0.0,
+        "metrics/precision(P)": 0.0,
+        "metrics/recall(P)": 0.0,
+        "metrics/mAP50(P)": 0.0,
+        "metrics/mAP75(P)": 0.0,
+        "metrics/mAP50-95(P)": 0.0,
+        "fitness": 0.0
+      }
+    },
+    {
+      "mode": "fallback",
+      "backend": "fallback",
+      "task": "obb",
+      "model": "ultralytics/cfg/models/v13/yolov13n-obb.yaml",
+      "data": "dota8.yaml",
+      "imgsz": 256,
+      "status": "ok",
+      "elapsed_s": 4.6226799260002736,
+      "metric_keys": [
+        "fitness",
+        "metrics/mAP50(B)",
+        "metrics/mAP50-95(B)",
+        "metrics/mAP75(B)",
+        "metrics/precision(B)",
+        "metrics/recall(B)"
+      ],
+      "has_map75B": true,
+      "metrics": {
+        "metrics/precision(B)": 0.0,
+        "metrics/recall(B)": 0.0,
+        "metrics/mAP50(B)": 0.0,
+        "metrics/mAP75(B)": 0.0,
+        "metrics/mAP50-95(B)": 0.0,
+        "fitness": 0.0
+      }
+    },
+    {
+      "mode": "turing",
+      "backend": "flash_attn_turing",
+      "task": "detect",
+      "model": "ultralytics/cfg/models/v13/yolov13n.yaml",
+      "data": "coco8.yaml",
+      "imgsz": 64,
+      "status": "ok",
+      "elapsed_s": 4.215418634001253,
+      "metric_keys": [
+        "fitness",
+        "metrics/mAP50(B)",
+        "metrics/mAP50-95(B)",
+        "metrics/mAP75(B)",
+        "metrics/precision(B)",
+        "metrics/recall(B)"
+      ],
+      "has_map75B": true,
+      "metrics": {
+        "metrics/precision(B)": 0.0,
+        "metrics/recall(B)": 0.0,
+        "metrics/mAP50(B)": 0.0,
+        "metrics/mAP75(B)": 0.0,
+        "metrics/mAP50-95(B)": 0.0,
+        "fitness": 0.0
+      }
+    },
+    {
+      "mode": "turing",
+      "backend": "flash_attn_turing",
+      "task": "segment",
+      "model": "ultralytics/cfg/models/v13/yolov13n-seg.yaml",
+      "data": "coco8-seg.yaml",
+      "imgsz": 64,
+      "status": "ok",
+      "elapsed_s": 4.030886543998349,
+      "metric_keys": [
+        "fitness",
+        "metrics/mAP50(B)",
+        "metrics/mAP50(M)",
+        "metrics/mAP50-95(B)",
+        "metrics/mAP50-95(M)",
+        "metrics/mAP75(B)",
+        "metrics/mAP75(M)",
+        "metrics/precision(B)",
+        "metrics/precision(M)",
+        "metrics/recall(B)",
+        "metrics/recall(M)"
+      ],
+      "has_map75B": true,
+      "metrics": {
+        "metrics/precision(B)": 0.0,
+        "metrics/recall(B)": 0.0,
+        "metrics/mAP50(B)": 0.0,
+        "metrics/mAP75(B)": 0.0,
+        "metrics/mAP50-95(B)": 0.0,
+        "metrics/precision(M)": 0.0,
+        "metrics/recall(M)": 0.0,
+        "metrics/mAP50(M)": 0.0,
+        "metrics/mAP75(M)": 0.0,
+        "metrics/mAP50-95(M)": 0.0,
+        "fitness": 0.0
+      }
+    },
+    {
+      "mode": "turing",
+      "backend": "flash_attn_turing",
+      "task": "pose",
+      "model": "ultralytics/cfg/models/v13/yolov13n-pose.yaml",
+      "data": "coco8-pose.yaml",
+      "imgsz": 64,
+      "status": "ok",
+      "elapsed_s": 4.300632153001061,
+      "metric_keys": [
+        "fitness",
+        "metrics/mAP50(B)",
+        "metrics/mAP50(P)",
+        "metrics/mAP50-95(B)",
+        "metrics/mAP50-95(P)",
+        "metrics/mAP75(B)",
+        "metrics/mAP75(P)",
+        "metrics/precision(B)",
+        "metrics/precision(P)",
+        "metrics/recall(B)",
+        "metrics/recall(P)"
+      ],
+      "has_map75B": true,
+      "metrics": {
+        "metrics/precision(B)": 0.0,
+        "metrics/recall(B)": 0.0,
+        "metrics/mAP50(B)": 0.0,
+        "metrics/mAP75(B)": 0.0,
+        "metrics/mAP50-95(B)": 0.0,
+        "metrics/precision(P)": 0.0,
+        "metrics/recall(P)": 0.0,
+        "metrics/mAP50(P)": 0.0,
+        "metrics/mAP75(P)": 0.0,
+        "metrics/mAP50-95(P)": 0.0,
+        "fitness": 0.0
+      }
+    },
+    {
+      "mode": "turing",
+      "backend": "flash_attn_turing",
+      "task": "obb",
+      "model": "ultralytics/cfg/models/v13/yolov13n-obb.yaml",
+      "data": "dota8.yaml",
+      "imgsz": 256,
+      "status": "ok",
+      "elapsed_s": 4.47775899899716,
+      "metric_keys": [
+        "fitness",
+        "metrics/mAP50(B)",
+        "metrics/mAP50-95(B)",
+        "metrics/mAP75(B)",
+        "metrics/precision(B)",
+        "metrics/recall(B)"
+      ],
+      "has_map75B": true,
+      "metrics": {
+        "metrics/precision(B)": 0.0,
+        "metrics/recall(B)": 0.0,
+        "metrics/mAP50(B)": 0.0,
+        "metrics/mAP75(B)": 0.0,
+        "metrics/mAP50-95(B)": 0.0,
+        "fitness": 0.0
+      }
+    }
+  ],
+  "ok": 8,
+  "fail": 0
+}

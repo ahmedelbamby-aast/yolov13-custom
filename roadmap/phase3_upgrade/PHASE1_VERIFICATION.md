@@ -22,6 +22,12 @@ Branch: `phase3-upgrade-ultralytics-and-deps`
    - Result: `16/16` configs loaded successfully.
    - Artifact: `roadmap/artifacts/phase3_model_load_matrix.json`
 
+5. Task validation smoke matrix (fallback + turing)
+   - Scope: `detect`, `segment`, `pose`, `obb` under both backend modes.
+   - Result: `8/8` runs passed.
+   - Turing path confirmed active (`FLASH_BACKEND=flash_attn_turing`).
+   - Artifact: `roadmap/artifacts/phase3_task_val_smoke.json`
+
 ## Notes
 
 - Core runtime is now on `ultralytics.__version__ == 8.4.33` surface.
