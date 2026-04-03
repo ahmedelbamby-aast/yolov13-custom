@@ -44,3 +44,4 @@ Create a stable baseline that matches latest Ultralytics core patterns as closel
 - In progress and partially complete.
 - `MuSGD` support integrated and verified by real Kaggle run.
 - `__init__` and `pyproject.toml` baseline alignment completed.
+- Diff baseline captured in `roadmap/phase3_upgrade/PHASE1_DIFF_BASELINE.md`.
