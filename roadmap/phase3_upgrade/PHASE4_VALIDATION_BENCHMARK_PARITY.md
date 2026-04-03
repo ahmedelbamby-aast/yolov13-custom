@@ -28,3 +28,16 @@ Prove that the upgraded stack preserves expected behavior and performance charac
 - All key workflows pass on Kaggle.
 - Plot/report artifacts are regenerated and synced.
 - No critical regressions in task functionality.
+
+## Progress Snapshot
+
+- Re-ran L-scale fallback vs turing benchmark suite on upgraded branch (5 epochs):
+  - output root: `/kaggle/working/phase3_l_flash_compare_5e`
+  - fallback backend: `fallback`
+  - turing backend: `flash_attn_turing`
+  - tasks covered: `detect`, `segment`, `pose`, `obb`
+- Synced benchmark artifacts and report:
+  - `kaggle/benchmarks/l_flash_tasks/`
+  - `kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md`
+- Added benchmark summary artifact:
+  - `roadmap/artifacts/phase3_l_flash_compare_5e_summary.json`

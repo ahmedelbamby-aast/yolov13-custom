@@ -30,4 +30,5 @@ Current status:
 - Phase 1 verification gates are passing with artifact evidence committed.
 - Phase 3 dependency/runtime alignment has successful first execution snapshot on Kaggle.
 - Phase 2 replay smoke matrix is passing for fallback+turing across detect/segment/pose/obb.
+- Phase 4 benchmark rerun on upgraded baseline completed for fallback vs turing (`detect/segment/pose/obb`, 5e).
 - Next execution step: continue deeper parity hardening and expand benchmark coverage on the upgraded baseline.
