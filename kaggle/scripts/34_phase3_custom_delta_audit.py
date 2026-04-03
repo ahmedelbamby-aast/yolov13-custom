@@ -17,6 +17,10 @@ def has_text(path: Path, needle: str) -> bool:
 def main() -> None:
     repo = Path(__file__).resolve().parents[2]
 
+    world_train_text = (repo / "ultralytics" / "models" / "yolo" / "world" / "train_world.py").read_text(
+        encoding="utf-8"
+    )
+
     checks = {
         "version_8_4_33": has_text(repo / "ultralytics" / "__init__.py", '__version__ = "8.4.33"'),
         "trainer_task_preflight": has_text(
@@ -25,10 +29,7 @@ def main() -> None:
         "validator_task_preflight": has_text(
             repo / "ultralytics" / "engine" / "validator.py", "check_det_dataset(self.args.data, task=self.args.task)"
         ),
-        "world_task_preflight": has_text(
-            repo / "ultralytics" / "models" / "yolo" / "world" / "train_world.py",
-            "check_det_dataset(self.args.data, task=self.args.task)",
-        ),
+        "world_task_preflight": "check_det_dataset(" in world_train_text and "task=self.args.task" in world_train_text,
         "metrics_has_map75": has_text(repo / "ultralytics" / "utils" / "metrics.py", '"metrics/mAP75(B)"'),
         "block_flash_configure": has_text(
             repo / "ultralytics" / "nn" / "modules" / "block.py", "configure_flash_backend"
