@@ -1,0 +1,26 @@
+{
+  "model": "/kaggle/working/phase3_final_gate/train_detect_1e/weights/best.pt",
+  "task": "detect",
+  "flash_backend": "flash_attn_turing",
+  "device": "0",
+  "results": [
+    {
+      "format": "onnx",
+      "artifact": "/kaggle/working/phase3_final_gate/train_detect_1e/weights/best.onnx",
+      "half_used": false,
+      "metric_key": "metrics/mAP50-95(B)",
+      "metric": 0.0,
+      "inference_ms": 7.667183876037598,
+      "status": "ok"
+    },
+    {
+      "format": "engine",
+      "artifact": "/kaggle/working/phase3_final_gate/train_detect_1e/weights/best.engine",
+      "half_used": false,
+      "metric_key": "metrics/mAP50-95(B)",
+      "metric": 0.0,
+      "inference_ms": 3.5140514373779297,
+      "status": "ok"
+    }
+  ]
+}

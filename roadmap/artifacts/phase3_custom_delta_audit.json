@@ -1,0 +1,18 @@
+{
+  "total": 11,
+  "ok": 11,
+  "fail": 0,
+  "checks": {
+    "version_8_4_33": true,
+    "trainer_task_preflight": true,
+    "validator_task_preflight": true,
+    "world_task_preflight": true,
+    "metrics_has_map75": true,
+    "block_flash_configure": true,
+    "block_flash_configured_flag": true,
+    "dist_flash_env_propagation": true,
+    "trainer_musgd_present": true,
+    "v13_task_config_set_present": true,
+    "developer_scripts_present": true
+  }
+}

@@ -483,10 +483,11 @@ def check_det_dataset(dataset, autodownload=True, task=None):
         data["nc"] = len(data["names"])
 
     data["names"] = check_class_names(data["names"])
+    data["channels"] = data.get("channels", 3)
 
     # Resolve paths
     path = Path(extract_dir or data.get("path") or Path(data.get("yaml_file", "")).parent)  # dataset root
-    if not path.is_absolute():
+    if not path.exists() and not path.is_absolute():
         path = (DATASETS_DIR / path).resolve()
 
     # Set paths
@@ -519,7 +520,8 @@ def check_det_dataset(dataset, autodownload=True, task=None):
                 safe_download(url=s, dir=DATASETS_DIR, delete=True)
             elif s.startswith("bash "):  # bash script
                 LOGGER.info(f"Running {s} ...")
-                r = os.system(s)
+                subprocess.run(s.split(), check=True)
+                r = 0
             else:  # python script
                 exec(s, {"yaml": data})
             dt = f"({round(time.time() - t, 1)}s)"

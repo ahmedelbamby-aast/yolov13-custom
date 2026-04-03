@@ -14,6 +14,7 @@ import time
 import warnings
 from copy import copy, deepcopy
 from datetime import datetime, timedelta
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -24,6 +25,7 @@ from torch import nn, optim
 from ultralytics.cfg import get_cfg, get_save_dir
 from ultralytics.data.utils import check_cls_dataset, check_det_dataset
 from ultralytics.nn.tasks import attempt_load_one_weight, attempt_load_weights
+from ultralytics.optim import MuSGD
 from ultralytics.utils import (
     DEFAULT_CFG,
     LOCAL_RANK,
@@ -52,6 +54,7 @@ from ultralytics.utils.torch_utils import (
     select_device,
     strip_optimizer,
     torch_distributed_zero_first,
+    unwrap_model,
 )
 
 
@@ -130,7 +133,8 @@ class BaseTrainer:
         # Model and Dataset
         self.model = check_model_file_from_stem(self.args.model)  # add suffix, i.e. yolov8n -> yolov8n.pt
         with torch_distributed_zero_first(LOCAL_RANK):  # avoid auto-downloading dataset multiple times
-            self.trainset, self.testset = self.get_dataset()
+            data = self.get_dataset()
+            self.trainset, self.testset = data["train"], data.get("val") or data.get("test")
         self.ema = None
 
         # Optimization utils init
@@ -571,9 +575,17 @@ class BaseTrainer:
         Returns None if data format is not recognized.
         """
         try:
+            data_str = str(self.args.data)
+            if data_str.endswith(".ndjson") or (data_str.startswith("ul://") and "/datasets/" in data_str):
+                import asyncio
+
+                from ultralytics.data.converter import convert_ndjson_to_yolo
+
+                self.args.data = str(asyncio.run(convert_ndjson_to_yolo(check_file(self.args.data))))
+
             if self.args.task == "classify":
                 data = check_cls_dataset(self.args.data)
-            elif self.args.data.split(".")[-1] in {"yaml", "yml"} or self.args.task in {
+            elif str(self.args.data).rsplit(".", 1)[-1] in {"yaml", "yml"} or self.args.task in {
                 "detect",
                 "segment",
                 "pose",
@@ -584,8 +596,12 @@ class BaseTrainer:
                     self.args.data = data["yaml_file"]  # for validating 'yolo train data=url.zip' usage
         except Exception as e:
             raise RuntimeError(emojis(f"Dataset '{clean_url(self.args.data)}' error ❌ {e}")) from e
+        if self.args.single_cls:
+            LOGGER.info("Overriding class names with single class.")
+            data["names"] = {0: "item"}
+            data["nc"] = 1
         self.data = data
-        return data["train"], data.get("val") or data.get("test")
+        return data
 
     def setup_model(self):
         """Load/create/download model for any task."""
@@ -622,7 +638,14 @@ class BaseTrainer:
 
         The returned dict is expected to contain "fitness" key.
         """
+        if self.ema and getattr(self, "world_size", 1) > 1:
+            for buffer in self.ema.ema.buffers():
+                dist.broadcast(buffer, src=0)
+
         metrics = self.validator(self)
+        if metrics is None:
+            return None, None
+
         fitness = metrics.pop("fitness", -self.loss.detach().cpu().numpy())  # use loss as fitness measure if not found
         if not self.best_fitness or self.best_fitness < fitness:
             self.best_fitness = fitness
@@ -793,7 +816,7 @@ class BaseTrainer:
         Returns:
             (torch.optim.Optimizer): The constructed optimizer.
         """
-        g = [], [], []  # optimizer parameter groups
+        g = [{}, {}, {}, {}]  # optimizer parameter groups: decay, norm, bias, muon
         bn = tuple(v for k, v in nn.__dict__.items() if "Norm" in k)  # normalization layers, i.e. BatchNorm2d()
         if name == "auto":
             LOGGER.info(
@@ -801,39 +824,70 @@ class BaseTrainer:
                 f"ignoring 'lr0={self.args.lr0}' and 'momentum={self.args.momentum}' and "
                 f"determining best 'optimizer', 'lr0' and 'momentum' automatically... "
             )
-            nc = getattr(model, "nc", 10)  # number of classes
+            nc = self.data.get("nc", 10)  # number of classes
             lr_fit = round(0.002 * 5 / (4 + nc), 6)  # lr0 fit equation to 6 decimal places
-            name, lr, momentum = ("SGD", 0.01, 0.9) if iterations > 10000 else ("AdamW", lr_fit, 0.9)
+            name, lr, momentum = ("MuSGD", 0.01, 0.9) if iterations > 10000 else ("AdamW", lr_fit, 0.9)
             self.args.warmup_bias_lr = 0.0  # no higher than 0.01 for Adam
 
-        for module_name, module in model.named_modules():
+        requested_name = str(name)
+        if requested_name.lower() in {"musgd", "muonsgd"}:
+            requested_name = "MuSGD"
+        use_muon = requested_name == "MuSGD"
+
+        for module_name, module in unwrap_model(model).named_modules():
             for param_name, param in module.named_parameters(recurse=False):
                 fullname = f"{module_name}.{param_name}" if module_name else param_name
-                if "bias" in fullname:  # bias (no decay)
-                    g[2].append(param)
-                elif isinstance(module, bn):  # weight (no decay)
-                    g[1].append(param)
+                if use_muon and param.ndim >= 2:  # muon-capable matrices/filters
+                    g[3][fullname] = param
+                elif "bias" in fullname:  # bias (no decay)
+                    g[2][fullname] = param
+                elif isinstance(module, bn) or "logit_scale" in fullname:  # weight (no decay)
+                    g[1][fullname] = param
                 else:  # weight (with decay)
-                    g[0].append(param)
+                    g[0][fullname] = param
 
-        optimizers = {"Adam", "Adamax", "AdamW", "NAdam", "RAdam", "RMSProp", "SGD", "auto"}
-        name = {x.lower(): x for x in optimizers}.get(name.lower())
+        if not use_muon:
+            g = [x.values() for x in g[:3]]
+
+        optimizers = {"Adam", "Adamax", "AdamW", "NAdam", "RAdam", "RMSProp", "SGD", "MuSGD", "auto"}
+        name = {x.lower(): x for x in optimizers}.get(requested_name.lower())
         if name in {"Adam", "Adamax", "AdamW", "NAdam", "RAdam"}:
-            optimizer = getattr(optim, name, optim.Adam)(g[2], lr=lr, betas=(momentum, 0.999), weight_decay=0.0)
+            optim_args = dict(lr=lr, betas=(momentum, 0.999), weight_decay=0.0)
         elif name == "RMSProp":
-            optimizer = optim.RMSprop(g[2], lr=lr, momentum=momentum)
-        elif name == "SGD":
-            optimizer = optim.SGD(g[2], lr=lr, momentum=momentum, nesterov=True)
-        else:
+            optim_args = dict(lr=lr, momentum=momentum)
+        elif name in {"SGD", "MuSGD"}:
+            optim_args = dict(lr=lr, momentum=momentum, nesterov=True)
+        else:  # includes unknown names and failed normalization
             raise NotImplementedError(
-                f"Optimizer '{name}' not found in list of available optimizers {optimizers}. "
+                f"Optimizer '{requested_name}' not found in list of available optimizers {optimizers}. "
                 "Request support for addition optimizers at https://github.com/ultralytics/ultralytics."
             )
 
-        optimizer.add_param_group({"params": g[0], "weight_decay": decay})  # add g0 with weight_decay
-        optimizer.add_param_group({"params": g[1], "weight_decay": 0.0})  # add g1 (BatchNorm2d weights)
+        num_params = [len(g[0]), len(g[1]), len(g[2])]
+        g[2] = {"params": g[2], **optim_args, "param_group": "bias"}
+        g[0] = {"params": g[0], **optim_args, "weight_decay": decay, "param_group": "weight"}
+        g[1] = {"params": g[1], **optim_args, "weight_decay": 0.0, "param_group": "bn"}
+        muon, sgd = (0.2, 1.0)
+
+        if use_muon:
+            import re
+
+            num_params[0] = len(g[3])
+            g[3] = {"params": g[3], **optim_args, "weight_decay": decay, "use_muon": True, "param_group": "muon"}
+
+            pattern = re.compile(r"(?=.*23)(?=.*cv3)|proto\.semseg")
+            groups = []
+            for x in g:
+                params_dict = x.pop("params")
+                p1 = [v for k, v in params_dict.items() if pattern.search(k)]
+                p2 = [v for k, v in params_dict.items() if not pattern.search(k)]
+                groups.extend([{"params": p1, **x, "lr": lr * 3}, {"params": p2, **x}])
+            g = groups
+
+        optimizer = getattr(optim, name, partial(MuSGD, muon=muon, sgd=sgd))(params=g)
+
         LOGGER.info(
             f"{colorstr('optimizer:')} {type(optimizer).__name__}(lr={lr}, momentum={momentum}) with parameter groups "
-            f"{len(g[1])} weight(decay=0.0), {len(g[0])} weight(decay={decay}), {len(g[2])} bias(decay=0.0)"
+            f"{num_params[1]} weight(decay=0.0), {num_params[0]} weight(decay={decay}), {num_params[2]} bias(decay=0.0)"
         )
         return optimizer

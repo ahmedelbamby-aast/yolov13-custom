@@ -8,9 +8,13 @@ import socket
 import sys
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from . import USER_CONFIG_DIR
 from .torch_utils import TORCH_1_9
+
+if TYPE_CHECKING:
+    from ultralytics.engine.trainer import BaseTrainer
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -38,7 +42,7 @@ def _serialize_overrides(overrides: dict) -> dict:
     return serialized
 
 
-def generate_ddp_file(trainer):
+def generate_ddp_file(trainer: BaseTrainer) -> str:
     """Generate temporary python entrypoint for DDP subprocess."""
     module, name = f"{trainer.__class__.__module__}.{trainer.__class__.__name__}".rsplit(".", 1)
     overrides = _serialize_overrides(vars(trainer.args))
@@ -90,9 +94,9 @@ if __name__ == "__main__":
     return file.name
 
 
-def generate_ddp_command(world_size, trainer):
+def generate_ddp_command(world_size: int, trainer: BaseTrainer) -> tuple[list[str], str]:
     """Generate command tuple for distributed training."""
-    import __main__  # noqa: F401
+    import __main__  # noqa: F401  # local import to avoid Lightning issue #15218
 
     if not trainer.resume and trainer.save_dir.exists():
         shutil.rmtree(trainer.save_dir, ignore_errors=True)
@@ -103,7 +107,7 @@ def generate_ddp_command(world_size, trainer):
     return cmd, file
 
 
-def ddp_cleanup(trainer, file):
+def ddp_cleanup(trainer: BaseTrainer, file: str) -> None:
     """Delete temp DDP file if created."""
     if f"{id(trainer)}.py" in file and os.path.exists(file):
         os.remove(file)

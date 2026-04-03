@@ -1170,11 +1170,12 @@ logger = logging.getLogger(__name__)
 USE_FLASH_ATTN = False
 FLASH_BACKEND = "fallback"
 FLASH_ERROR = ""
+FLASH_CONFIGURED = False
 
 
 def configure_flash_backend(disable_flash=None, use_turing_flash=None):
     """Configure flash attention backend from flags or environment."""
-    global USE_FLASH_ATTN, FLASH_BACKEND, FLASH_ERROR
+    global USE_FLASH_ATTN, FLASH_BACKEND, FLASH_ERROR, FLASH_CONFIGURED
 
     USE_FLASH_ATTN = False
     FLASH_BACKEND = "fallback"
@@ -1218,7 +1219,7 @@ def configure_flash_backend(disable_flash=None, use_turing_flash=None):
                 logger.warning(
                     f"Flash attention backend unavailable ({FLASH_ERROR}). Using fallback attention backend."
                 )
-            else:
+            elif torch.cuda.is_available():
                 logger.warning(
                     "Flash attention backend unavailable on this device/config. Using fallback attention backend."
                 )
@@ -1230,10 +1231,8 @@ def configure_flash_backend(disable_flash=None, use_turing_flash=None):
         FLASH_BACKEND = "fallback"
         logger.warning(f"Flash attention initialization failed ({FLASH_ERROR}). Using fallback attention backend.")
 
+    FLASH_CONFIGURED = True
     return FLASH_BACKEND
-
-
-configure_flash_backend()
 
 
 class AAttn(nn.Module):
@@ -1292,7 +1291,16 @@ class AAttn(nn.Module):
             B, N, _ = qk.shape
         q, k = qk.split([C, C], dim=2)
 
-        if x.is_cuda and USE_FLASH_ATTN and self.head_dim in {64, 128}:
+        if x.is_cuda and not FLASH_CONFIGURED:
+            configure_flash_backend()
+
+        if (
+            x.is_cuda
+            and USE_FLASH_ATTN
+            and FLASH_BACKEND in {"flash_attn", "flash_attn_turing"}
+            and "flash_attn_func" in globals()
+            and self.head_dim in {64, 128}
+        ):
             q = q.view(B, N, self.num_heads, self.head_dim)
             k = k.view(B, N, self.num_heads, self.head_dim)
             v = v.view(B, N, self.num_heads, self.head_dim)

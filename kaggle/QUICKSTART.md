@@ -165,8 +165,14 @@ python scripts/benchmark.py \
   --imgsz 640 \
   --device 0 \
   --half \
-  --flash-mode turing
+  --flash-mode turing \
+  --format onnx \
+  --format engine \
+  --out-json /kaggle/working/bench_detect_t4.json
 ```
+
+Use GPU (`--device 0`) for benchmarks. The script runs controlled formats to keep results focused on T4 CUDA paths.
+For stability, ONNX runs in FP32 while TensorRT/TorchScript can use FP16.
 
 ## 6) Custom dataset usage
 

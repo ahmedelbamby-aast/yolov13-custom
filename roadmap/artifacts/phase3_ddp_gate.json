@@ -1,0 +1,24 @@
+{
+  "phase": "phase3",
+  "gate": "ddp_smoke",
+  "status": "ok",
+  "error": "",
+  "elapsed_s": 63.91241693496704,
+  "flash_mode": "auto",
+  "env": {
+    "Y13_DISABLE_FLASH": "0",
+    "Y13_USE_TURING_FLASH": "0"
+  },
+  "run": {
+    "model": "ultralytics/cfg/models/v13/yolov13.yaml",
+    "data": "coco8.yaml",
+    "epochs": 1,
+    "imgsz": 64,
+    "batch": 8,
+    "workers": 2,
+    "device": "0,1",
+    "optimizer": "MuSGD",
+    "project": "/kaggle/working/phase3_ddp",
+    "name": "ddp_gate_script_run"
+  }
+}

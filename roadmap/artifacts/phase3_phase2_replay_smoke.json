@@ -1,0 +1,94 @@
+{
+  "runs": [
+    {
+      "mode": "fallback",
+      "backend": "fallback",
+      "task": "detect",
+      "model": "ultralytics/cfg/models/v13/yolov13n.yaml",
+      "data": "coco8.yaml",
+      "imgsz": 64,
+      "batch": 8,
+      "status": "ok",
+      "elapsed_s": 38.130373141000746
+    },
+    {
+      "mode": "fallback",
+      "backend": "fallback",
+      "task": "segment",
+      "model": "ultralytics/cfg/models/v13/yolov13n-seg.yaml",
+      "data": "coco8-seg.yaml",
+      "imgsz": 64,
+      "batch": 8,
+      "status": "ok",
+      "elapsed_s": 25.046332130998053
+    },
+    {
+      "mode": "fallback",
+      "backend": "fallback",
+      "task": "pose",
+      "model": "ultralytics/cfg/models/v13/yolov13n-pose.yaml",
+      "data": "coco8-pose.yaml",
+      "imgsz": 64,
+      "batch": 8,
+      "status": "ok",
+      "elapsed_s": 25.111732474000746
+    },
+    {
+      "mode": "fallback",
+      "backend": "fallback",
+      "task": "obb",
+      "model": "ultralytics/cfg/models/v13/yolov13n-obb.yaml",
+      "data": "dota8.yaml",
+      "imgsz": 256,
+      "batch": 4,
+      "status": "ok",
+      "elapsed_s": 21.44746154799941
+    },
+    {
+      "mode": "turing",
+      "backend": "flash_attn_turing",
+      "task": "detect",
+      "model": "ultralytics/cfg/models/v13/yolov13n.yaml",
+      "data": "coco8.yaml",
+      "imgsz": 64,
+      "batch": 8,
+      "status": "ok",
+      "elapsed_s": 23.338661690999288
+    },
+    {
+      "mode": "turing",
+      "backend": "flash_attn_turing",
+      "task": "segment",
+      "model": "ultralytics/cfg/models/v13/yolov13n-seg.yaml",
+      "data": "coco8-seg.yaml",
+      "imgsz": 64,
+      "batch": 8,
+      "status": "ok",
+      "elapsed_s": 25.224348134997854
+    },
+    {
+      "mode": "turing",
+      "backend": "flash_attn_turing",
+      "task": "pose",
+      "model": "ultralytics/cfg/models/v13/yolov13n-pose.yaml",
+      "data": "coco8-pose.yaml",
+      "imgsz": 64,
+      "batch": 8,
+      "status": "ok",
+      "elapsed_s": 25.454011489997356
+    },
+    {
+      "mode": "turing",
+      "backend": "flash_attn_turing",
+      "task": "obb",
+      "model": "ultralytics/cfg/models/v13/yolov13n-obb.yaml",
+      "data": "dota8.yaml",
+      "imgsz": 256,
+      "batch": 4,
+      "status": "ok",
+      "elapsed_s": 21.191524150999612
+    }
+  ],
+  "ok": 8,
+  "fail": 0
+}

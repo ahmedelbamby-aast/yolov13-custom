@@ -138,10 +138,19 @@ python scripts/benchmark.py \
   --model runs/train/exp/weights/best.pt \
   --data coco8.yaml \
   --imgsz 640 \
+  --device 0 \
   --half \
   --flash-mode turing \
-  --verbose
+  --format onnx \
+  --format engine \
+  --out-json /kaggle/working/bench_detect_t4.json
 ```
+
+Notes:
+
+- Benchmark runs are GPU-first and intended for T4/CUDA execution.
+- Script runs controlled export formats (`onnx`, `engine` by default) to avoid irrelevant CPU-only framework checks.
+- FP16 is format-aware: ONNX is forced to FP32 for stability, while TensorRT/TorchScript may use FP16.
 
 ## What the scripts print
 

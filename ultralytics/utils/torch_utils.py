@@ -466,6 +466,17 @@ def de_parallel(model):
     return model.module if is_parallel(model) else model
 
 
+def unwrap_model(m: nn.Module) -> nn.Module:
+    """Unwrap compiled/parallel wrappers and return the base model."""
+    while True:
+        if hasattr(m, "_orig_mod") and isinstance(m._orig_mod, nn.Module):
+            m = m._orig_mod
+        elif hasattr(m, "module") and isinstance(m.module, nn.Module):
+            m = m.module
+        else:
+            return m
+
+
 def one_cycle(y1=0.0, y2=1.0, steps=100):
     """Returns a lambda function for sinusoidal ramp from y1 to y2 https://arxiv.org/pdf/1812.01187.pdf."""
     return lambda x: max((1 - math.cos(x * math.pi / steps)) / 2, 0) * (y2 - y1) + y1
