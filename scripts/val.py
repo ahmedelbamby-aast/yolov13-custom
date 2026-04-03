@@ -58,7 +58,10 @@ def main() -> None:
     print_runtime_header("val", flash_backend, kwargs)
 
     metrics = model.val(**kwargs)
-    print(f"[y13] validation complete. metrics={metrics}")
+    summary = getattr(metrics, "results_dict", None)
+    if summary is None:
+        summary = str(type(metrics))
+    print(f"[y13] validation complete. metrics={summary}")
 
 
 if __name__ == "__main__":
