@@ -35,3 +35,14 @@ Reapply and validate all fork-specific functional deltas on top of the upstream-
 - Preflight smoke checks pass for detect/segment/pose/obb.
 - OBB metrics compatibility retained.
 - Turing vs fallback backend mode is selectable and reported correctly.
+
+## Progress Snapshot
+
+- YOLOv13 config load matrix passed (`16/16`):
+  - `roadmap/artifacts/phase3_model_load_matrix.json`
+- Task preflight smoke passed (`6/6`):
+  - `roadmap/artifacts/phase3_task_preflight_smoke.json`
+- Task validation matrix (fallback + turing) passed (`8/8`):
+  - `roadmap/artifacts/phase3_task_val_smoke.json`
+- Phase2 replay smoke training matrix (1 epoch, detect/segment/pose/obb under fallback+turing) passed (`8/8`):
+  - `roadmap/artifacts/phase3_phase2_replay_smoke.json`

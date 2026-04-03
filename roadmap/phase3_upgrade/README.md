@@ -29,4 +29,5 @@ Current status:
 
 - Phase 1 verification gates are passing with artifact evidence committed.
 - Phase 3 dependency/runtime alignment has successful first execution snapshot on Kaggle.
-- Next execution step: continue into Phase 2 custom-feature replay hardening on top of Phase 1 baseline.
+- Phase 2 replay smoke matrix is passing for fallback+turing across detect/segment/pose/obb.
+- Next execution step: continue deeper parity hardening and expand benchmark coverage on the upgraded baseline.
