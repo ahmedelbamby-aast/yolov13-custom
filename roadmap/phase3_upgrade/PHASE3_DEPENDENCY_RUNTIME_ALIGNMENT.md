@@ -28,3 +28,13 @@ Align runtime dependencies and environment setup with latest upstream-compatible
 - Clean environment bootstrap on Kaggle succeeds.
 - Core scripts execute with refreshed dependency set.
 - No regressions in flash backend selection from dependency changes.
+
+## Progress Snapshot
+
+- `kaggle/scripts/20_install_deps.sh` executed successfully on branch `phase3-upgrade-ultralytics-and-deps`.
+- `ultralytics` package installed from local repo at version `8.4.33`.
+- Runtime dependency snapshot captured in:
+  - `roadmap/artifacts/phase3_dependency_snapshot.json`
+- Post-install smoke checks passed:
+  - `scripts/train.py` with `optimizer=MuSGD` (1 epoch)
+  - `scripts/val.py` detect validation

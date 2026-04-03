@@ -28,4 +28,5 @@ Execution principles:
 Current status:
 
 - Phase 1 is active and substantially advanced with regression artifacts committed.
+- Phase 3 dependency/runtime alignment has successful first execution snapshot on Kaggle.
 - Next execution step: continue into Phase 2 custom-feature replay hardening on top of Phase 1 baseline.
