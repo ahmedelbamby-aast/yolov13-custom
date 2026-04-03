@@ -1,0 +1,28 @@
+# Phase 1 Verification Snapshot
+
+Branch: `phase3-upgrade-ultralytics-and-deps`
+
+## Runtime smoke checks (Kaggle)
+
+1. MuSGD training probe
+   - Command family: `python scripts/train.py ... --optimizer MuSGD --epochs 1`
+   - Result: pass
+   - Verified after trainer, data-utils, metrics, and block updates.
+
+2. Validation probe
+   - Command family: `python scripts/val.py ... --task detect`
+   - Result: pass
+   - `scripts/val.py` updated to print `metrics.results_dict` for compatibility.
+
+3. Task preflight smoke
+   - Result: `6/6` expected outcomes passed.
+   - Artifact: `roadmap/artifacts/phase3_task_preflight_smoke.json`
+
+4. YOLOv13 model load matrix
+   - Result: `16/16` configs loaded successfully.
+   - Artifact: `roadmap/artifacts/phase3_model_load_matrix.json`
+
+## Notes
+
+- Core runtime is now on `ultralytics.__version__ == 8.4.33` surface.
+- Phase 1 remains focused on parity-safe updates while preserving custom feature behavior.

@@ -1,0 +1,71 @@
+{
+  "total": 16,
+  "ok": 16,
+  "fail": 0,
+  "rows": [
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13n-seg.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13s-seg.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13l-seg.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13x-seg.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13n-pose.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13s-pose.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13l-pose.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13x-pose.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13n-obb.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13s-obb.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13l-obb.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13x-obb.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13s.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13l.yaml",
+      "status": "ok"
+    },
+    {
+      "model": "ultralytics/cfg/models/v13/yolov13x.yaml",
+      "status": "ok"
+    }
+  ]
+}
