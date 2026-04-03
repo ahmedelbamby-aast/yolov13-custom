@@ -133,7 +133,8 @@ class BaseTrainer:
         # Model and Dataset
         self.model = check_model_file_from_stem(self.args.model)  # add suffix, i.e. yolov8n -> yolov8n.pt
         with torch_distributed_zero_first(LOCAL_RANK):  # avoid auto-downloading dataset multiple times
-            self.trainset, self.testset = self.get_dataset()
+            data = self.get_dataset()
+            self.trainset, self.testset = data["train"], data.get("val") or data.get("test")
         self.ema = None
 
         # Optimization utils init
@@ -600,7 +601,7 @@ class BaseTrainer:
             data["names"] = {0: "item"}
             data["nc"] = 1
         self.data = data
-        return data["train"], data.get("val") or data.get("test")
+        return data
 
     def setup_model(self):
         """Load/create/download model for any task."""

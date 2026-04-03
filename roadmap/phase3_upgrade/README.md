@@ -24,6 +24,7 @@ Execution principles:
 - Push incremental commits after each milestone.
 - Preserve custom behavior with explicit acceptance checks.
 - Prefer upstream behavior by default, then layer custom deltas with minimal drift.
+- Mandatory gate: run at least one DDP smoke validation at the end of each phase.
 
 Current status:
 

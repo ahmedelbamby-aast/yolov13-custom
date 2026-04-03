@@ -33,6 +33,11 @@ Branch: `phase3-upgrade-ultralytics-and-deps`
    - Result: `11/11` checks passed.
    - Artifact: `roadmap/artifacts/phase3_custom_delta_audit.json`
 
+7. DDP smoke gate
+   - Scope: 2-GPU DDP train smoke on Kaggle (`device=0,1`, 1 epoch).
+   - Result: pass.
+   - Artifact: `roadmap/artifacts/phase3_ddp_smoke.json`
+
 ## Notes
 
 - Core runtime is now on `ultralytics.__version__ == 8.4.33` surface.
