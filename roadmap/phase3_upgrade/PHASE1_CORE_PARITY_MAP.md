@@ -72,6 +72,9 @@ Reference baseline: `upstream/main`
   - `ul://` and `.ndjson` conversion path support
   - safer suffix parsing with `rsplit('.', 1)`
   - `single_cls` class-name override handling.
+- `ultralytics/engine/trainer.py` `validate()` moved closer to upstream DDP behavior:
+  - EMA buffer broadcast on distributed runs
+  - safe guard for forks lacking `self.world_size` attr (`getattr(self, "world_size", 1)`).
 - Added phase1 regression evidence:
   - `roadmap/artifacts/phase3_task_preflight_smoke.json` (`6/6` pass)
   - `roadmap/artifacts/phase3_model_load_matrix.json` (`16/16` pass)

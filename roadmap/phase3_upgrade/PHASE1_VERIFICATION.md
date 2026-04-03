@@ -38,6 +38,13 @@ Branch: `phase3-upgrade-ultralytics-and-deps`
    - Result: pass.
    - Artifact: `roadmap/artifacts/phase3_ddp_smoke.json`
 
+8. DDP regression re-check after trainer validation sync
+   - Scope: validate upstream-style `validate()` DDP EMA sync integration.
+   - Initial issue: missing `world_size` attribute caused DDP failure.
+   - Fix: guard with `getattr(self, "world_size", 1)`.
+   - Result after fix: pass.
+   - Artifact: `roadmap/artifacts/phase3_ddp_smoke_after_validate_sync_fix.json`
+
 ## Notes
 
 - Core runtime is now on `ultralytics.__version__ == 8.4.33` surface.

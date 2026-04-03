@@ -638,7 +638,14 @@ class BaseTrainer:
 
         The returned dict is expected to contain "fitness" key.
         """
+        if self.ema and getattr(self, "world_size", 1) > 1:
+            for buffer in self.ema.ema.buffers():
+                dist.broadcast(buffer, src=0)
+
         metrics = self.validator(self)
+        if metrics is None:
+            return None, None
+
         fitness = metrics.pop("fitness", -self.loss.detach().cpu().numpy())  # use loss as fitness measure if not found
         if not self.best_fitness or self.best_fitness < fitness:
             self.best_fitness = fitness

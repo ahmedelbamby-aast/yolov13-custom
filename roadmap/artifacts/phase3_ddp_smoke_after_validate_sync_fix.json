@@ -1,0 +1,7 @@
+{
+  "phase": "phase3",
+  "gate": "ddp_smoke_after_validate_sync_fix",
+  "status": "ok",
+  "error": "",
+  "elapsed_s": 61.764057636260986
+}
