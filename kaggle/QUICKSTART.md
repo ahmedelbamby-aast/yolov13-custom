@@ -221,6 +221,94 @@ python scripts/train.py \
   --cos_lr true
 ```
 
+## 6.1) Repeatable final detect run (2xT4 DDP + Turing flash + feature-map projection)
+
+Use this procedure when you want to re-run the exact final workflow:
+
+- task: detect only
+- model: YOLOv13-l
+- optimizer: MuSGD
+- time budget: 2 hours (`time=2`)
+- DDP: `device=0,1` (2xT4)
+- data loading: `cache=ram`, `workers=8`, `fraction=1`
+- outputs: `/kaggle/working/final_run`
+- feature-map overlays + markdown: `/kaggle/working/final_run/feature_projection` and `/kaggle/working/final_run/ff_maps.md`
+
+### A) Sync latest run scripts to Kaggle repo
+
+If your Kaggle workspace is not on `main`, pull the two scripts directly from `origin/main`:
+
+```bash
+cd /kaggle/work_here/yolov13
+git fetch origin
+git show origin/main:kaggle/scripts/37_feature_map_projection.py > kaggle/scripts/37_feature_map_projection.py
+git show origin/main:kaggle/scripts/run_custom_time2_tmp.sh > kaggle/scripts/run_custom_time2_tmp.sh
+chmod +x kaggle/scripts/run_custom_time2_tmp.sh
+```
+
+### B) Enforce dataset classes for this run
+
+Roboflow YAML must be reduced to only `student` and `teacher`:
+
+```bash
+/kaggle/work_here/yolov13/.venv/bin/python - <<'PY'
+import pathlib
+import yaml
+
+p = pathlib.Path('/kaggle/work_here/datasets/roboflow_custom_detect/data.yaml')
+d = yaml.safe_load(p.read_text())
+d['nc'] = 2
+d['names'] = ['student', 'teacher']
+p.write_text(yaml.safe_dump(d, sort_keys=False))
+print('dataset_yaml', p)
+print('nc', d['nc'])
+print('names', d['names'])
+PY
+```
+
+### C) Launch the run
+
+The launcher does all of this automatically:
+
+- kills any previous `scripts/train.py` and `37_feature_map_projection.py`
+- sets `Y13_DISABLE_FLASH=0` and `Y13_USE_TURING_FLASH=1`
+- starts train with `--flash-mode turing`
+- starts feature-map projection in parallel (waits for `best.pt`)
+
+```bash
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/run_custom_time2_tmp.sh
+```
+
+### D) Verify critical runtime conditions
+
+Check Turing backend, DDP, and run arguments:
+
+```bash
+grep -nE "flash_mode_env|resolved_flash_backend|DDP|time=2|batch=16|imgsz=640|optimizer=MuSGD|cache=ram|fraction=1" /kaggle/working/final_run/train.log
+```
+
+Expected key lines include:
+
+- `Y13_USE_TURING_FLASH=1`
+- `resolved_flash_backend=flash_attn_turing`
+- DDP launch with `--nproc_per_node 2`
+
+### E) Monitor and collect outputs
+
+```bash
+ps -ef | grep -E "scripts/train.py|37_feature_map_projection.py|torch.distributed.run" | grep -v grep
+tail -n 50 /kaggle/working/final_run/train.log
+tail -n 50 /kaggle/working/final_run/feature_projection.log
+ls -la /kaggle/working/final_run
+```
+
+At completion, verify:
+
+- weights/checkpoints under `/kaggle/working/final_run/detect_l_time2_musgd_ddp/`
+- per-layer projected overlays under `/kaggle/working/final_run/feature_projection/`
+- final markdown report `/kaggle/working/final_run/ff_maps.md`
+
 ## 7) Kaggle validation and utility pipelines
 
 ### DDP smoke
