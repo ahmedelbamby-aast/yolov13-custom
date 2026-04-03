@@ -45,6 +45,11 @@ Branch: `phase3-upgrade-ultralytics-and-deps`
    - Result after fix: pass.
    - Artifact: `roadmap/artifacts/phase3_ddp_smoke_after_validate_sync_fix.json`
 
+9. Standardized phase DDP gate script
+   - Scope: run reusable gate (`kaggle/scripts/35_phase_ddp_gate.py`) with `phase=phase3`.
+   - Result: pass.
+   - Artifact: `roadmap/artifacts/phase3_ddp_gate.json`
+
 ## Notes
 
 - Core runtime is now on `ultralytics.__version__ == 8.4.33` surface.

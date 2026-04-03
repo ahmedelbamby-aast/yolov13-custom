@@ -36,4 +36,5 @@ Current status:
 - Phase 3 dependency/runtime alignment has successful first execution snapshot on Kaggle.
 - Phase 2 replay smoke matrix is passing for fallback+turing across detect/segment/pose/obb.
 - Phase 4 benchmark rerun on upgraded baseline completed for fallback vs turing (`detect/segment/pose/obb`, 5e).
+- Standardized per-phase DDP gate script is added and validated on Phase 3.
 - Next execution step: continue deeper parity hardening and expand benchmark coverage on the upgraded baseline.
