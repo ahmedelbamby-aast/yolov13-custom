@@ -53,3 +53,7 @@ Reference baseline: `upstream/main`
   - muon grouping order before bias
 - `ultralytics/engine/validator.py` got a low-risk upstream-safe parsing sync (`rsplit('.', 1)`), while keeping custom
   task-aware `check_det_dataset(..., task=self.args.task)`.
+- `ultralytics/data/utils.py` received low-risk parity syncs while preserving task preflight:
+  - default `data["channels"] = data.get("channels", 3)`
+  - safer relative-path resolution (`if not path.exists() and not path.is_absolute()`)
+  - bash autodownload via `subprocess.run(..., check=True)` instead of `os.system`.
