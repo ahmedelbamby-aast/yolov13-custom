@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -17,15 +18,6 @@ def step(result: dict, name: str, fn):
     except Exception as e:
         result["steps"][name] = {"status": "fail", "elapsed_s": time.time() - t0, "error": str(e)[:1200]}
         result["status"] = "fail"
-
-
-def optional_step(result: dict, name: str, fn):
-    t0 = time.time()
-    try:
-        out = fn()
-        result["steps"][name] = {"status": "ok", "elapsed_s": time.time() - t0, "output": out}
-    except Exception as e:
-        result["steps"][name] = {"status": "warning", "elapsed_s": time.time() - t0, "error": str(e)[:1200]}
 
 
 def main() -> None:
@@ -78,9 +70,38 @@ def main() -> None:
         return {"artifact": str(out)}
 
     def benchmark_step():
-        m = YOLO(str(best))
-        out = m.benchmark(data="coco8.yaml", imgsz=64, device="0", format="onnx", verbose=False)
-        return {"type": str(type(out))}
+        out_json = Path("/kaggle/working/phase3_final_gate_benchmark.json")
+        cmd = [
+            "/kaggle/work_here/yolov13/.venv/bin/python",
+            "scripts/benchmark.py",
+            "--model",
+            str(best),
+            "--data",
+            "coco8.yaml",
+            "--imgsz",
+            "64",
+            "--device",
+            "0",
+            "--flash-mode",
+            "turing",
+            "--format",
+            "onnx",
+            "--format",
+            "engine",
+            "--out-json",
+            str(out_json),
+        ]
+        subprocess.run(cmd, check=True)
+        data = json.loads(out_json.read_text(encoding="utf-8"))
+        results = data.get("results", [])
+        failed = [r for r in results if r.get("status") != "ok"]
+        if failed:
+            raise RuntimeError(f"Benchmark failures: {failed}")
+        return {
+            "flash_backend": data.get("flash_backend"),
+            "device": data.get("device"),
+            "formats": [r.get("format") for r in results],
+        }
 
     step(result, "train", train_step)
     if result["status"] == "ok":
@@ -90,11 +111,10 @@ def main() -> None:
     if result["status"] == "ok":
         step(result, "export", export_step)
     if result["status"] == "ok":
-        optional_step(result, "benchmark", benchmark_step)
+        step(result, "benchmark", benchmark_step)
 
     result["ok_steps"] = sum(1 for s in result["steps"].values() if s["status"] == "ok")
     result["fail_steps"] = sum(1 for s in result["steps"].values() if s["status"] == "fail")
-    result["warning_steps"] = sum(1 for s in result["steps"].values() if s["status"] == "warning")
     out_path = Path("/kaggle/working/phase3_final_gate.json")
     out_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps(result, indent=2))
