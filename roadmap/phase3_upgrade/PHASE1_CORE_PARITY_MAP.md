@@ -57,3 +57,7 @@ Reference baseline: `upstream/main`
   - default `data["channels"] = data.get("channels", 3)`
   - safer relative-path resolution (`if not path.exists() and not path.is_absolute()`)
   - bash autodownload via `subprocess.run(..., check=True)` instead of `os.system`.
+- `ultralytics/nn/modules/block.py` received safer flash init behavior while preserving custom controls:
+  - one-time lazy backend configuration (`FLASH_CONFIGURED`) on first CUDA forward
+  - guarded flash path requires valid backend and function availability
+  - reduced noisy fallback warning on CPU-only startup
