@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from ultralytics.utils import LOGGER, SimpleClass, TryExcept, plt_settings
+from ultralytics.utils import LOGGER, SimpleClass, TryExcept, checks, plt_settings
 
 OKS_SIGMA = (
     np.array([0.26, 0.25, 0.25, 0.35, 0.35, 0.79, 0.79, 0.72, 0.72, 0.62, 0.62, 1.07, 1.07, 0.87, 0.87, 0.89, 0.89])
@@ -526,7 +526,8 @@ def compute_ap(recall, precision):
     method = "interp"  # methods: 'continuous', 'interp'
     if method == "interp":
         x = np.linspace(0, 1, 101)  # 101-point interp (COCO)
-        ap = np.trapz(np.interp(x, mrec, mpre), x)  # integrate
+        func = np.trapezoid if checks.check_version(np.__version__, ">=2.0") else np.trapz
+        ap = func(np.interp(x, mrec, mpre), x)  # integrate
     else:  # 'continuous'
         i = np.where(mrec[1:] != mrec[:-1])[0]  # points where x-axis (recall) changes
         ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])  # area under curve
@@ -604,12 +605,11 @@ def ap_per_class(
             if j == 0:
                 prec_values.append(np.interp(x, mrec, mpre))  # precision at mAP@0.5
 
-    prec_values = np.array(prec_values)  # (nc, 1000)
+    prec_values = np.array(prec_values) if prec_values else np.zeros((1, 1000))  # (nc, 1000)
 
     # Compute F1 (harmonic mean of precision and recall)
     f1_curve = 2 * p_curve * r_curve / (p_curve + r_curve + eps)
-    names = [v for k, v in names.items() if k in unique_classes]  # list: only classes that have data
-    names = dict(enumerate(names))  # to dict
+    names = {i: names[k] for i, k in enumerate(unique_classes) if k in names}  # only classes that have data
     if plot:
         plot_pr_curve(x, prec_values, ap, save_dir / f"{prefix}PR_curve.png", names, on_plot=on_plot)
         plot_mc_curve(x, f1_curve, save_dir / f"{prefix}F1_curve.png", names, ylabel="F1", on_plot=on_plot)

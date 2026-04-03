@@ -61,3 +61,7 @@ Reference baseline: `upstream/main`
   - one-time lazy backend configuration (`FLASH_CONFIGURED`) on first CUDA forward
   - guarded flash path requires valid backend and function availability
   - reduced noisy fallback warning on CPU-only startup
+- `ultralytics/utils/metrics.py` got low-risk upstream compatibility syncs while preserving custom mAP75 metrics:
+  - NumPy 2.x-safe integration fallback (`np.trapezoid`/`np.trapz`)
+  - empty `prec_values` guard in `ap_per_class`
+  - safer class-name remap for active classes only.
