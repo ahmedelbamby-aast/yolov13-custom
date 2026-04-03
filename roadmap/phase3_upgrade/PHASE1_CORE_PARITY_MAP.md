@@ -65,3 +65,5 @@ Reference baseline: `upstream/main`
   - NumPy 2.x-safe integration fallback (`np.trapezoid`/`np.trapz`)
   - empty `prec_values` guard in `ap_per_class`
   - safer class-name remap for active classes only.
+- `ultralytics/utils/dist.py` received low-risk parity-level typing updates while preserving custom DDP flash env
+  propagation and robust override serialization.
