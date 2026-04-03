@@ -273,7 +273,7 @@ The launcher does all of this automatically:
 - kills any previous `scripts/train.py` and `37_feature_map_projection.py`
 - sets `Y13_DISABLE_FLASH=0` and `Y13_USE_TURING_FLASH=1`
 - starts train with `--flash-mode turing`
-- starts feature-map projection in parallel (waits for `best.pt`)
+- runs feature-map projection only after training completes, using `best.pt`
 
 ```bash
 cd /kaggle/work_here/yolov13
@@ -308,6 +308,35 @@ At completion, verify:
 - weights/checkpoints under `/kaggle/working/final_run/detect_l_time2_musgd_ddp/`
 - per-layer projected overlays under `/kaggle/working/final_run/feature_projection/`
 - final markdown report `/kaggle/working/final_run/ff_maps.md`
+
+### F) Optional: use post-train feature projection flags directly in `scripts/train.py`
+
+```bash
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --task detect \
+  --time 2 \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0,1 \
+  --workers 8 \
+  --cache ram \
+  --fraction 1 \
+  --optimizer MuSGD \
+  --flash-mode turing \
+  --feature-projection \
+  --feature-projection-script kaggle/scripts/37_feature_map_projection.py \
+  --feature-projection-valid-dir /kaggle/work_here/datasets/my_detect/valid/images \
+  --feature-projection-out-dir /kaggle/working/custom_runs/detect_l_time2_custom/feature_projection \
+  --feature-projection-md-path /kaggle/working/custom_runs/detect_l_time2_custom/ff_maps.md \
+  --feature-projection-log-path /kaggle/working/custom_runs/detect_l_time2_custom/feature_projection.log \
+  --feature-projection-flash-mode same \
+  --project /kaggle/working/custom_runs \
+  --name detect_l_time2_custom
+```
+
+`--feature-projection-flash-mode same` reuses training flash mode (e.g., Turing).
 
 ## 6.2) End-to-end custom dataset example (setup -> train -> val -> test -> benchmark)
 
@@ -451,6 +480,165 @@ If you want the integrated final-run package (train + feature-map projection + `
 ```bash
 cd /kaggle/work_here/yolov13
 bash kaggle/scripts/run_custom_time2_tmp.sh
+```
+
+## 6.3) Full pipeline example (old-style scripts)
+
+This is a compact copy-paste workflow from setup to train/val/test/export/benchmark using `scripts/*.py`.
+
+```bash
+# 1) Setup
+mkdir -p /kaggle/work_here
+cd /kaggle/work_here
+if [ ! -d yolov13 ]; then
+  git clone https://github.com/ahmedelbamby-aast/yolov13-custom.git yolov13
+fi
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/10_setup_uv.sh
+bash kaggle/scripts/20_install_deps.sh
+source .venv/bin/activate
+
+# 2) Flash runtime
+export Y13_DISABLE_FLASH=0
+export Y13_USE_TURING_FLASH=1
+
+# 3) Train (DDP 2xT4)
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --task detect \
+  --time 2 \
+  --epochs 1000 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 8 \
+  --cache ram \
+  --fraction 1 \
+  --device 0,1 \
+  --optimizer MuSGD \
+  --flash-mode turing \
+  --amp true \
+  --project /kaggle/working/custom_runs \
+  --name old_style_detect
+
+# 4) Validate
+python scripts/val.py \
+  --model /kaggle/working/custom_runs/old_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split val \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0 \
+  --flash-mode turing
+
+# 5) Test
+python scripts/test.py \
+  --model /kaggle/working/custom_runs/old_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split test \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0
+
+# 6) Export
+python scripts/export.py \
+  --model /kaggle/working/custom_runs/old_style_detect/weights/best.pt \
+  --format onnx \
+  --imgsz 640 \
+  --batch 1 \
+  --device 0 \
+  --dynamic \
+  --flash-mode turing
+
+# 7) Benchmark
+python scripts/benchmark.py \
+  --model /kaggle/working/custom_runs/old_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --imgsz 640 \
+  --device 0 \
+  --half \
+  --flash-mode turing \
+  --format onnx \
+  --format engine \
+  --out-json /kaggle/working/custom_runs/old_style_detect/bench_t4.json
+```
+
+## 6.4) Full pipeline example (new API-style scripts)
+
+This is the equivalent workflow using `scripts/api_style/*.py`.
+
+```bash
+# 1) Setup
+mkdir -p /kaggle/work_here
+cd /kaggle/work_here
+if [ ! -d yolov13 ]; then
+  git clone https://github.com/ahmedelbamby-aast/yolov13-custom.git yolov13
+fi
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/10_setup_uv.sh
+bash kaggle/scripts/20_install_deps.sh
+source .venv/bin/activate
+
+# 2) Flash runtime
+export Y13_DISABLE_FLASH=0
+export Y13_USE_TURING_FLASH=1
+
+# 3) Train (DDP 2xT4, API-style)
+python scripts/api_style/train_api.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --task detect \
+  --time 2 \
+  --epochs 1000 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 8 \
+  --cache ram \
+  --fraction 1 \
+  --device 0,1 \
+  --optimizer MuSGD \
+  --flash-mode turing \
+  --project /kaggle/working/custom_runs \
+  --name api_style_detect
+
+# 4) Validate
+python scripts/api_style/val_api.py \
+  --model /kaggle/working/custom_runs/api_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split val \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0 \
+  --flash-mode turing
+
+# 5) Test
+python scripts/api_style/test_api.py \
+  --model /kaggle/working/custom_runs/api_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0 \
+  --flash-mode turing
+
+# 6) Export
+python scripts/api_style/export_api.py \
+  --model /kaggle/working/custom_runs/api_style_detect/weights/best.pt \
+  --format onnx \
+  --imgsz 640 \
+  --batch 1 \
+  --device 0 \
+  --dynamic \
+  --flash-mode turing
+
+# 7) Benchmark
+python scripts/api_style/benchmark_api.py \
+  --model /kaggle/working/custom_runs/api_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --imgsz 640 \
+  --device 0 \
+  --format onnx \
+  --flash-mode turing \
+  --out-json /kaggle/working/custom_runs/api_style_detect/bench_t4_api_style.json
 ```
 
 ## 7) Kaggle validation and utility pipelines

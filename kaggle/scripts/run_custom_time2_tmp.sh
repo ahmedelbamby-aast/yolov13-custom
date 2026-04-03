@@ -25,16 +25,6 @@ export MKL_NUM_THREADS="$(nproc)"
 export Y13_DISABLE_FLASH=0
 export Y13_USE_TURING_FLASH=1
 
-"${PY}" kaggle/scripts/37_feature_map_projection.py \
-  --model "${BEST_PT}" \
-  --valid-dir "${VALID_DIR}" \
-  --imgsz 640 \
-  --device 0 \
-  --out-dir "${OUT_ROOT}/feature_projection" \
-  --md-path "${OUT_ROOT}/ff_maps.md" \
-  > "${FMAP_LOG}" 2>&1 &
-FMAP_PID=$!
-
 "${PY}" scripts/train.py \
   --model ultralytics/cfg/models/v13/yolov13l.yaml \
   --data "${DATA_YAML}" \
@@ -51,6 +41,17 @@ FMAP_PID=$!
   --project "${OUT_ROOT}" \
   --name "${RUN_NAME}" \
   --flash-mode turing \
+  --feature-projection \
+  --feature-projection-script kaggle/scripts/37_feature_map_projection.py \
+  --feature-projection-valid-dir "${VALID_DIR}" \
+  --feature-projection-device 0 \
+  --feature-projection-out-dir "${OUT_ROOT}/feature_projection" \
+  --feature-projection-md-path "${OUT_ROOT}/ff_maps.md" \
+  --feature-projection-log-path "${FMAP_LOG}" \
+  --feature-projection-dataset-name "SBAS-AASTMT-AI-ALAMEIN" \
+  --feature-projection-model-name "YOLOv13" \
+  --feature-projection-variant "l" \
+  --feature-projection-flash-mode same \
   --arg val=true \
   --arg plots=true \
   --arg verbose=true \
@@ -64,4 +65,4 @@ grep -n "enlargement_enabled" kaggle/scripts/37_feature_map_projection.py
 grep -n "cv2.resize" kaggle/scripts/37_feature_map_projection.py
 
 printf 'training_pid=%s\nfeature_projection_pid=%s\nout_root=%s\ntrain_log=%s\nfeature_projection_log=%s\n' \
-  "${TRAIN_PID}" "${FMAP_PID}" "${OUT_ROOT}" "${TRAIN_LOG}" "${FMAP_LOG}"
+  "${TRAIN_PID}" "embedded_post_train" "${OUT_ROOT}" "${TRAIN_LOG}" "${FMAP_LOG}"

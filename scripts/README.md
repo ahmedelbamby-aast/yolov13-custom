@@ -20,6 +20,17 @@ The goal is to feel like normal Ultralytics usage, while making runtime behavior
 - `scripts/export.py`: export to ONNX/TensorRT/TorchScript/etc.
 - `scripts/benchmark.py`: benchmark model/export performance.
 
+Additional API-style variants (closer to `from ultralytics import YOLO` examples):
+
+- `scripts/api_style/train_api.py`
+- `scripts/api_style/val_api.py`
+- `scripts/api_style/test_api.py`
+- `scripts/api_style/predict_api.py`
+- `scripts/api_style/export_api.py`
+- `scripts/api_style/benchmark_api.py`
+
+See `scripts/api_style/README.md` for usage.
+
 ## Flash Backend Control (Turing / Fallback / Auto)
 
 All scripts accept:
@@ -162,3 +173,25 @@ Each script prints:
 - final kwargs passed to Ultralytics
 
 This makes runs easy to audit and reproduce.
+
+## Post-train Feature Projection (new)
+
+Both train entry points support optional post-train feature-map projection that runs only after training finishes and uses `best.pt`.
+
+Supported in:
+
+- `scripts/train.py`
+- `scripts/api_style/train_api.py`
+
+Main flags:
+
+- `--feature-projection` enable post-train projection
+- `--feature-projection-script` projection script path
+- `--feature-projection-valid-dir` fallback image directory
+- `--feature-projection-source` optional fixed image
+- `--feature-projection-out-dir` output directory for overlays
+- `--feature-projection-md-path` markdown report path
+- `--feature-projection-log-path` projection log file
+- `--feature-projection-flash-mode` one of `same|auto|fallback|turing`
+
+`same` means projection reuses the training flash mode, including Turing when training used `--flash-mode turing`.
