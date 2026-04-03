@@ -1,0 +1,56 @@
+{
+  "phase": "phase3",
+  "gate": "final_integration",
+  "status": "ok",
+  "steps": {
+    "train": {
+      "status": "ok",
+      "elapsed_s": 39.49501013755798,
+      "output": {
+        "best": "/kaggle/working/phase3_final_gate/train_detect_1e/weights/best.pt"
+      }
+    },
+    "val": {
+      "status": "ok",
+      "elapsed_s": 4.162073612213135,
+      "output": {
+        "metric_keys": [
+          "fitness",
+          "metrics/mAP50(B)",
+          "metrics/mAP50-95(B)",
+          "metrics/mAP75(B)",
+          "metrics/precision(B)",
+          "metrics/recall(B)"
+        ]
+      }
+    },
+    "predict": {
+      "status": "ok",
+      "elapsed_s": 0.42378783226013184,
+      "output": {
+        "results_len": 4
+      }
+    },
+    "export": {
+      "status": "ok",
+      "elapsed_s": 17.657635927200317,
+      "output": {
+        "artifact": "/kaggle/working/phase3_final_gate/train_detect_1e/weights/best.onnx"
+      }
+    },
+    "benchmark": {
+      "status": "ok",
+      "elapsed_s": 176.48256015777588,
+      "output": {
+        "flash_backend": "flash_attn_turing",
+        "device": "0",
+        "formats": [
+          "onnx",
+          "engine"
+        ]
+      }
+    }
+  },
+  "ok_steps": 5,
+  "fail_steps": 0
+}

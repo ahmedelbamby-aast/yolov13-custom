@@ -53,3 +53,8 @@ Prove that the upgraded stack preserves expected behavior and performance charac
     - validated on T4 GPU with turing flash backend.
   - Artifact:
     - `roadmap/artifacts/phase3_t4_benchmark_summary.json`
+
+- Final integration gate benchmark (mandatory, non-optional) passed on T4 with controlled formats:
+  - formats: `onnx`, `engine`
+  - backend: `flash_attn_turing`
+  - artifact: `roadmap/artifacts/phase3_final_gate_benchmark.json`
