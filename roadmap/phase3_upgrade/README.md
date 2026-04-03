@@ -26,6 +26,10 @@ Execution principles:
 - Prefer upstream behavior by default, then layer custom deltas with minimal drift.
 - Mandatory gate: run at least one DDP smoke validation at the end of each phase.
 
+Recommended gate command:
+
+- `python kaggle/scripts/35_phase_ddp_gate.py --phase <phase-tag> --flash-mode auto`
+
 Current status:
 
 - Phase 1 verification gates are passing with artifact evidence committed.
