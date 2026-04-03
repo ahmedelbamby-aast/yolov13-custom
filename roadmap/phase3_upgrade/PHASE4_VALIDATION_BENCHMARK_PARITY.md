@@ -41,3 +41,15 @@ Prove that the upgraded stack preserves expected behavior and performance charac
   - `kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md`
 - Added benchmark summary artifact:
   - `roadmap/artifacts/phase3_l_flash_compare_5e_summary.json`
+
+- Investigated T4 benchmark blocker (high VRAM with near-zero util / unstable benchmark process).
+  - Root causes:
+    1) global `model.benchmark()` format sweep triggered irrelevant framework checks/auto-installs,
+    2) ONNX FP16 export path failed for this model (`avg_pool2d` half issue),
+    3) SSH stream instability could surface as broken-pipe errors during long export logs.
+  - Resolution:
+    - replaced developer benchmark flow with controlled GPU-only format loop in `scripts/benchmark.py`,
+    - enforced format-level half policy (`onnx` uses FP32, `engine`/`torchscript` can use FP16),
+    - validated on T4 GPU with turing flash backend.
+  - Artifact:
+    - `roadmap/artifacts/phase3_t4_benchmark_summary.json`

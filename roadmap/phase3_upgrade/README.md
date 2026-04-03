@@ -37,4 +37,5 @@ Current status:
 - Phase 2 replay smoke matrix is passing for fallback+turing across detect/segment/pose/obb.
 - Phase 4 benchmark rerun on upgraded baseline completed for fallback vs turing (`detect/segment/pose/obb`, 5e).
 - Standardized per-phase DDP gate script is added and validated on Phase 3.
+- T4 GPU benchmark blocker is resolved with controlled benchmark runner (`scripts/benchmark.py`).
 - Next execution step: continue deeper parity hardening and expand benchmark coverage on the upgraded baseline.
