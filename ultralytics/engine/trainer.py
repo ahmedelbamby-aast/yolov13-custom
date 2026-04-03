@@ -54,6 +54,7 @@ from ultralytics.utils.torch_utils import (
     select_device,
     strip_optimizer,
     torch_distributed_zero_first,
+    unwrap_model,
 )
 
 
@@ -803,7 +804,7 @@ class BaseTrainer:
                 f"ignoring 'lr0={self.args.lr0}' and 'momentum={self.args.momentum}' and "
                 f"determining best 'optimizer', 'lr0' and 'momentum' automatically... "
             )
-            nc = getattr(model, "nc", 10)  # number of classes
+            nc = self.data.get("nc", 10)  # number of classes
             lr_fit = round(0.002 * 5 / (4 + nc), 6)  # lr0 fit equation to 6 decimal places
             name, lr, momentum = ("MuSGD", 0.01, 0.9) if iterations > 10000 else ("AdamW", lr_fit, 0.9)
             self.args.warmup_bias_lr = 0.0  # no higher than 0.01 for Adam
@@ -813,15 +814,15 @@ class BaseTrainer:
             requested_name = "MuSGD"
         use_muon = requested_name == "MuSGD"
 
-        for module_name, module in model.named_modules():
+        for module_name, module in unwrap_model(model).named_modules():
             for param_name, param in module.named_parameters(recurse=False):
                 fullname = f"{module_name}.{param_name}" if module_name else param_name
-                if "bias" in fullname:  # bias (no decay)
-                    g[2][fullname] = param
-                elif isinstance(module, bn):  # weight (no decay)
-                    g[1][fullname] = param
-                elif use_muon and param.ndim >= 2:  # muon-capable matrices/filters
+                if use_muon and param.ndim >= 2:  # muon-capable matrices/filters
                     g[3][fullname] = param
+                elif "bias" in fullname:  # bias (no decay)
+                    g[2][fullname] = param
+                elif isinstance(module, bn) or "logit_scale" in fullname:  # weight (no decay)
+                    g[1][fullname] = param
                 else:  # weight (with decay)
                     g[0][fullname] = param
 

@@ -42,3 +42,12 @@ Reference baseline: `upstream/main`
 1. Finish low-risk and medium-risk parity refinements.
 2. Rebase/port high-risk files one by one with explicit custom-delta reapplication.
 3. Run smoke checks after each high-risk file update.
+
+## Progress updates
+
+- `ultralytics/optim/__init__.py` and `ultralytics/optim/muon.py` were set to exact upstream content.
+- `ultralytics/engine/trainer.py` parity moved closer to upstream for:
+  - `unwrap_model(model).named_modules()` traversal
+  - `nc = self.data.get("nc", 10)` in `optimizer=auto`
+  - `logit_scale` no-decay grouping
+  - muon grouping order before bias
