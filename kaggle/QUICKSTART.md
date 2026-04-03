@@ -309,6 +309,150 @@ At completion, verify:
 - per-layer projected overlays under `/kaggle/working/final_run/feature_projection/`
 - final markdown report `/kaggle/working/final_run/ff_maps.md`
 
+## 6.2) End-to-end custom dataset example (setup -> train -> val -> test -> benchmark)
+
+This is a full developer flow you can repeat for any custom YOLO-format detect dataset.
+
+### A) Setup from scratch
+
+```bash
+mkdir -p /kaggle/work_here
+cd /kaggle/work_here
+
+if [ ! -d yolov13 ]; then
+  git clone https://github.com/ahmedelbamby-aast/yolov13-custom.git yolov13
+fi
+
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/10_setup_uv.sh
+bash kaggle/scripts/20_install_deps.sh
+source .venv/bin/activate
+```
+
+### B) Optional: sync latest run scripts from `origin/main`
+
+Use this when your local Kaggle clone is not on the latest main commit.
+
+```bash
+cd /kaggle/work_here/yolov13
+git fetch origin
+git show origin/main:kaggle/scripts/37_feature_map_projection.py > kaggle/scripts/37_feature_map_projection.py
+git show origin/main:kaggle/scripts/run_custom_time2_tmp.sh > kaggle/scripts/run_custom_time2_tmp.sh
+chmod +x kaggle/scripts/run_custom_time2_tmp.sh
+```
+
+### C) Prepare custom dataset
+
+Expected structure:
+
+- `/kaggle/work_here/datasets/my_detect/train/images`
+- `/kaggle/work_here/datasets/my_detect/train/labels`
+- `/kaggle/work_here/datasets/my_detect/valid/images`
+- `/kaggle/work_here/datasets/my_detect/valid/labels`
+- `/kaggle/work_here/datasets/my_detect/test/images`
+- `/kaggle/work_here/datasets/my_detect/test/labels`
+- `/kaggle/work_here/datasets/my_detect/data.yaml`
+
+Example `data.yaml`:
+
+```yaml
+path: /kaggle/work_here/datasets/my_detect
+train: train/images
+val: valid/images
+test: test/images
+nc: 2
+names: [student, teacher]
+```
+
+### D) Train (DDP 2xT4 + Turing flash)
+
+Notes:
+
+- `amp=True` is the recommended train-time mixed precision path (half-precision behavior for training).
+- DDP is enabled by `--device 0,1`.
+
+```bash
+cd /kaggle/work_here/yolov13
+source .venv/bin/activate
+
+export Y13_DISABLE_FLASH=0
+export Y13_USE_TURING_FLASH=1
+
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --task detect \
+  --time 2 \
+  --epochs 1000 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 8 \
+  --cache ram \
+  --fraction 1 \
+  --device 0,1 \
+  --optimizer MuSGD \
+  --flash-mode turing \
+  --amp true \
+  --project /kaggle/working/custom_runs \
+  --name detect_l_time2_custom \
+  | tee /kaggle/working/custom_runs/detect_l_time2_custom_train.log
+```
+
+### E) Validate (`val` split)
+
+```bash
+python scripts/val.py \
+  --model /kaggle/working/custom_runs/detect_l_time2_custom/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split val \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0 \
+  --flash-mode turing
+```
+
+### F) Test (`test` split)
+
+```bash
+python scripts/test.py \
+  --model /kaggle/working/custom_runs/detect_l_time2_custom/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split test \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0
+```
+
+### G) Benchmark (controlled ONNX + TensorRT on T4)
+
+```bash
+python scripts/benchmark.py \
+  --model /kaggle/working/custom_runs/detect_l_time2_custom/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --imgsz 640 \
+  --device 0 \
+  --half \
+  --flash-mode turing \
+  --format onnx \
+  --format engine \
+  --out-json /kaggle/working/custom_runs/detect_l_time2_custom/bench_t4.json
+```
+
+### H) Quick verification checklist
+
+```bash
+grep -nE "flash_mode_env|resolved_flash_backend|DDP|time=2|optimizer=MuSGD|cache=ram|fraction=1" /kaggle/working/custom_runs/detect_l_time2_custom_train.log
+ls -la /kaggle/working/custom_runs/detect_l_time2_custom/weights
+cat /kaggle/working/custom_runs/detect_l_time2_custom/results.csv | tail -n 5
+```
+
+If you want the integrated final-run package (train + feature-map projection + `ff_maps.md`), use section **6.1** launcher:
+
+```bash
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/run_custom_time2_tmp.sh
+```
+
 ## 7) Kaggle validation and utility pipelines
 
 ### DDP smoke
