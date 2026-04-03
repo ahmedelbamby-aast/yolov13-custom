@@ -51,3 +51,5 @@ Reference baseline: `upstream/main`
   - `nc = self.data.get("nc", 10)` in `optimizer=auto`
   - `logit_scale` no-decay grouping
   - muon grouping order before bias
+- `ultralytics/engine/validator.py` got a low-risk upstream-safe parsing sync (`rsplit('.', 1)`), while keeping custom
+  task-aware `check_det_dataset(..., task=self.args.task)`.
