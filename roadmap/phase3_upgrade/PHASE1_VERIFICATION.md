@@ -28,6 +28,11 @@ Branch: `phase3-upgrade-ultralytics-and-deps`
    - Turing path confirmed active (`FLASH_BACKEND=flash_attn_turing`).
    - Artifact: `roadmap/artifacts/phase3_task_val_smoke.json`
 
+6. Custom delta audit
+   - Scope: verify key custom features survived upstream-alignment updates.
+   - Result: `11/11` checks passed.
+   - Artifact: `roadmap/artifacts/phase3_custom_delta_audit.json`
+
 ## Notes
 
 - Core runtime is now on `ultralytics.__version__ == 8.4.33` surface.
