@@ -1,0 +1,38 @@
+{
+  "baseline": {
+    "total": 144,
+    "hits": 0,
+    "fallbacks": 144,
+    "hit_rate": 0.0,
+    "head_dims": {
+      "32": 144
+    },
+    "fallback_reasons": {
+      "not_cuda": 24,
+      "unsupported_head_dim_32": 120
+    },
+    "inference_ms": 9.2,
+    "train_iter_s": null,
+    "log_path": "/kaggle/working/smoke_telemetry_baseline.log"
+  },
+  "head32_enabled": {
+    "total": 144,
+    "hits": 120,
+    "fallbacks": 24,
+    "hit_rate": 83.33,
+    "head_dims": {
+      "32": 144
+    },
+    "fallback_reasons": {
+      "not_cuda": 24
+    },
+    "inference_ms": 7.7,
+    "train_iter_s": null,
+    "log_path": "/kaggle/working/smoke_telemetry_head32.log"
+  },
+  "delta": {
+    "hit_rate_pp": 83.33,
+    "inference_ms": -1.5,
+    "train_iter_s": null
+  }
+}
