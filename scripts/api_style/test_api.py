@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""API-style test script (validation over test split)."""
+"""API-style test script (validation over configurable split)."""
 
 from __future__ import annotations
 
@@ -10,9 +10,10 @@ from common import apply_flash_mode, print_runtime, resolve_flash_backend
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Test with YOLO API-style calls (split=test).")
+    p = argparse.ArgumentParser(description="Test with YOLO API-style calls.")
     p.add_argument("--model", required=True)
     p.add_argument("--data", required=True)
+    p.add_argument("--split", default="test")
     p.add_argument("--task", default=None)
     p.add_argument("--imgsz", type=int, default=640)
     p.add_argument("--batch", type=int, default=16)
@@ -33,7 +34,7 @@ def main() -> None:
 
     kwargs = {
         "data": args.data,
-        "split": "test",
+        "split": args.split,
         "imgsz": args.imgsz,
         "batch": args.batch,
         "device": args.device,

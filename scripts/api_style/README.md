@@ -87,9 +87,12 @@ python scripts/api_style/val_api.py \
 python scripts/api_style/test_api.py \
   --model /kaggle/working/runs/train/api_style_train/weights/best.pt \
   --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split test \
   --device 0 \
   --flash-mode turing
 ```
+
+`--split` defaults to `test`; set `--split val` for datasets that do not define a `test` split.
 
 ### Predict
 
