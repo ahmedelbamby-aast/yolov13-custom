@@ -750,6 +750,7 @@ python scripts/api_style/val_api.py \
 python scripts/api_style/test_api.py \
   --model /kaggle/working/custom_runs/api_style_detect/weights/best.pt \
   --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split test \
   --imgsz 640 \
   --batch 16 \
   --device 0 \
@@ -775,6 +776,8 @@ python scripts/api_style/benchmark_api.py \
   --flash-mode turing \
   --out-json /kaggle/working/custom_runs/api_style_detect/bench_t4_api_style.json
 ```
+
+If your dataset has no `test` split, run `--split val` with `scripts/api_style/test_api.py`.
 
 ## 7) Kaggle validation and utility pipelines
 
