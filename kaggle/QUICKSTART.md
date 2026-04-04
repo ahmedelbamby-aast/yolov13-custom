@@ -77,6 +77,7 @@ export Y13_TORCH_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu124
 ```
 
 For latest cu13 stack on hosts with older system CUDA toolkits, turFlash installer also injects NVCC from pip (`nvidia-cuda-nvcc`) and prepends it to `PATH`.
+It also installs matching CUDA headers (`nvidia-cuda-cccl`) and builds turFlash with `--no-deps` to avoid torch/NCCL downgrades.
 
 ### 3.1) Optional one-shot Roboflow dataset prep
 
