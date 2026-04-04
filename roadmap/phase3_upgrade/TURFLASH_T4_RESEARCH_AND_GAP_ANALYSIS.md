@@ -181,3 +181,9 @@ Resolution strategy:
 4. Optionally add telemetry split fields:
    - `cuda_total`, `cuda_flash_hits`, `cuda_fallbacks`
    so comparisons focus on GPU-executable attention calls.
+
+Implemented in current phase:
+
+- Added CUDA-only telemetry fields and reporting in flash summary:
+  - `cuda_total`, `cuda_hits`, `cuda_fallbacks`, `cuda_hit_rate`.
+- In dirty-data parallel benchmark, CUDA-only measurement confirms `not_cuda` is fixed-size eval-side noise while CUDA coverage moves from 0% to 100% with head32 enabled.

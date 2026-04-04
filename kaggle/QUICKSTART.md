@@ -835,8 +835,21 @@ bash kaggle/scripts/15_roboflow_ready.sh
 Y13_DIRTY_DATA_YAML=/kaggle/work_here/datasets/roboflow_custom_detect_dirty/data.yaml \
 Y13_HEAD32_BENCH_EPOCHS=5 \
 Y13_HEAD32_BENCH_FRACTION=0.05 \
+Y13_HEAD32_BENCH_BASE_DEVICE=1 \
+Y13_HEAD32_BENCH_HEAD32_DEVICE=0 \
+Y13_HEAD32_BENCH_WORKERS_PER_RUN=2 \
 bash kaggle/scripts/182_benchmark_head32_dirty_smoke.sh
 ```
+
+Benchmark policy used in this phase:
+
+- real dirty dataset only (no synthetic benchmark dataset)
+- two runs in parallel:
+  - baseline on `gpu:1`
+  - head32-enabled on `gpu:0`
+- each run is hard-pinned via `CUDA_VISIBLE_DEVICES` and launched with local `--device 0`
+- workers per run: `2` (total `4`)
+- train cache: `ram`
 
 Artifacts:
 
@@ -846,9 +859,12 @@ Artifacts:
 
 Latest 5-epoch dirty-data smoke snapshot (fraction `0.05`):
 
-- baseline train epoch time: `118.08s`
-- head32-enabled train epoch time: `115.92s`
-- train speedup: `1.02x`
+- parallel policy: baseline `gpu:1`, head32 `gpu:0`, workers per run `2`, cache `ram`
+- baseline train epoch time: `133.20s`
+- head32-enabled train epoch time: `133.20s`
+- train speedup: `1.00x`
+- baseline CUDA-only hit-rate: `0.00%` (`0/10128`)
+- head32 CUDA-only hit-rate: `100.00%` (`10128/10128`)
 - baseline fallback reasons: `{'not_cuda': 24, 'unsupported_head_dim_32': 10128}`
 - head32-enabled fallback reasons: `{'not_cuda': 24}`
 

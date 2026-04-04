@@ -66,3 +66,32 @@ def flash_attn_func(
     causal: bool = False,
 ) -> torch.Tensor:
     return _FlashAttnFunc.apply(q, k, v, softmax_scale, causal)
+
+
+def varlen_flash_attn_func(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    cu_seqlens_q: torch.Tensor,
+    cu_seqlens_k: torch.Tensor,
+    max_seqlen_q: int,
+    max_seqlen_k: int,
+    softmax_scale: Optional[float] = None,
+    causal: bool = False,
+) -> torch.Tensor:
+    q, k, v = [_maybe_contiguous(x) for x in (q, k, v)]
+    cu_seqlens_q = _maybe_contiguous(cu_seqlens_q)
+    cu_seqlens_k = _maybe_contiguous(cu_seqlens_k)
+    softmax_scale = q.shape[-1] ** (-0.5) if softmax_scale is None else softmax_scale
+    out, _ = flash_attn_gpu.varlen_fwd(
+        q,
+        k,
+        v,
+        cu_seqlens_q,
+        cu_seqlens_k,
+        int(max_seqlen_q),
+        int(max_seqlen_k),
+        float(softmax_scale),
+        bool(causal),
+    )
+    return out
