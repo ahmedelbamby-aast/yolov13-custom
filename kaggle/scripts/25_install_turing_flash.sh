@@ -38,6 +38,7 @@ uv pip install --python "${PY}" \
 for candidate in "${Y13_VENV}/lib/python"*/site-packages/nvidia/cu13/bin; do
   if [[ -d "${candidate}" ]]; then
     export PATH="${candidate}:${PATH}"
+    export LD_LIBRARY_PATH="${candidate}:${LD_LIBRARY_PATH:-}"
     export CUDACXX="${candidate}/nvcc"
     break
   fi
@@ -48,6 +49,10 @@ for candidate in "${Y13_VENV}/lib/python"*/site-packages/nvidia/cu13; do
     break
   fi
 done
+
+echo "[turflash] nvcc=$(command -v nvcc || true)"
+echo "[turflash] ptxas=$(command -v ptxas || true)"
+ptxas --version || true
 
 echo "[turflash] MAX_JOBS=${MAX_JOBS} TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}"
 
