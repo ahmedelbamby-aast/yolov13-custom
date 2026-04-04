@@ -31,10 +31,10 @@ export TORCH_CUDA_ARCH_LIST="${Y13_TORCH_CUDA_ARCH_LIST:-7.5}"
 
 # Ensure CUDA compiler toolchain/headers match torch CUDA major (cu13 wheels) when system CUDA is older.
 uv pip install --python "${PY}" \
-  "nvidia-cuda-nvcc==${Y13_NVCC_VERSION:-13.0.88}" \
+  "nvidia-cuda-nvcc==${Y13_NVCC_VERSION:-13.2.51}" \
   "nvidia-cuda-crt==${Y13_CUDA_CRT_VERSION:-13.2.51}" \
   "nvidia-nvvm==${Y13_NVVM_VERSION:-13.2.51}" \
-  "nvidia-cuda-cccl==${Y13_CUDA_CCCL_VERSION:-13.0.85}"
+  "nvidia-cuda-cccl==${Y13_CUDA_CCCL_VERSION:-13.2.27}"
 for candidate in "${Y13_VENV}/lib/python"*/site-packages/nvidia/cu13/bin; do
   if [[ -d "${candidate}" ]]; then
     export PATH="${candidate}:${PATH}"
