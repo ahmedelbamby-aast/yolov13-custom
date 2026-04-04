@@ -551,6 +551,65 @@ cd /kaggle/work_here/yolov13
 bash kaggle/scripts/run_custom_time2_tmp.sh
 ```
 
+### 6.2.1) Fix class-ID mismatch quickly (new helper script)
+
+If you see warnings like:
+
+- `Label class 9 exceeds dataset class count 2`
+
+then your `data.yaml` was reduced (e.g., to 2 classes) but label `.txt` files still contain old IDs.
+
+Use `kaggle/scripts/38_class_remap.py` to keep selected classes and remap them to `0..N-1`.
+
+Keep classes by **name** (recommended):
+
+```bash
+cd /kaggle/work_here/yolov13
+source .venv/bin/activate
+
+python kaggle/scripts/38_class_remap.py \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --include-name student \
+  --include-name teacher
+```
+
+Keep classes by **original ID**:
+
+```bash
+python kaggle/scripts/38_class_remap.py \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --include-id 8 \
+  --include-id 9
+```
+
+Preview only (no write):
+
+```bash
+python kaggle/scripts/38_class_remap.py \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --include-name student \
+  --include-name teacher \
+  --dry-run
+```
+
+What the script does:
+
+- rewrites all `labels/*.txt` across train/val/valid/test
+- drops boxes from non-selected classes
+- remaps selected classes to contiguous IDs starting at 0
+- updates `data.yaml` `names` and `nc`
+- deletes stale `*.cache` files by default (use `--keep-cache` to disable)
+
+After remap, rerun val first (single GPU) before DDP:
+
+```bash
+CUDA_LAUNCH_BLOCKING=1 python scripts/val.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split val \
+  --device 0
+```
+
 ## 6.3) Full pipeline example (old-style scripts)
 
 This is a compact copy-paste workflow from setup to train/val/test/export/benchmark using `scripts/*.py`.
