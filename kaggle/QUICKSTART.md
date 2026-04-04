@@ -69,6 +69,13 @@ bash kaggle/scripts/32_cuda_sanity_report.sh
 
 Default behavior in this repo prefers Turing flash on T4 when available.
 
+Naming note:
+
+- In this repo/docs, `turFlash` refers to the Turing-focused package `flash-attention-turing`.
+- Python import/module name is `flash_attn_turing`.
+- Runtime backend string in logs is `flash_attn_turing`.
+- See detailed research and gap analysis: `roadmap/phase3_upgrade/TURFLASH_T4_RESEARCH_AND_GAP_ANALYSIS.md`.
+
 ### 4.1 Install / build Turing FlashAttention
 
 The repo supports installing `ssiu/flash-attention-turing` through:
@@ -901,3 +908,4 @@ Use notebooks from `notebooks/` with the same venv in `/kaggle/work_here/yolov13
 
 - Developer script guide: `scripts/README.md`
 - L-task benchmark report: `kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md`
+- turFlash/T4 research and gap analysis: `roadmap/phase3_upgrade/TURFLASH_T4_RESEARCH_AND_GAP_ANALYSIS.md`
