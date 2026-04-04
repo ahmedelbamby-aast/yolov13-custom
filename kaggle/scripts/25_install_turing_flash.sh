@@ -29,29 +29,21 @@ export CC=gcc
 export MAX_JOBS="${Y13_TURFLASH_MAX_JOBS:-2}"
 export TORCH_CUDA_ARCH_LIST="${Y13_TORCH_CUDA_ARCH_LIST:-7.5}"
 
-# Ensure CUDA compiler toolchain/headers match torch CUDA major (cu13 wheels) when system CUDA is older.
-uv pip install --python "${PY}" \
-  "nvidia-cuda-nvcc==${Y13_NVCC_VERSION:-13.2.51}" \
-  "nvidia-cuda-crt==${Y13_CUDA_CRT_VERSION:-13.2.51}" \
-  "nvidia-nvvm==${Y13_NVVM_VERSION:-13.2.51}" \
-  "nvidia-cuda-cccl==${Y13_CUDA_CCCL_VERSION:-13.2.27}"
-for candidate in "${Y13_VENV}/lib/python"*/site-packages/nvidia/cu13/bin; do
-  if [[ -d "${candidate}" ]]; then
-    export PATH="${candidate}:${PATH}"
-    export LD_LIBRARY_PATH="${candidate}:${LD_LIBRARY_PATH:-}"
-    export CUDACXX="${candidate}/nvcc"
-    break
-  fi
-done
-for candidate in "${Y13_VENV}/lib/python"*/site-packages/nvidia/cu13; do
-  if [[ -d "${candidate}" ]]; then
-    export CUDA_HOME="${candidate}"
-    break
-  fi
-done
+# Use system CUDA toolchain first (Kaggle provides /usr/local/cuda).
+if [[ -d "/usr/local/cuda" ]]; then
+  export CUDA_HOME="/usr/local/cuda"
+fi
+if [[ -n "${CUDA_HOME:-}" && -d "${CUDA_HOME}/bin" ]]; then
+  export PATH="${CUDA_HOME}/bin:${PATH}"
+  export LD_LIBRARY_PATH="${CUDA_HOME}/lib64:${LD_LIBRARY_PATH:-}"
+fi
+if command -v nvcc >/dev/null 2>&1; then
+  export CUDACXX="$(command -v nvcc)"
+fi
 
 echo "[turflash] nvcc=$(command -v nvcc || true)"
 echo "[turflash] ptxas=$(command -v ptxas || true)"
+nvcc --version || true
 ptxas --version || true
 
 echo "[turflash] MAX_JOBS=${MAX_JOBS} TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}"

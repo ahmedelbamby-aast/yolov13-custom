@@ -66,19 +66,18 @@ bash kaggle/scripts/30_gpu_check.sh
 bash kaggle/scripts/32_cuda_sanity_report.sh
 ```
 
-Torch stack defaults to latest validated runtime (`torch==2.11.0`, `torchvision==0.26.0`, `nvidia-nccl-cu13==2.29.7`).
+Torch stack defaults to turFlash-tested runtime (`torch==2.8.0`, `torchvision==0.23.0`, `nvidia-nccl-cu12==2.27.3`).
 Optional override before `20_install_deps.sh`:
 
 ```bash
-export Y13_TORCH_VERSION=2.5.1
-export Y13_TORCHVISION_VERSION=0.20.1
-export Y13_NCCL_VERSION=2.29.7
+export Y13_TORCH_VERSION=2.8.0
+export Y13_TORCHVISION_VERSION=0.23.0
+export Y13_NCCL_VERSION=2.27.3
 export Y13_TORCH_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu124
 ```
 
-For latest cu13 stack on hosts with older system CUDA toolkits, turFlash installer also injects NVCC from pip (`nvidia-cuda-nvcc`) and prepends it to `PATH`.
-It also installs matching CUDA headers (`nvidia-cuda-cccl`) and builds turFlash with `--no-deps` to avoid torch/NCCL downgrades.
-Default compile toolchain pins use CUDA 13.2 components (`nvidia-cuda-nvcc`, `nvidia-cuda-crt`, `nvidia-nvvm`, `nvidia-cuda-cccl`) to keep PTX assembler compatibility.
+For the cu12 baseline, turFlash installer uses the system CUDA toolchain (`/usr/local/cuda`) by default and prepends it to `PATH`.
+It also builds turFlash with `--no-deps` to avoid torch/NCCL version drift.
 
 ### 3.1) Optional one-shot Roboflow dataset prep
 
