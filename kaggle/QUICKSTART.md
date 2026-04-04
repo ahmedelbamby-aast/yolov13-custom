@@ -857,6 +857,18 @@ Artifacts:
 - `kaggle/benchmarks/flash_head32_dirty_smoke/REPORT.md`
 - `kaggle/benchmarks/flash_head32_dirty_smoke/telemetry_compare.png`
 
+Round-separated benchmark archives and comparison plots:
+
+- `kaggle/benchmarks/flash_head32_dirty_smoke_round1/`
+- `kaggle/benchmarks/flash_head32_dirty_smoke_round2/`
+- `kaggle/benchmarks/flash_head32_dirty_smoke_comparison/`
+
+Generate/update these round-separated plots and reports:
+
+```bash
+python kaggle/scripts/183_generate_dirty_rounds_plots.py
+```
+
 Latest 5-epoch dirty-data smoke snapshot (fraction `0.05`):
 
 - parallel policy: baseline `gpu:1`, head32 `gpu:0`, workers per run `2`, cache `ram`
