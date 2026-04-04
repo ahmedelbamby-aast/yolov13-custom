@@ -18,3 +18,25 @@ fi
 uv pip install --python "${Y13_ROOT}/.venv/bin/python" --upgrade pip setuptools wheel
 
 "${Y13_ROOT}/.venv/bin/python" -V
+
+ACTIVATE_PATH="${Y13_ROOT}/.venv/bin/activate"
+MARKER="# Y13: ensure torch CUDA shared libs are discoverable (turFlash import)"
+
+if [[ -f "${ACTIVATE_PATH}" ]] && ! grep -Fq "${MARKER}" "${ACTIVATE_PATH}"; then
+  cat <<'EOF' >> "${ACTIVATE_PATH}"
+
+# Y13: ensure torch CUDA shared libs are discoverable (turFlash import)
+if [ -n "${VIRTUAL_ENV:-}" ]; then
+  for _y13_torch_lib in "$VIRTUAL_ENV"/lib/python*/site-packages/torch/lib; do
+    if [ -d "$_y13_torch_lib" ]; then
+      case ":${LD_LIBRARY_PATH:-}:" in
+        *":$_y13_torch_lib:"*) ;;
+        *) export LD_LIBRARY_PATH="$_y13_torch_lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" ;;
+      esac
+      break
+    fi
+  done
+  unset _y13_torch_lib
+fi
+EOF
+fi
