@@ -8,6 +8,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+plt.rcParams["font.family"] = "DejaVu Sans"
+
 
 ROUND1_SUMMARY = {
     "baseline": {
@@ -59,19 +61,19 @@ def _plot_round(summary: dict, out_png: Path, title: str) -> None:
     inf_vals = [b.get("inference_ms", 0.0) or 0.0, h.get("inference_ms", 0.0) or 0.0]
     trn_vals = [b.get("train_epoch_s", 0.0) or 0.0, h.get("train_epoch_s", 0.0) or 0.0]
 
-    color = "#1f77b4"
-    fig, axes = plt.subplots(1, 3, figsize=(24, 7.5))
+    bar_colors = ["#1f77b4", "#ff7f0e"]
+    fig, axes = plt.subplots(1, 3, figsize=(26, 8.5))
 
-    bars0 = axes[0].bar(labels, hit_vals, color=color)
+    bars0 = axes[0].bar(labels, hit_vals, color=bar_colors)
     axes[0].set_title("Flash Hit Rate (%)")
     axes[0].set_ylim(0, 110)
     axes[0].grid(axis="y", alpha=0.25)
 
-    bars1 = axes[1].bar(labels, inf_vals, color=color)
+    bars1 = axes[1].bar(labels, inf_vals, color=bar_colors)
     axes[1].set_title("Validation Inference (ms/img)")
     axes[1].grid(axis="y", alpha=0.25)
 
-    bars2 = axes[2].bar(labels, trn_vals, color=color)
+    bars2 = axes[2].bar(labels, trn_vals, color=bar_colors)
     axes[2].set_title("Train Time Per Epoch (s)")
     axes[2].grid(axis="y", alpha=0.25)
 
@@ -80,13 +82,16 @@ def _plot_round(summary: dict, out_png: Path, title: str) -> None:
         offset = 0.02 * ymax if ymax > 0 else 0.02
         for bar in bars:
             val = bar.get_height()
+            color = bar.get_facecolor()
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
                 val + offset,
                 f"{val:.{nd}f}",
                 ha="center",
                 va="bottom",
-                fontsize=12,
+                fontsize=13,
+                fontweight="bold",
+                color=color,
             )
 
     if speedup is not None and trn_vals[0] > 0:
@@ -103,7 +108,7 @@ def _plot_round(summary: dict, out_png: Path, title: str) -> None:
             fontweight="bold",
         )
 
-    fig.suptitle(title, fontsize=17)
+    fig.suptitle(title, fontsize=18)
     fig.tight_layout()
     fig.savefig(out_png, dpi=400)
     plt.close(fig)
@@ -187,34 +192,75 @@ def main() -> None:
     }
     (cmp_dir / "compare_rounds.json").write_text(json.dumps(comparison, indent=2), encoding="utf-8")
 
-    fig, axes = plt.subplots(1, 4, figsize=(30, 7.5))
     labels = ["round1", "round2"]
-    color = "#1f77b4"
-    metrics = [
-        ("hit_rate_pp", "Flash Hit-Rate Gain (pp)"),
-        ("inference_ms_delta", "Inference Delta (ms/img)"),
-        ("train_epoch_s_delta", "Train Epoch Delta (s)"),
-        ("speedup_x", "Speedup (x)"),
+    r1_base = ROUND1_SUMMARY["baseline"]
+    r2_base = round2_summary["baseline"]
+    r1_h32 = ROUND1_SUMMARY["head32_enabled"]
+    r2_h32 = round2_summary["head32_enabled"]
+
+    base_unsupported = [
+        r1_base.get("fallback_reasons", {}).get("unsupported_head_dim_32", 0),
+        r2_base.get("fallback_reasons", {}).get("unsupported_head_dim_32", 0),
     ]
-    for ax, (key, title) in zip(axes, metrics):
-        vals = [comparison[r][key] for r in labels]
-        bars = ax.bar(labels, vals, color=color)
-        ax.set_title(title)
-        ax.grid(axis="y", alpha=0.25)
-        ymax = max(abs(v) for v in vals) if vals else 1.0
-        offset = 0.03 * (ymax if ymax else 1.0)
-        for bar, val in zip(bars, vals):
-            y = val + (offset if val >= 0 else -offset)
+    base_not_cuda = [
+        r1_base.get("fallback_reasons", {}).get("not_cuda", 0),
+        r2_base.get("fallback_reasons", {}).get("not_cuda", 0),
+    ]
+    h32_flash = [r1_h32.get("hits", 0), r2_h32.get("hits", 0)]
+    h32_not_cuda = [
+        r1_h32.get("fallback_reasons", {}).get("not_cuda", 0),
+        r2_h32.get("fallback_reasons", {}).get("not_cuda", 0),
+    ]
+
+    fig, axes = plt.subplots(1, 2, figsize=(30, 8.5))
+
+    c_unsupported = "#d62728"
+    c_not_cuda = "#9467bd"
+    c_flash = "#2ca02c"
+
+    bars_base_uns = axes[0].bar(labels, base_unsupported, color=c_unsupported, label="unsupported_head_dim_32")
+    bars_base_nc = axes[0].bar(labels, base_not_cuda, bottom=base_unsupported, color=c_not_cuda, label="not_cuda")
+    axes[0].set_title("Baseline Attention Outcome (Stacked)")
+    axes[0].grid(axis="y", alpha=0.25)
+    axes[0].legend()
+
+    bars_h32_flash = axes[1].bar(labels, h32_flash, color=c_flash, label="flash_hits")
+    bars_h32_nc = axes[1].bar(labels, h32_not_cuda, bottom=h32_flash, color=c_not_cuda, label="not_cuda")
+    axes[1].set_title("Head32 Attention Outcome (Stacked)")
+    axes[1].grid(axis="y", alpha=0.25)
+    axes[1].legend()
+
+    def annotate_stacked(ax, lower_bars, upper_bars):
+        for bar in lower_bars:
+            val = bar.get_height()
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
-                y,
-                f"{val:.3f}",
+                val + max(1.0, 0.005 * val),
+                f"{int(val)}",
                 ha="center",
-                va="bottom" if val >= 0 else "top",
+                va="bottom",
                 fontsize=12,
+                fontweight="bold",
+                color=bar.get_facecolor(),
+            )
+        for low, up in zip(lower_bars, upper_bars):
+            val = up.get_height()
+            top = low.get_height() + val
+            ax.text(
+                up.get_x() + up.get_width() / 2,
+                top + max(1.0, 0.005 * top),
+                f"{int(val)}",
+                ha="center",
+                va="bottom",
+                fontsize=12,
+                fontweight="bold",
+                color=up.get_facecolor(),
             )
 
-    fig.suptitle("Dirty Smoke Benchmark Comparison: Round1 vs Round2", fontsize=17)
+    annotate_stacked(axes[0], bars_base_uns, bars_base_nc)
+    annotate_stacked(axes[1], bars_h32_flash, bars_h32_nc)
+
+    fig.suptitle("Dirty Smoke Benchmark Comparison (Stacked): Round1 vs Round2", fontsize=18)
     fig.tight_layout()
     fig.savefig(cmp_dir / "rounds_compare.png", dpi=400)
     plt.close(fig)
