@@ -94,7 +94,10 @@ Useful env flags:
 
 - `Y13_ROBOFLOW_FORCE=1` re-download/re-extract
 - `Y13_ROBOFLOW_DATASET_NAME=...` custom destination folder name
-- `Y13_ROBOFLOW_REMAP_STUDENT_TEACHER=1` auto-run class remap (`student`, `teacher`)
+- `Y13_ROBOFLOW_REMAP_ENABLE=1` enable auto-remap after dataset extraction
+- `Y13_ROBOFLOW_REMAP_INCLUDE_NAMES=student,teacher` comma-separated class names to keep
+- `Y13_ROBOFLOW_REMAP_INCLUDE_IDS=0,9` comma-separated original class IDs to keep
+- `Y13_ROBOFLOW_REMAP_STUDENT_TEACHER=1` legacy shortcut for `student,teacher`
 - `Y13_AUTO_ROBOFLOW_READY=1` run this script automatically from `run_all.sh`
 
 ## 4) Flash backend controls (global)
@@ -841,7 +844,8 @@ source .venv/bin/activate
 
 # optional: prepare + normalize + remap Roboflow dataset first
 Y13_ROBOFLOW_FORCE=1 \
-Y13_ROBOFLOW_REMAP_STUDENT_TEACHER=1 \
+Y13_ROBOFLOW_REMAP_ENABLE=1 \
+Y13_ROBOFLOW_REMAP_INCLUDE_NAMES=student,teacher \
 bash kaggle/scripts/15_roboflow_ready.sh
 
 # benchmark 5 epochs using 5% subset
