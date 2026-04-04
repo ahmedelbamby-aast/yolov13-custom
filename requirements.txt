@@ -3,6 +3,7 @@
 
 torch==2.11.0
 torchvision==0.26.0
+nvidia-nccl-cu13==2.29.7
 timm==1.0.19
 albumentations==2.0.8
 onnx==1.17.0

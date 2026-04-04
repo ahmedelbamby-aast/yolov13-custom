@@ -23,6 +23,9 @@ else
   uv pip install --python "${PY}" ${TORCH_SPEC}
 fi
 
+# Keep NCCL runtime aligned with latest torch+cu13 wheels.
+uv pip install --python "${PY}" "nvidia-nccl-cu13==${Y13_NCCL_VERSION:-2.29.7}"
+
 "${PY}" - <<'PY'
 from pathlib import Path
 import subprocess

@@ -66,12 +66,13 @@ bash kaggle/scripts/30_gpu_check.sh
 bash kaggle/scripts/32_cuda_sanity_report.sh
 ```
 
-Torch stack defaults to latest validated runtime (`torch==2.11.0`, `torchvision==0.26.0`).
+Torch stack defaults to latest validated runtime (`torch==2.11.0`, `torchvision==0.26.0`, `nvidia-nccl-cu13==2.29.7`).
 Optional override before `20_install_deps.sh`:
 
 ```bash
 export Y13_TORCH_VERSION=2.5.1
 export Y13_TORCHVISION_VERSION=0.20.1
+export Y13_NCCL_VERSION=2.29.7
 export Y13_TORCH_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu124
 ```
 
