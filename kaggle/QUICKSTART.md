@@ -290,6 +290,485 @@ python scripts/train.py \
   --cos_lr true
 ```
 
+## 6.1) Repeatable final detect run (2xT4 DDP + Turing flash + feature-map projection)
+
+Use this procedure when you want to re-run the exact final workflow:
+
+- task: detect only
+- model: YOLOv13-l
+- optimizer: MuSGD
+- time budget: 2 hours (`time=2`)
+- DDP: `device=0,1` (2xT4)
+- data loading: `cache=ram`, `workers=8`, `fraction=1`
+- outputs: `/kaggle/working/final_run`
+- feature-map overlays + markdown: `/kaggle/working/final_run/feature_projection` and `/kaggle/working/final_run/ff_maps.md`
+
+### A) Sync latest run scripts to Kaggle repo
+
+If your Kaggle workspace is not on `main`, pull the two scripts directly from `origin/main`:
+
+```bash
+cd /kaggle/work_here/yolov13
+git fetch origin
+git show origin/main:kaggle/scripts/37_feature_map_projection.py > kaggle/scripts/37_feature_map_projection.py
+git show origin/main:kaggle/scripts/run_custom_time2_tmp.sh > kaggle/scripts/run_custom_time2_tmp.sh
+chmod +x kaggle/scripts/run_custom_time2_tmp.sh
+```
+
+### B) Enforce dataset classes for this run
+
+Roboflow YAML must be reduced to only `student` and `teacher`:
+
+```bash
+/kaggle/work_here/yolov13/.venv/bin/python - <<'PY'
+import pathlib
+import yaml
+
+p = pathlib.Path('/kaggle/work_here/datasets/roboflow_custom_detect/data.yaml')
+d = yaml.safe_load(p.read_text())
+d['nc'] = 2
+d['names'] = ['student', 'teacher']
+p.write_text(yaml.safe_dump(d, sort_keys=False))
+print('dataset_yaml', p)
+print('nc', d['nc'])
+print('names', d['names'])
+PY
+```
+
+### C) Launch the run
+
+The launcher does all of this automatically:
+
+- kills any previous `scripts/train.py` and `37_feature_map_projection.py`
+- sets `Y13_DISABLE_FLASH=0` and `Y13_USE_TURING_FLASH=1`
+- starts train with `--flash-mode turing`
+- runs feature-map projection only after training completes, using `best.pt`
+
+```bash
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/run_custom_time2_tmp.sh
+```
+
+### D) Verify critical runtime conditions
+
+Check Turing backend, DDP, and run arguments:
+
+```bash
+grep -nE "flash_mode_env|resolved_flash_backend|DDP|time=2|batch=16|imgsz=640|optimizer=MuSGD|cache=ram|fraction=1" /kaggle/working/final_run/train.log
+```
+
+Expected key lines include:
+
+- `Y13_USE_TURING_FLASH=1`
+- `resolved_flash_backend=flash_attn_turing`
+- DDP launch with `--nproc_per_node 2`
+
+### E) Monitor and collect outputs
+
+```bash
+ps -ef | grep -E "scripts/train.py|37_feature_map_projection.py|torch.distributed.run" | grep -v grep
+tail -n 50 /kaggle/working/final_run/train.log
+tail -n 50 /kaggle/working/final_run/feature_projection.log
+ls -la /kaggle/working/final_run
+```
+
+At completion, verify:
+
+- weights/checkpoints under `/kaggle/working/final_run/detect_l_time2_musgd_ddp/`
+- per-layer projected overlays under `/kaggle/working/final_run/feature_projection/`
+- final markdown report `/kaggle/working/final_run/ff_maps.md`
+
+### F) Optional: use post-train feature projection flags directly in `scripts/train.py`
+
+```bash
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --task detect \
+  --time 2 \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0,1 \
+  --workers 8 \
+  --cache ram \
+  --fraction 1 \
+  --optimizer MuSGD \
+  --flash-mode turing \
+  --feature-projection \
+  --feature-projection-script kaggle/scripts/37_feature_map_projection.py \
+  --feature-projection-valid-dir /kaggle/work_here/datasets/my_detect/valid/images \
+  --feature-projection-out-dir /kaggle/working/custom_runs/detect_l_time2_custom/feature_projection \
+  --feature-projection-md-path /kaggle/working/custom_runs/detect_l_time2_custom/ff_maps.md \
+  --feature-projection-log-path /kaggle/working/custom_runs/detect_l_time2_custom/feature_projection.log \
+  --feature-projection-flash-mode same \
+  --project /kaggle/working/custom_runs \
+  --name detect_l_time2_custom
+```
+
+`--feature-projection-flash-mode same` reuses training flash mode (e.g., Turing).
+
+## 6.2) End-to-end custom dataset example (setup -> train -> val -> test -> benchmark)
+
+This is a full developer flow you can repeat for any custom YOLO-format detect dataset.
+
+### A) Setup from scratch
+
+```bash
+mkdir -p /kaggle/work_here
+cd /kaggle/work_here
+
+if [ ! -d yolov13 ]; then
+  git clone https://github.com/ahmedelbamby-aast/yolov13-custom.git yolov13
+fi
+
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/10_setup_uv.sh
+bash kaggle/scripts/20_install_deps.sh
+source .venv/bin/activate
+```
+
+### B) Optional: sync latest run scripts from `origin/main`
+
+Use this when your local Kaggle clone is not on the latest main commit.
+
+```bash
+cd /kaggle/work_here/yolov13
+git fetch origin
+git show origin/main:kaggle/scripts/37_feature_map_projection.py > kaggle/scripts/37_feature_map_projection.py
+git show origin/main:kaggle/scripts/run_custom_time2_tmp.sh > kaggle/scripts/run_custom_time2_tmp.sh
+chmod +x kaggle/scripts/run_custom_time2_tmp.sh
+```
+
+### C) Prepare custom dataset
+
+Expected structure:
+
+- `/kaggle/work_here/datasets/my_detect/train/images`
+- `/kaggle/work_here/datasets/my_detect/train/labels`
+- `/kaggle/work_here/datasets/my_detect/valid/images`
+- `/kaggle/work_here/datasets/my_detect/valid/labels`
+- `/kaggle/work_here/datasets/my_detect/test/images`
+- `/kaggle/work_here/datasets/my_detect/test/labels`
+- `/kaggle/work_here/datasets/my_detect/data.yaml`
+
+Example `data.yaml`:
+
+```yaml
+path: /kaggle/work_here/datasets/my_detect
+train: train/images
+val: valid/images
+test: test/images
+nc: 2
+names: [student, teacher]
+```
+
+### D) Train (DDP 2xT4 + Turing flash)
+
+Notes:
+
+- `amp=True` is the recommended train-time mixed precision path (half-precision behavior for training).
+- DDP is enabled by `--device 0,1`.
+
+```bash
+cd /kaggle/work_here/yolov13
+source .venv/bin/activate
+
+export Y13_DISABLE_FLASH=0
+export Y13_USE_TURING_FLASH=1
+
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --task detect \
+  --time 2 \
+  --epochs 1000 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 8 \
+  --cache ram \
+  --fraction 1 \
+  --device 0,1 \
+  --optimizer MuSGD \
+  --flash-mode turing \
+  --amp true \
+  --project /kaggle/working/custom_runs \
+  --name detect_l_time2_custom \
+  | tee /kaggle/working/custom_runs/detect_l_time2_custom_train.log
+```
+
+### E) Validate (`val` split)
+
+```bash
+python scripts/val.py \
+  --model /kaggle/working/custom_runs/detect_l_time2_custom/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split val \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0 \
+  --flash-mode turing
+```
+
+### F) Test (`test` split)
+
+```bash
+python scripts/test.py \
+  --model /kaggle/working/custom_runs/detect_l_time2_custom/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split test \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0
+```
+
+### G) Benchmark (controlled ONNX + TensorRT on T4)
+
+```bash
+python scripts/benchmark.py \
+  --model /kaggle/working/custom_runs/detect_l_time2_custom/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --imgsz 640 \
+  --device 0 \
+  --half \
+  --flash-mode turing \
+  --format onnx \
+  --format engine \
+  --out-json /kaggle/working/custom_runs/detect_l_time2_custom/bench_t4.json
+```
+
+### H) Quick verification checklist
+
+```bash
+grep -nE "flash_mode_env|resolved_flash_backend|DDP|time=2|optimizer=MuSGD|cache=ram|fraction=1" /kaggle/working/custom_runs/detect_l_time2_custom_train.log
+ls -la /kaggle/working/custom_runs/detect_l_time2_custom/weights
+cat /kaggle/working/custom_runs/detect_l_time2_custom/results.csv | tail -n 5
+```
+
+If you want the integrated final-run package (train + feature-map projection + `ff_maps.md`), use section **6.1** launcher:
+
+```bash
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/run_custom_time2_tmp.sh
+```
+
+### 6.2.1) Fix class-ID mismatch quickly (new helper script)
+
+If you see warnings like:
+
+- `Label class 9 exceeds dataset class count 2`
+
+then your `data.yaml` was reduced (e.g., to 2 classes) but label `.txt` files still contain old IDs.
+
+Use `kaggle/scripts/38_class_remap.py` to keep selected classes and remap them to `0..N-1`.
+
+Keep classes by **name** (recommended):
+
+```bash
+cd /kaggle/work_here/yolov13
+source .venv/bin/activate
+
+python kaggle/scripts/38_class_remap.py \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --include-name student \
+  --include-name teacher
+```
+
+Keep classes by **original ID**:
+
+```bash
+python kaggle/scripts/38_class_remap.py \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --include-id 8 \
+  --include-id 9
+```
+
+Preview only (no write):
+
+```bash
+python kaggle/scripts/38_class_remap.py \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --include-name student \
+  --include-name teacher \
+  --dry-run
+```
+
+What the script does:
+
+- rewrites all `labels/*.txt` across train/val/valid/test
+- drops boxes from non-selected classes
+- remaps selected classes to contiguous IDs starting at 0
+- updates `data.yaml` `names` and `nc`
+- deletes stale `*.cache` files by default (use `--keep-cache` to disable)
+
+After remap, rerun val first (single GPU) before DDP:
+
+```bash
+CUDA_LAUNCH_BLOCKING=1 python scripts/val.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split val \
+  --device 0
+```
+
+## 6.3) Full pipeline example (old-style scripts)
+
+This is a compact copy-paste workflow from setup to train/val/test/export/benchmark using `scripts/*.py`.
+
+```bash
+# 1) Setup
+mkdir -p /kaggle/work_here
+cd /kaggle/work_here
+if [ ! -d yolov13 ]; then
+  git clone https://github.com/ahmedelbamby-aast/yolov13-custom.git yolov13
+fi
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/10_setup_uv.sh
+bash kaggle/scripts/20_install_deps.sh
+source .venv/bin/activate
+
+# 2) Flash runtime
+export Y13_DISABLE_FLASH=0
+export Y13_USE_TURING_FLASH=1
+
+# 3) Train (DDP 2xT4)
+python scripts/train.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --task detect \
+  --time 2 \
+  --epochs 1000 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 8 \
+  --cache ram \
+  --fraction 1 \
+  --device 0,1 \
+  --optimizer MuSGD \
+  --flash-mode turing \
+  --amp true \
+  --project /kaggle/working/custom_runs \
+  --name old_style_detect
+
+# 4) Validate
+python scripts/val.py \
+  --model /kaggle/working/custom_runs/old_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split val \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0 \
+  --flash-mode turing
+
+# 5) Test
+python scripts/test.py \
+  --model /kaggle/working/custom_runs/old_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split test \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0
+
+# 6) Export
+python scripts/export.py \
+  --model /kaggle/working/custom_runs/old_style_detect/weights/best.pt \
+  --format onnx \
+  --imgsz 640 \
+  --batch 1 \
+  --device 0 \
+  --dynamic \
+  --flash-mode turing
+
+# 7) Benchmark
+python scripts/benchmark.py \
+  --model /kaggle/working/custom_runs/old_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --imgsz 640 \
+  --device 0 \
+  --half \
+  --flash-mode turing \
+  --format onnx \
+  --format engine \
+  --out-json /kaggle/working/custom_runs/old_style_detect/bench_t4.json
+```
+
+## 6.4) Full pipeline example (new API-style scripts)
+
+This is the equivalent workflow using `scripts/api_style/*.py`.
+
+```bash
+# 1) Setup
+mkdir -p /kaggle/work_here
+cd /kaggle/work_here
+if [ ! -d yolov13 ]; then
+  git clone https://github.com/ahmedelbamby-aast/yolov13-custom.git yolov13
+fi
+cd /kaggle/work_here/yolov13
+bash kaggle/scripts/10_setup_uv.sh
+bash kaggle/scripts/20_install_deps.sh
+source .venv/bin/activate
+
+# 2) Flash runtime
+export Y13_DISABLE_FLASH=0
+export Y13_USE_TURING_FLASH=1
+
+# 3) Train (DDP 2xT4, API-style)
+python scripts/api_style/train_api.py \
+  --model ultralytics/cfg/models/v13/yolov13l.yaml \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --task detect \
+  --time 2 \
+  --epochs 1000 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 8 \
+  --cache ram \
+  --fraction 1 \
+  --device 0,1 \
+  --optimizer MuSGD \
+  --flash-mode turing \
+  --project /kaggle/working/custom_runs \
+  --name api_style_detect
+
+# 4) Validate
+python scripts/api_style/val_api.py \
+  --model /kaggle/working/custom_runs/api_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --split val \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0 \
+  --flash-mode turing
+
+# 5) Test
+python scripts/api_style/test_api.py \
+  --model /kaggle/working/custom_runs/api_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --imgsz 640 \
+  --batch 16 \
+  --device 0 \
+  --flash-mode turing
+
+# 6) Export
+python scripts/api_style/export_api.py \
+  --model /kaggle/working/custom_runs/api_style_detect/weights/best.pt \
+  --format onnx \
+  --imgsz 640 \
+  --batch 1 \
+  --device 0 \
+  --dynamic \
+  --flash-mode turing
+
+# 7) Benchmark
+python scripts/api_style/benchmark_api.py \
+  --model /kaggle/working/custom_runs/api_style_detect/weights/best.pt \
+  --data /kaggle/work_here/datasets/my_detect/data.yaml \
+  --imgsz 640 \
+  --device 0 \
+  --format onnx \
+  --flash-mode turing \
+  --out-json /kaggle/working/custom_runs/api_style_detect/bench_t4_api_style.json
+```
+
 ## 7) Kaggle validation and utility pipelines
 
 ### DDP smoke
