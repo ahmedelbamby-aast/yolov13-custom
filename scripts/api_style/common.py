@@ -22,6 +22,9 @@ def apply_flash_mode(mode: str) -> None:
 def resolve_flash_backend() -> str:
     from ultralytics.nn.modules import block
 
+    if hasattr(block, "reset_flash_telemetry"):
+        block.reset_flash_telemetry()
+
     if hasattr(block, "configure_flash_backend"):
         block.configure_flash_backend(
             disable_flash=os.environ.get("Y13_DISABLE_FLASH", "0") == "1",
