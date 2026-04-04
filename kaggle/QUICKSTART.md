@@ -42,12 +42,12 @@ bash kaggle/scripts/run_all.sh
 This performs:
 
 1. venv setup (`10_setup_uv.sh`)
-2. optional Roboflow dataset prep (`15_roboflow_ready.sh`) when `Y13_AUTO_ROBOFLOW_READY=1`
-2. dependency install (`20_install_deps.sh`)
-3. NVIDIA driver check/install step (`27_install_nvidia_driver_535.sh`)
-4. CUDA/GPU checks (`30_gpu_check.sh`, `32_cuda_sanity_report.sh`)
-5. optional DDP smoke train (`40_ddp_smoke.sh`)
-6. zip packaging (`50_package_zip.sh`)
+2. NVIDIA driver check/install step (`27_install_nvidia_driver_535.sh`)
+3. optional Roboflow dataset prep (`15_roboflow_ready.sh`) when `Y13_AUTO_ROBOFLOW_READY=1`
+4. dependency install (`20_install_deps.sh`)
+5. CUDA/GPU checks (`30_gpu_check.sh`, `32_cuda_sanity_report.sh`)
+6. optional DDP smoke train (`40_ddp_smoke.sh`)
+7. zip packaging (`50_package_zip.sh`)
 
 Output zip:
 
@@ -60,10 +60,18 @@ If you prefer explicit setup:
 ```bash
 cd /kaggle/work_here/yolov13
 bash kaggle/scripts/10_setup_uv.sh
-bash kaggle/scripts/20_install_deps.sh
 bash kaggle/scripts/27_install_nvidia_driver_535.sh
+bash kaggle/scripts/20_install_deps.sh
 bash kaggle/scripts/30_gpu_check.sh
 bash kaggle/scripts/32_cuda_sanity_report.sh
+```
+
+Optional explicit torch stack override before `20_install_deps.sh`:
+
+```bash
+export Y13_TORCH_VERSION=2.5.1
+export Y13_TORCHVISION_VERSION=0.20.1
+export Y13_TORCH_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu124
 ```
 
 ### 3.1) Optional one-shot Roboflow dataset prep

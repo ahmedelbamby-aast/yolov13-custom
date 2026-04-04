@@ -1,12 +1,10 @@
-# turFlash Optimization Tasks
+# YOLOv13 Training Speed Tasks
 
-- [x] Add flash dispatch telemetry in `AAttn` (hit/miss, reasons, head-dim counts).
-- [x] Add dirty-data smoke benchmarks with generated report/plots.
-- [ ] Make head-dim 32 support mandatory for Turing backend (with opt-out env).
-- [x] Replace manual fallback attention with SDPA.
-- [x] Extend Turing wrapper APIs with varlen support (mandatory hardening).
-- [x] Add CUDA-only telemetry counters and report fields (`not_cuda` isolation).
-- [x] Update dirty benchmark to run baseline/head32 in parallel on GPU1/GPU0 with workers=2 each and cache=ram.
-- [x] Re-run dirty real-dataset benchmark with new parallel policy and sync fresh plots/artifacts.
-- [ ] Verify feature-map projection integration in both script styles remains toggleable and post-train-only (best.pt only).
-- [ ] Update QUICKSTART and research docs for each change and keep both branches in sync.
+- [x] Fix DDP `world_size` propagation so EMA buffer broadcast uses real distributed state.
+- [x] Add DDP runtime toggles for `find_unused_parameters` and `gradient_as_bucket_view` with speed-first defaults.
+- [x] Add DataLoader runtime toggles for `persistent_workers` and `prefetch_factor`.
+- [x] Reorder bootstrap pipeline to ensure GPU driver/runtime readiness before optional turFlash build.
+- [x] Make turFlash installer expose `TORCH_CUDA_ARCH_LIST` and configurable compile jobs.
+- [x] Add Torch/TorchVision install overrides in setup scripts so upgraded stacks can be tested reproducibly.
+- [x] Keep benchmark and QUICKSTART docs aligned with new runtime/env knobs.
+- [ ] Run controlled A/B throughput test on target server (before/after) and capture epoch-time deltas.

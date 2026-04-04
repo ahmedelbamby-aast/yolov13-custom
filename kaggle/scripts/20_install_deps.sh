@@ -13,6 +13,19 @@ fi
 uv pip install --python "${PY}" -e "${Y13_ROOT}"
 uv pip install --python "${PY}" rich
 
+# Optional explicit torch stack overrides for reproducible benchmarking.
+if [[ -n "${Y13_TORCH_VERSION:-}" ]]; then
+  TORCH_SPEC="torch==${Y13_TORCH_VERSION}"
+  if [[ -n "${Y13_TORCHVISION_VERSION:-}" ]]; then
+    TORCH_SPEC+=" torchvision==${Y13_TORCHVISION_VERSION}"
+  fi
+  if [[ -n "${Y13_TORCH_EXTRA_INDEX_URL:-}" ]]; then
+    uv pip install --python "${PY}" --extra-index-url "${Y13_TORCH_EXTRA_INDEX_URL}" ${TORCH_SPEC}
+  else
+    uv pip install --python "${PY}" ${TORCH_SPEC}
+  fi
+fi
+
 "${PY}" - <<'PY'
 from pathlib import Path
 import subprocess

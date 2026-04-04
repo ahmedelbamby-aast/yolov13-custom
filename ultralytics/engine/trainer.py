@@ -107,6 +107,7 @@ class BaseTrainer:
         self.validator = None
         self.metrics = None
         self.plots = {}
+        self.world_size = 1
         init_seeds(self.args.seed + 1 + RANK, deterministic=self.args.deterministic)
 
         # Dirs
@@ -220,6 +221,7 @@ class BaseTrainer:
 
     def _setup_ddp(self, world_size):
         """Initializes and sets the DistributedDataParallel parameters for training."""
+        self.world_size = world_size
         torch.cuda.set_device(RANK)
         self.device = torch.device("cuda", RANK)
         # LOGGER.info(f'DDP info: RANK {RANK}, WORLD_SIZE {world_size}, DEVICE {self.device}')
@@ -233,6 +235,7 @@ class BaseTrainer:
 
     def _setup_train(self, world_size):
         """Builds dataloaders and optimizer on correct rank process."""
+        self.world_size = max(int(world_size), 1)
         # Model
         self.run_callbacks("on_pretrain_routine_start")
         ckpt = self.setup_model()
@@ -278,8 +281,8 @@ class BaseTrainer:
             self.model = nn.parallel.DistributedDataParallel(
                 self.model,
                 device_ids=[RANK],
-                find_unused_parameters=True,
-                gradient_as_bucket_view=False,
+                find_unused_parameters=bool(getattr(self.args, "ddp_find_unused_parameters", False)),
+                gradient_as_bucket_view=bool(getattr(self.args, "ddp_gradient_as_bucket_view", True)),
             )
             self.set_model_attributes()  # set again after DDP wrapper
 

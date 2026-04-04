@@ -26,7 +26,10 @@ git -C "${WORKTREE}" submodule update --init --recursive
 
 export CXX=g++
 export CC=gcc
-export MAX_JOBS=2
+export MAX_JOBS="${Y13_TURFLASH_MAX_JOBS:-2}"
+export TORCH_CUDA_ARCH_LIST="${Y13_TORCH_CUDA_ARCH_LIST:-7.5}"
+
+echo "[turflash] MAX_JOBS=${MAX_JOBS} TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}"
 
 uv pip install --python "${PY}" ninja setuptools wheel
 

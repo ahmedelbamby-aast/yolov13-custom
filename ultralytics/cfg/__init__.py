@@ -183,6 +183,7 @@ CFG_INT_KEYS = {  # integer-only arguments
     "epochs",
     "patience",
     "workers",
+    "prefetch_factor",
     "seed",
     "close_mosaic",
     "mask_ratio",
@@ -227,6 +228,9 @@ CFG_BOOL_KEYS = {  # boolean-only arguments
     "nms",
     "profile",
     "multi_scale",
+    "persistent_workers",
+    "ddp_find_unused_parameters",
+    "ddp_gradient_as_bucket_view",
 }
 
 

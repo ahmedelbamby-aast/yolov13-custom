@@ -6,13 +6,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 python "${SCRIPT_DIR}/00_entry_banner.py"
 
 bash "${SCRIPT_DIR}/10_setup_uv.sh"
+bash "${SCRIPT_DIR}/27_install_nvidia_driver_535.sh"
 
 if [[ "${Y13_AUTO_ROBOFLOW_READY:-0}" == "1" ]]; then
   bash "${SCRIPT_DIR}/15_roboflow_ready.sh"
 fi
 
 bash "${SCRIPT_DIR}/20_install_deps.sh"
-bash "${SCRIPT_DIR}/27_install_nvidia_driver_535.sh"
 bash "${SCRIPT_DIR}/30_gpu_check.sh"
 bash "${SCRIPT_DIR}/32_cuda_sanity_report.sh"
 
