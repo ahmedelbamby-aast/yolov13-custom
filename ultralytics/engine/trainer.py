@@ -482,9 +482,9 @@ class BaseTrainer:
 
             # Early Stopping
             if RANK != -1:  # if DDP training
-                broadcast_list = [self.stop if RANK == 0 else None]
-                dist.broadcast_object_list(broadcast_list, 0)  # broadcast 'stop' to all ranks
-                self.stop = broadcast_list[0]
+                stop_tensor = torch.tensor(int(self.stop) if RANK == 0 else 0, device=self.device, dtype=torch.int32)
+                dist.broadcast(stop_tensor, 0)  # broadcast stop flag to all ranks
+                self.stop = bool(stop_tensor.item())
             if self.stop:
                 break  # must break all DDP ranks
             epoch += 1

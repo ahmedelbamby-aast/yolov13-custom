@@ -76,6 +76,8 @@ export Y13_NCCL_VERSION=2.29.7
 export Y13_TORCH_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu124
 ```
 
+For latest cu13 stack on hosts with older system CUDA toolkits, turFlash installer also injects NVCC from pip (`nvidia-cuda-nvcc`) and prepends it to `PATH`.
+
 ### 3.1) Optional one-shot Roboflow dataset prep
 
 Use this helper when you want a fast repeatable download/extract into `/kaggle/work_here/datasets`.
