@@ -150,3 +150,34 @@ Phase C (hardening):
 - turFlash is the correct focus for T4.
 - Main blocker for YOLOv13 speed is head-dim mismatch (`32` not supported by current flash kernel gate).
 - Best next optimization work should target flash coverage first, not only backend selection logs.
+
+## `not_cuda` telemetry investigation (root cause and actions)
+
+Observed in telemetry:
+
+- baseline run: `fallback_reasons = {'not_cuda': 24, 'unsupported_head_dim_32': ...}`
+- head32-enabled run: `fallback_reasons = {'not_cuda': 24}`
+
+What `not_cuda` means in this code path:
+
+- In `AAttn.forward`, fallback reason `not_cuda` is recorded whenever input tensor `x` for that attention call is not on a CUDA device.
+- This is expected during non-training-GPU execution segments.
+
+Primary root cause in current benchmark context:
+
+- Validation/inference paths execute some model forwards on CPU-side tensors (or CPU execution contexts) where flash kernels are unavailable by design.
+- These calls are a small fixed count (24 in this benchmark), independent of the head-dim gate.
+
+Why it persists after enabling head32:
+
+- Enabling head32 only resolves `unsupported_head_dim_32` on CUDA paths.
+- It does not change CPU-side forwards, so `not_cuda` remains.
+
+Resolution strategy:
+
+1. Keep `not_cuda` as expected noise floor; do not treat it as a regression.
+2. Track CUDA-only flash hit-rate separately (exclude `not_cuda`) for cleaner KPI.
+3. Ensure training/validation device config remains GPU (`--device 0` or `0,1`) to avoid accidental CPU runs.
+4. Optionally add telemetry split fields:
+   - `cuda_total`, `cuda_flash_hits`, `cuda_fallbacks`
+   so comparisons focus on GPU-executable attention calls.

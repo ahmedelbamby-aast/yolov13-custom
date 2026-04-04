@@ -42,6 +42,7 @@ bash kaggle/scripts/run_all.sh
 This performs:
 
 1. venv setup (`10_setup_uv.sh`)
+2. optional Roboflow dataset prep (`15_roboflow_ready.sh`) when `Y13_AUTO_ROBOFLOW_READY=1`
 2. dependency install (`20_install_deps.sh`)
 3. NVIDIA driver check/install step (`27_install_nvidia_driver_535.sh`)
 4. CUDA/GPU checks (`30_gpu_check.sh`, `32_cuda_sanity_report.sh`)
@@ -64,6 +65,24 @@ bash kaggle/scripts/27_install_nvidia_driver_535.sh
 bash kaggle/scripts/30_gpu_check.sh
 bash kaggle/scripts/32_cuda_sanity_report.sh
 ```
+
+### 3.1) Optional one-shot Roboflow dataset prep
+
+Use this helper when you want a fast repeatable download/extract into `/kaggle/work_here/datasets`.
+
+```bash
+cd /kaggle/work_here/yolov13
+
+# default dataset key/url from project docs
+bash kaggle/scripts/15_roboflow_ready.sh
+```
+
+Useful env flags:
+
+- `Y13_ROBOFLOW_FORCE=1` re-download/re-extract
+- `Y13_ROBOFLOW_DATASET_NAME=...` custom destination folder name
+- `Y13_ROBOFLOW_REMAP_STUDENT_TEACHER=1` auto-run class remap (`student`, `teacher`)
+- `Y13_AUTO_ROBOFLOW_READY=1` run this script automatically from `run_all.sh`
 
 ## 4) Flash backend controls (global)
 
@@ -798,6 +817,40 @@ bash kaggle/scripts/60_ddp_train_5epochs.sh
 ```bash
 bash kaggle/scripts/100_full_validation.sh
 ```
+
+### Dirty-data head_dim=32 smoke benchmark (custom dataset)
+
+Runs baseline vs head32-enabled on a remapped dirty dataset subset, then writes JSON + report + plot.
+
+```bash
+cd /kaggle/work_here/yolov13
+source .venv/bin/activate
+
+# optional: prepare + normalize + remap Roboflow dataset first
+Y13_ROBOFLOW_FORCE=1 \
+Y13_ROBOFLOW_REMAP_STUDENT_TEACHER=1 \
+bash kaggle/scripts/15_roboflow_ready.sh
+
+# benchmark 5 epochs using 5% subset
+Y13_DIRTY_DATA_YAML=/kaggle/work_here/datasets/roboflow_custom_detect_dirty/data.yaml \
+Y13_HEAD32_BENCH_EPOCHS=5 \
+Y13_HEAD32_BENCH_FRACTION=0.05 \
+bash kaggle/scripts/182_benchmark_head32_dirty_smoke.sh
+```
+
+Artifacts:
+
+- `kaggle/benchmarks/flash_head32_dirty_smoke/compare_summary.json`
+- `kaggle/benchmarks/flash_head32_dirty_smoke/REPORT.md`
+- `kaggle/benchmarks/flash_head32_dirty_smoke/telemetry_compare.png`
+
+Latest 5-epoch dirty-data smoke snapshot (fraction `0.05`):
+
+- baseline train epoch time: `118.08s`
+- head32-enabled train epoch time: `115.92s`
+- train speedup: `1.02x`
+- baseline fallback reasons: `{'not_cuda': 24, 'unsupported_head_dim_32': 10128}`
+- head32-enabled fallback reasons: `{'not_cuda': 24}`
 
 ### Export validation helper
 
