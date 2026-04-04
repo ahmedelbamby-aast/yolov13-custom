@@ -1,0 +1,43 @@
+{
+  "baseline": {
+    "total": 10152,
+    "hits": 0,
+    "fallbacks": 10152,
+    "hit_rate": 0.0,
+    "head_dims": {
+      "32": 10152
+    },
+    "fallback_reasons": {
+      "not_cuda": 24,
+      "unsupported_head_dim_32": 10128
+    },
+    "inference_ms": 3.0,
+    "epochs": 5,
+    "train_time_hours": 0.164,
+    "train_epoch_s": 118.08,
+    "log_path": "/kaggle/working/head32_dirty_smoke/baseline.log"
+  },
+  "head32_enabled": {
+    "total": 10152,
+    "hits": 10128,
+    "fallbacks": 24,
+    "hit_rate": 99.76,
+    "head_dims": {
+      "32": 10152
+    },
+    "fallback_reasons": {
+      "not_cuda": 24
+    },
+    "inference_ms": 2.5,
+    "epochs": 5,
+    "train_time_hours": 0.161,
+    "train_epoch_s": 115.92,
+    "log_path": "/kaggle/working/head32_dirty_smoke/head32_enabled.log"
+  },
+  "delta": {
+    "hit_rate_pp": 99.76,
+    "inference_ms": -0.5,
+    "train_epoch_s": -2.16,
+    "train_speedup_x": 1.019
+  }
+}
