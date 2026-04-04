@@ -15,9 +15,11 @@ EPOCHS="${Y13_HEAD32_BENCH_EPOCHS:-5}"
 FRACTION="${Y13_HEAD32_BENCH_FRACTION:-0.05}"
 BATCH="${Y13_HEAD32_BENCH_BATCH:-16}"
 IMGSZ="${Y13_HEAD32_BENCH_IMGSZ:-640}"
-WORKERS="${Y13_HEAD32_BENCH_WORKERS:-8}"
-DEVICE="${Y13_HEAD32_BENCH_DEVICE:-0}"
+WORKERS_PER_RUN="${Y13_HEAD32_BENCH_WORKERS_PER_RUN:-2}"
+BASE_DEVICE="${Y13_HEAD32_BENCH_BASE_DEVICE:-1}"
+HEAD32_DEVICE="${Y13_HEAD32_BENCH_HEAD32_DEVICE:-0}"
 OUT_ROOT="${Y13_HEAD32_BENCH_OUT_ROOT:-${Y13_OUTPUT_DIR}/head32_dirty_smoke}"
+SKIP_TRAIN="${Y13_HEAD32_BENCH_SKIP_TRAIN:-0}"
 
 mkdir -p "${OUT_ROOT}"
 
@@ -25,42 +27,55 @@ BASE_LOG="${OUT_ROOT}/baseline.log"
 HEAD32_LOG="${OUT_ROOT}/head32_enabled.log"
 
 echo "[head32_dirty_smoke] data=${DATA_YAML} epochs=${EPOCHS} fraction=${FRACTION}"
+echo "[head32_dirty_smoke] parallel runs: baseline gpu=${BASE_DEVICE}, head32 gpu=${HEAD32_DEVICE}, workers_per_run=${WORKERS_PER_RUN}"
 
-Y13_DISABLE_FLASH=0 Y13_USE_TURING_FLASH=1 Y13_ENABLE_TURING_HEAD_DIM32=0 \
-"${PY}" "${Y13_ROOT}/scripts/train.py" \
-  --model ultralytics/cfg/models/v13/yolov13n.yaml \
-  --data "${DATA_YAML}" \
-  --epochs "${EPOCHS}" \
-  --imgsz "${IMGSZ}" \
-  --batch "${BATCH}" \
-  --device "${DEVICE}" \
-  --workers "${WORKERS}" \
-  --project "${OUT_ROOT}" \
-  --name baseline \
-  --flash-mode turing \
-  --arg fraction="${FRACTION}" \
-  --arg plots=false \
-  > "${BASE_LOG}" 2>&1
+if [[ "${SKIP_TRAIN}" != "1" ]]; then
+  Y13_DISABLE_FLASH=0 Y13_USE_TURING_FLASH=1 Y13_DISABLE_TURING_HEAD_DIM32=1 \
+  CUDA_VISIBLE_DEVICES="${BASE_DEVICE}" "${PY}" "${Y13_ROOT}/scripts/train.py" \
+    --model ultralytics/cfg/models/v13/yolov13n.yaml \
+    --data "${DATA_YAML}" \
+    --epochs "${EPOCHS}" \
+    --imgsz "${IMGSZ}" \
+    --batch "${BATCH}" \
+    --device 0 \
+    --workers "${WORKERS_PER_RUN}" \
+    --project "${OUT_ROOT}" \
+    --name baseline \
+    --flash-mode turing \
+    --arg fraction="${FRACTION}" \
+    --arg cache=ram \
+    --arg plots=false \
+    > "${BASE_LOG}" 2>&1 &
+  BASE_PID=$!
 
-Y13_DISABLE_FLASH=0 Y13_USE_TURING_FLASH=1 Y13_ENABLE_TURING_HEAD_DIM32=1 \
-"${PY}" "${Y13_ROOT}/scripts/train.py" \
-  --model ultralytics/cfg/models/v13/yolov13n.yaml \
-  --data "${DATA_YAML}" \
-  --epochs "${EPOCHS}" \
-  --imgsz "${IMGSZ}" \
-  --batch "${BATCH}" \
-  --device "${DEVICE}" \
-  --workers "${WORKERS}" \
-  --project "${OUT_ROOT}" \
-  --name head32_enabled \
-  --flash-mode turing \
-  --arg fraction="${FRACTION}" \
-  --arg plots=false \
-  > "${HEAD32_LOG}" 2>&1
+  Y13_DISABLE_FLASH=0 Y13_USE_TURING_FLASH=1 Y13_DISABLE_TURING_HEAD_DIM32=0 \
+  CUDA_VISIBLE_DEVICES="${HEAD32_DEVICE}" "${PY}" "${Y13_ROOT}/scripts/train.py" \
+    --model ultralytics/cfg/models/v13/yolov13n.yaml \
+    --data "${DATA_YAML}" \
+    --epochs "${EPOCHS}" \
+    --imgsz "${IMGSZ}" \
+    --batch "${BATCH}" \
+    --device 0 \
+    --workers "${WORKERS_PER_RUN}" \
+    --project "${OUT_ROOT}" \
+    --name head32_enabled \
+    --flash-mode turing \
+    --arg fraction="${FRACTION}" \
+    --arg cache=ram \
+    --arg plots=false \
+    > "${HEAD32_LOG}" 2>&1 &
+  HEAD32_PID=$!
+
+  wait "${BASE_PID}"
+  wait "${HEAD32_PID}"
+fi
 
 export Y13_BENCH_OUT_ROOT="${OUT_ROOT}"
 export Y13_BENCH_ARTIFACT_DIR="${Y13_ROOT}/kaggle/benchmarks/flash_head32_dirty_smoke"
 export Y13_BENCH_FRACTION="${FRACTION}"
+export Y13_BENCH_BASE_DEVICE="${BASE_DEVICE}"
+export Y13_BENCH_HEAD32_DEVICE="${HEAD32_DEVICE}"
+export Y13_BENCH_WORKERS_PER_RUN="${WORKERS_PER_RUN}"
 
 "${PY}" - <<'PY'
 import ast
@@ -74,6 +89,9 @@ import matplotlib.pyplot as plt
 out_root = Path(os.environ["Y13_BENCH_OUT_ROOT"])
 artifact_dir = Path(os.environ["Y13_BENCH_ARTIFACT_DIR"])
 fraction = os.environ["Y13_BENCH_FRACTION"]
+base_device = os.environ["Y13_BENCH_BASE_DEVICE"]
+head32_device = os.environ["Y13_BENCH_HEAD32_DEVICE"]
+workers_per_run = os.environ["Y13_BENCH_WORKERS_PER_RUN"]
 
 logs = {
     "baseline": out_root / "baseline.log",
@@ -83,7 +101,10 @@ artifact_dir.mkdir(parents=True, exist_ok=True)
 
 telemetry_re = re.compile(
     r"flash_telemetry total=(?P<total>\d+) hits=(?P<hits>\d+) fallbacks=(?P<fallbacks>\d+) "
-    r"hit_rate=(?P<hit_rate>[0-9.]+)% head_dims=(?P<head_dims>\{.*?\}) "
+    r"hit_rate=(?P<hit_rate>[0-9.]+)% "
+    r"(?:cuda_total=(?P<cuda_total>\d+) cuda_hits=(?P<cuda_hits>\d+) "
+    r"cuda_fallbacks=(?P<cuda_fallbacks>\d+) cuda_hit_rate=(?P<cuda_hit_rate>[0-9.]+)% )?"
+    r"head_dims=(?P<head_dims>\{.*?\}) "
     r"fallback_reasons=(?P<fallback_reasons>\{.*\})"
 )
 speed_re = re.compile(r"Speed:\s+[^\n]*?,\s*(?P<inference>[0-9.]+)ms inference,")
@@ -116,6 +137,10 @@ for name, path in logs.items():
         "hits": int(tm.group("hits")),
         "fallbacks": int(tm.group("fallbacks")),
         "hit_rate": float(tm.group("hit_rate")),
+        "cuda_total": int(tm.group("cuda_total")) if tm.group("cuda_total") else None,
+        "cuda_hits": int(tm.group("cuda_hits")) if tm.group("cuda_hits") else None,
+        "cuda_fallbacks": int(tm.group("cuda_fallbacks")) if tm.group("cuda_fallbacks") else None,
+        "cuda_hit_rate": float(tm.group("cuda_hit_rate")) if tm.group("cuda_hit_rate") else None,
         "head_dims": ast.literal_eval(tm.group("head_dims")),
         "fallback_reasons": ast.literal_eval(tm.group("fallback_reasons")),
         "inference_ms": float(sm.group("inference")) if sm else None,
@@ -198,9 +223,11 @@ lines = [
     "",
     "- baseline: `Y13_ENABLE_TURING_HEAD_DIM32=0`",
     "- enabled: `Y13_ENABLE_TURING_HEAD_DIM32=1`",
+    f"- parallel policy: baseline gpu={base_device}, head32 gpu={head32_device}, workers per run={workers_per_run}",
     f"- epochs: {b['epochs']}",
     "- dataset: remapped dirty Roboflow subset (`student`, `teacher`)",
     f"- fraction: {fraction}",
+    "- train cache: ram",
     "",
     "## Results",
     "",
@@ -208,6 +235,11 @@ lines = [
     "|---|---:|---:|---:|---:|---:|",
     f"| baseline | {f2(b['hit_rate'])} | {b['hits']} | {b['fallbacks']} | {f2(b['inference_ms'])} | {f2(b['train_epoch_s'])} |",
     f"| head32 enabled | {f2(h['hit_rate'])} | {h['hits']} | {h['fallbacks']} | {f2(h['inference_ms'])} | {f2(h['train_epoch_s'])} |",
+    "",
+    "## CUDA-only telemetry",
+    "",
+    f"- baseline cuda hit-rate: {f2(b['cuda_hit_rate'])}% ({b['cuda_hits']}/{b['cuda_total']})",
+    f"- head32 cuda hit-rate: {f2(h['cuda_hit_rate'])}% ({h['cuda_hits']}/{h['cuda_total']})",
     "",
     "## Delta (enabled - baseline)",
     "",
@@ -234,5 +266,6 @@ print("artifact_dir", artifact_dir)
 PY
 
 unset Y13_BENCH_OUT_ROOT Y13_BENCH_ARTIFACT_DIR Y13_BENCH_FRACTION
+unset Y13_BENCH_BASE_DEVICE Y13_BENCH_HEAD32_DEVICE Y13_BENCH_WORKERS_PER_RUN
 
 echo "[head32_dirty_smoke] done"

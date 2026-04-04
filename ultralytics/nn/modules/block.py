@@ -1178,8 +1178,9 @@ DEFAULT_FLASH_HEAD_DIMS = {64, 128}
 def _supported_flash_head_dims():
     """Return currently enabled flash head dimensions for the active backend."""
     dims = set(DEFAULT_FLASH_HEAD_DIMS)
-    if FLASH_BACKEND == "flash_attn_turing" and os.getenv("Y13_ENABLE_TURING_HEAD_DIM32", "0") == "1":
-        dims.add(32)
+    if FLASH_BACKEND == "flash_attn_turing":
+        if os.getenv("Y13_DISABLE_TURING_HEAD_DIM32", "0") != "1":
+            dims.add(32)
     return dims
 
 
@@ -1187,6 +1188,9 @@ FLASH_TELEMETRY = {
     "total": 0,
     "flash_hits": 0,
     "fallback_hits": 0,
+    "cuda_total": 0,
+    "cuda_flash_hits": 0,
+    "cuda_fallback_hits": 0,
     "fallback_reasons": defaultdict(int),
     "head_dims": defaultdict(int),
     "backends": defaultdict(int),
@@ -1200,6 +1204,9 @@ def reset_flash_telemetry():
         "total": 0,
         "flash_hits": 0,
         "fallback_hits": 0,
+        "cuda_total": 0,
+        "cuda_flash_hits": 0,
+        "cuda_fallback_hits": 0,
         "fallback_reasons": defaultdict(int),
         "head_dims": defaultdict(int),
         "backends": defaultdict(int),
@@ -1211,10 +1218,19 @@ def _record_flash_event(head_dim, used_flash, reason=""):
     FLASH_TELEMETRY["total"] += 1
     FLASH_TELEMETRY["head_dims"][int(head_dim)] += 1
     FLASH_TELEMETRY["backends"][FLASH_BACKEND] += 1
+
+    is_cuda = reason != "not_cuda"
+    if is_cuda:
+        FLASH_TELEMETRY["cuda_total"] += 1
+
     if used_flash:
         FLASH_TELEMETRY["flash_hits"] += 1
+        if is_cuda:
+            FLASH_TELEMETRY["cuda_flash_hits"] += 1
     else:
         FLASH_TELEMETRY["fallback_hits"] += 1
+        if is_cuda:
+            FLASH_TELEMETRY["cuda_fallback_hits"] += 1
         FLASH_TELEMETRY["fallback_reasons"][reason or "unknown"] += 1
 
 
@@ -1224,6 +1240,9 @@ def get_flash_telemetry_snapshot():
         "total": int(FLASH_TELEMETRY["total"]),
         "flash_hits": int(FLASH_TELEMETRY["flash_hits"]),
         "fallback_hits": int(FLASH_TELEMETRY["fallback_hits"]),
+        "cuda_total": int(FLASH_TELEMETRY["cuda_total"]),
+        "cuda_flash_hits": int(FLASH_TELEMETRY["cuda_flash_hits"]),
+        "cuda_fallback_hits": int(FLASH_TELEMETRY["cuda_fallback_hits"]),
         "fallback_reasons": dict(sorted(FLASH_TELEMETRY["fallback_reasons"].items())),
         "head_dims": dict(sorted(FLASH_TELEMETRY["head_dims"].items())),
         "backends": dict(sorted(FLASH_TELEMETRY["backends"].items())),
@@ -1237,9 +1256,13 @@ def format_flash_telemetry_summary():
     if total == 0:
         return "[y13] flash_telemetry total=0"
     hit_rate = 100.0 * snap["flash_hits"] / total
+    cuda_total = snap["cuda_total"]
+    cuda_hit_rate = 100.0 * snap["cuda_flash_hits"] / cuda_total if cuda_total else 0.0
     return (
         f"[y13] flash_telemetry total={total} hits={snap['flash_hits']} "
         f"fallbacks={snap['fallback_hits']} hit_rate={hit_rate:.2f}% "
+        f"cuda_total={cuda_total} cuda_hits={snap['cuda_flash_hits']} "
+        f"cuda_fallbacks={snap['cuda_fallback_hits']} cuda_hit_rate={cuda_hit_rate:.2f}% "
         f"head_dims={snap['head_dims']} fallback_reasons={snap['fallback_reasons']}"
     )
 
@@ -1397,17 +1420,12 @@ class AAttn(nn.Module):
                 reason = "fallback_other"
             _record_flash_event(self.head_dim, used_flash=False, reason=reason)
 
-            q = q.transpose(1, 2).reshape(B, self.num_heads, self.head_dim, N).contiguous()
-            k = k.transpose(1, 2).reshape(B, self.num_heads, self.head_dim, N).contiguous()
-            v = v.transpose(1, 2).reshape(B, self.num_heads, self.head_dim, N).contiguous()
+            q = q.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
+            k = k.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
+            v = v.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
 
-            attn = (q.transpose(-2, -1) @ k) * (self.head_dim**-0.5)
-            max_attn = attn.max(dim=-1, keepdim=True).values
-            exp_attn = torch.exp(attn - max_attn)
-            attn = exp_attn / exp_attn.sum(dim=-1, keepdim=True)
-            x = v @ attn.transpose(-2, -1)
-
-            x = x.permute(0, 3, 1, 2).contiguous()
+            x = F.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=False)
+            x = x.permute(0, 2, 1, 3).contiguous()
 
         if self.area > 1:
             x = x.reshape(B // self.area, N * self.area, C)
