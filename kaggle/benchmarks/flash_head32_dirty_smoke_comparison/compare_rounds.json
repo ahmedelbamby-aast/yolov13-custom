@@ -1,0 +1,14 @@
+{
+  "round1": {
+    "hit_rate_pp": 99.76,
+    "inference_ms_delta": -0.5,
+    "train_epoch_s_delta": -2.16,
+    "speedup_x": 1.019
+  },
+  "round2": {
+    "hit_rate_pp": 99.76,
+    "inference_ms_delta": 0.0,
+    "train_epoch_s_delta": 0.0,
+    "speedup_x": 1.0
+  }
+}
