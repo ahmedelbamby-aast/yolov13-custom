@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
+from collections import defaultdict
 
 from ultralytics.utils.torch_utils import fuse_conv_and_bn
 from .conv import Conv, DSConv, DWConv, GhostConv, LightConv, RepConv, autopad
@@ -1171,6 +1172,76 @@ USE_FLASH_ATTN = False
 FLASH_BACKEND = "fallback"
 FLASH_ERROR = ""
 FLASH_CONFIGURED = False
+DEFAULT_FLASH_HEAD_DIMS = {64, 128}
+
+
+def _supported_flash_head_dims():
+    """Return currently enabled flash head dimensions for the active backend."""
+    dims = set(DEFAULT_FLASH_HEAD_DIMS)
+    if FLASH_BACKEND == "flash_attn_turing" and os.getenv("Y13_ENABLE_TURING_HEAD_DIM32", "0") == "1":
+        dims.add(32)
+    return dims
+
+
+FLASH_TELEMETRY = {
+    "total": 0,
+    "flash_hits": 0,
+    "fallback_hits": 0,
+    "fallback_reasons": defaultdict(int),
+    "head_dims": defaultdict(int),
+    "backends": defaultdict(int),
+}
+
+
+def reset_flash_telemetry():
+    """Reset attention backend usage counters."""
+    global FLASH_TELEMETRY
+    FLASH_TELEMETRY = {
+        "total": 0,
+        "flash_hits": 0,
+        "fallback_hits": 0,
+        "fallback_reasons": defaultdict(int),
+        "head_dims": defaultdict(int),
+        "backends": defaultdict(int),
+    }
+
+
+def _record_flash_event(head_dim, used_flash, reason=""):
+    """Record one attention dispatch event for runtime telemetry."""
+    FLASH_TELEMETRY["total"] += 1
+    FLASH_TELEMETRY["head_dims"][int(head_dim)] += 1
+    FLASH_TELEMETRY["backends"][FLASH_BACKEND] += 1
+    if used_flash:
+        FLASH_TELEMETRY["flash_hits"] += 1
+    else:
+        FLASH_TELEMETRY["fallback_hits"] += 1
+        FLASH_TELEMETRY["fallback_reasons"][reason or "unknown"] += 1
+
+
+def get_flash_telemetry_snapshot():
+    """Return a serializable snapshot of flash telemetry counters."""
+    return {
+        "total": int(FLASH_TELEMETRY["total"]),
+        "flash_hits": int(FLASH_TELEMETRY["flash_hits"]),
+        "fallback_hits": int(FLASH_TELEMETRY["fallback_hits"]),
+        "fallback_reasons": dict(sorted(FLASH_TELEMETRY["fallback_reasons"].items())),
+        "head_dims": dict(sorted(FLASH_TELEMETRY["head_dims"].items())),
+        "backends": dict(sorted(FLASH_TELEMETRY["backends"].items())),
+    }
+
+
+def format_flash_telemetry_summary():
+    """Format a concise one-line telemetry summary for logs."""
+    snap = get_flash_telemetry_snapshot()
+    total = snap["total"]
+    if total == 0:
+        return "[y13] flash_telemetry total=0"
+    hit_rate = 100.0 * snap["flash_hits"] / total
+    return (
+        f"[y13] flash_telemetry total={total} hits={snap['flash_hits']} "
+        f"fallbacks={snap['fallback_hits']} hit_rate={hit_rate:.2f}% "
+        f"head_dims={snap['head_dims']} fallback_reasons={snap['fallback_reasons']}"
+    )
 
 
 def configure_flash_backend(disable_flash=None, use_turing_flash=None):
@@ -1294,19 +1365,38 @@ class AAttn(nn.Module):
         if x.is_cuda and not FLASH_CONFIGURED:
             configure_flash_backend()
 
-        if (
+        supported_head_dims = _supported_flash_head_dims()
+        can_use_flash = (
             x.is_cuda
             and USE_FLASH_ATTN
             and FLASH_BACKEND in {"flash_attn", "flash_attn_turing"}
             and "flash_attn_func" in globals()
-            and self.head_dim in {64, 128}
-        ):
+            and self.head_dim in supported_head_dims
+        )
+
+        if can_use_flash:
             q = q.view(B, N, self.num_heads, self.head_dim)
             k = k.view(B, N, self.num_heads, self.head_dim)
             v = v.view(B, N, self.num_heads, self.head_dim)
 
             x = flash_attn_func(q.contiguous().half(), k.contiguous().half(), v.contiguous().half()).to(q.dtype)
+            _record_flash_event(self.head_dim, used_flash=True)
         else:
+            reason = ""
+            if not x.is_cuda:
+                reason = "not_cuda"
+            elif not USE_FLASH_ATTN:
+                reason = "flash_disabled_or_unavailable"
+            elif FLASH_BACKEND not in {"flash_attn", "flash_attn_turing"}:
+                reason = f"backend_{FLASH_BACKEND}"
+            elif "flash_attn_func" not in globals():
+                reason = "missing_flash_attn_func"
+            elif self.head_dim not in supported_head_dims:
+                reason = f"unsupported_head_dim_{self.head_dim}"
+            else:
+                reason = "fallback_other"
+            _record_flash_event(self.head_dim, used_flash=False, reason=reason)
+
             q = q.transpose(1, 2).reshape(B, self.num_heads, self.head_dim, N).contiguous()
             k = k.transpose(1, 2).reshape(B, self.num_heads, self.head_dim, N).contiguous()
             v = v.transpose(1, 2).reshape(B, self.num_heads, self.head_dim, N).contiguous()

@@ -112,6 +112,9 @@ def load_yolo_and_flash_backend() -> tuple[Any, str]:
     from ultralytics import YOLO
     from ultralytics.nn.modules import block
 
+    if hasattr(block, "reset_flash_telemetry"):
+        block.reset_flash_telemetry()
+
     if hasattr(block, "configure_flash_backend"):
         block.configure_flash_backend(
             disable_flash=os.environ.get("Y13_DISABLE_FLASH", "0") == "1",

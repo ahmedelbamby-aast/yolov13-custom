@@ -178,6 +178,13 @@ def main() -> None:
 
     print_runtime("train", args.flash_mode, backend, train_kwargs)
     results = model.train(**train_kwargs)
+    try:
+        from ultralytics.nn.modules import block as block_mod
+
+        if hasattr(block_mod, "format_flash_telemetry_summary"):
+            print(block_mod.format_flash_telemetry_summary())
+    except Exception as e:
+        print(f"[api-style] flash telemetry summary unavailable: {e}")
     save_dir = getattr(getattr(model, "trainer", None), "save_dir", None)
     _run_feature_projection(args, save_dir)
     print(f"[api-style] train complete. save_dir={save_dir}")
