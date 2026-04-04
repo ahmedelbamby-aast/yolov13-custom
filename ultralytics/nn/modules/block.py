@@ -6,6 +6,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 from collections import defaultdict
+from contextlib import nullcontext
+
+try:
+    from torch.nn.attention import SDPBackend, sdpa_kernel
+except Exception:
+    SDPBackend = None
+    sdpa_kernel = None
 
 from ultralytics.utils.torch_utils import fuse_conv_and_bn
 from .conv import Conv, DSConv, DWConv, GhostConv, LightConv, RepConv, autopad
@@ -1424,7 +1431,19 @@ class AAttn(nn.Module):
             k = k.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
             v = v.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
 
-            x = F.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=False)
+            deterministic = torch.are_deterministic_algorithms_enabled()
+            if deterministic:
+                if sdpa_kernel is not None and SDPBackend is not None:
+                    sdpa_ctx = sdpa_kernel(SDPBackend.MATH)
+                else:
+                    sdpa_ctx = torch.backends.cuda.sdp_kernel(
+                        enable_flash=False, enable_math=True, enable_mem_efficient=False
+                    )
+            else:
+                sdpa_ctx = nullcontext()
+
+            with sdpa_ctx:
+                x = F.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=False)
             x = x.permute(0, 2, 1, 3).contiguous()
 
         if self.area > 1:
