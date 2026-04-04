@@ -1,8 +1,8 @@
 # Runtime-focused dependency pins for this custom fork (Kaggle + dev scripts)
 # Core package metadata and broad constraints live in pyproject.toml.
 
-torch==2.2.2
-torchvision==0.17.2
+torch==2.11.0
+torchvision==0.26.0
 timm==1.0.19
 albumentations==2.0.8
 onnx==1.17.0

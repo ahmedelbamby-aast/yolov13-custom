@@ -13,17 +13,14 @@ fi
 uv pip install --python "${PY}" -e "${Y13_ROOT}"
 uv pip install --python "${PY}" rich
 
-# Optional explicit torch stack overrides for reproducible benchmarking.
-if [[ -n "${Y13_TORCH_VERSION:-}" ]]; then
-  TORCH_SPEC="torch==${Y13_TORCH_VERSION}"
-  if [[ -n "${Y13_TORCHVISION_VERSION:-}" ]]; then
-    TORCH_SPEC+=" torchvision==${Y13_TORCHVISION_VERSION}"
-  fi
-  if [[ -n "${Y13_TORCH_EXTRA_INDEX_URL:-}" ]]; then
-    uv pip install --python "${PY}" --extra-index-url "${Y13_TORCH_EXTRA_INDEX_URL}" ${TORCH_SPEC}
-  else
-    uv pip install --python "${PY}" ${TORCH_SPEC}
-  fi
+# Torch stack defaults (override via env vars if needed).
+Y13_TORCH_VERSION="${Y13_TORCH_VERSION:-2.11.0}"
+Y13_TORCHVISION_VERSION="${Y13_TORCHVISION_VERSION:-0.26.0}"
+TORCH_SPEC="torch==${Y13_TORCH_VERSION} torchvision==${Y13_TORCHVISION_VERSION}"
+if [[ -n "${Y13_TORCH_EXTRA_INDEX_URL:-}" ]]; then
+  uv pip install --python "${PY}" --extra-index-url "${Y13_TORCH_EXTRA_INDEX_URL}" ${TORCH_SPEC}
+else
+  uv pip install --python "${PY}" ${TORCH_SPEC}
 fi
 
 "${PY}" - <<'PY'

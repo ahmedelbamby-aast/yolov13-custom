@@ -66,7 +66,8 @@ bash kaggle/scripts/30_gpu_check.sh
 bash kaggle/scripts/32_cuda_sanity_report.sh
 ```
 
-Optional explicit torch stack override before `20_install_deps.sh`:
+Torch stack defaults to latest validated runtime (`torch==2.11.0`, `torchvision==0.26.0`).
+Optional override before `20_install_deps.sh`:
 
 ```bash
 export Y13_TORCH_VERSION=2.5.1
