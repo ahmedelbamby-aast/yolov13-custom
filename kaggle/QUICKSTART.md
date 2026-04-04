@@ -69,17 +69,86 @@ bash kaggle/scripts/32_cuda_sanity_report.sh
 
 Default behavior in this repo prefers Turing flash on T4 when available.
 
+### 4.1 Install / build Turing FlashAttention
+
+The repo supports installing `ssiu/flash-attention-turing` through:
+
+- `kaggle/scripts/20_install_deps.sh` (auto-calls `25_install_turing_flash.sh` when flags are enabled)
+- or direct call to `kaggle/scripts/25_install_turing_flash.sh`
+
+Recommended setup sequence:
+
 ```bash
-# optional one-time install/build of turing flash
+cd /kaggle/work_here/yolov13
+source .venv/bin/activate
+
+# enable install + runtime preference
 export Y13_INSTALL_TURING_FLASH=1
+export Y13_USE_TURING_FLASH=1
+export Y13_DISABLE_FLASH=0
 
-# flash runtime control
-export Y13_USE_TURING_FLASH=1   # enable turing path
-export Y13_DISABLE_FLASH=0      # do not force fallback
+# install project deps and (if enabled) build flash-attention-turing
+bash kaggle/scripts/20_install_deps.sh
+```
 
-# force fallback backend
+Notes:
+
+- installer worktree path: `/kaggle/work_here/flash-attention-turing`
+- build is best-effort; if it fails, repo falls back to non-flash attention path
+- you can rerun only Turing install with:
+
+```bash
+cd /kaggle/work_here/yolov13
+export Y13_INSTALL_TURING_FLASH=1
+bash kaggle/scripts/25_install_turing_flash.sh
+```
+
+### 4.2 Verify installation and backend resolution
+
+```bash
+cd /kaggle/work_here/yolov13
+source .venv/bin/activate
+
+# verify Python package import
+python - <<'PY'
+import importlib
+mod = importlib.import_module('flash_attn_turing')
+print('flash_attn_turing import ok:', mod is not None)
+PY
+
+# verify backend picked by repo attention selector
+Y13_USE_TURING_FLASH=1 Y13_DISABLE_FLASH=0 python - <<'PY'
+from ultralytics.nn.modules import block
+block.configure_flash_backend(disable_flash=False, use_turing_flash=True)
+print('FLASH_BACKEND =', getattr(block, 'FLASH_BACKEND', 'unknown'))
+PY
+```
+
+Expected backend on T4 with successful build:
+
+- `FLASH_BACKEND = flash_attn_turing`
+
+### 4.3 Runtime controls during train/val/test/export/benchmark
+
+```bash
+# preferred Turing path
+export Y13_USE_TURING_FLASH=1
+export Y13_DISABLE_FLASH=0
+
+# force fallback (debug / compare)
 # export Y13_DISABLE_FLASH=1
 ```
+
+For script-level control, pass `--flash-mode`:
+
+- old style: `scripts/train.py`, `scripts/val.py`, `scripts/test.py`, `scripts/export.py`, `scripts/benchmark.py`
+- new API-style: `scripts/api_style/*.py`
+
+Modes:
+
+- `--flash-mode turing`
+- `--flash-mode auto`
+- `--flash-mode fallback`
 
 ## 5) Core developer workflows (recommended)
 
