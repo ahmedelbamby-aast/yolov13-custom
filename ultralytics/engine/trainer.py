@@ -542,6 +542,15 @@ class BaseTrainer:
         """Save model training checkpoints with additional metadata."""
         import io
 
+        ema = deepcopy(unwrap_model(self.ema.ema)).half()
+        if (
+            not all(torch.isfinite(v).all() for v in ema.state_dict().values() if isinstance(v, torch.Tensor))
+            and self.epoch > self.start_epoch  # at least save checkpoint for the first epoch
+        ):
+            LOGGER.warning(f"Skipping checkpoint save at epoch {self.epoch}: EMA contains NaN/Inf")
+            return False
+
+
         # Serialize ckpt to a byte buffer once (faster than repeated torch.save() calls)
         buffer = io.BytesIO()
         torch.save(
