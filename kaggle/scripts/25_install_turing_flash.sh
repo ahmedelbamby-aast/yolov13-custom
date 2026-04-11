@@ -15,6 +15,23 @@ if [[ ! -x "${PY}" ]]; then
   exit 1
 fi
 
+WHEEL_URL_DEFAULT="https://github.com/ahmedelbamby-aast/yolov13-custom/releases/download/flash-turing-wheels-v1/flash_attn_turing-0.0.0-cp311-cp311-linux_x86_64.whl"
+WHEEL_URL="${Y13_TURFLASH_WHEEL_URL:-${WHEEL_URL_DEFAULT}}"
+
+if [[ "${Y13_TURFLASH_USE_WHEEL:-1}" == "1" ]]; then
+  echo "[turflash] attempting prebuilt wheel install: ${WHEEL_URL}"
+  set +e
+  uv pip install --python "${PY}" -U "${WHEEL_URL}"
+  rc_wheel=$?
+  set -e
+  if [[ "${rc_wheel}" -eq 0 ]]; then
+    echo "[turflash] prebuilt wheel installed successfully."
+    exit 0
+  else
+    echo "[turflash] prebuilt wheel install failed, falling back to source build."
+  fi
+fi
+
 WORKTREE="${Y13_WORKDIR}/flash-attention-turing"
 if [[ ! -d "${WORKTREE}" ]]; then
   git clone https://github.com/ssiu/flash-attention-turing "${WORKTREE}"
@@ -29,7 +46,6 @@ export CC=gcc
 export MAX_JOBS="${Y13_TURFLASH_MAX_JOBS:-2}"
 export TORCH_CUDA_ARCH_LIST="${Y13_TORCH_CUDA_ARCH_LIST:-7.5}"
 
-# Use system CUDA toolchain first (Kaggle provides /usr/local/cuda).
 if [[ -d "/usr/local/cuda" ]]; then
   export CUDA_HOME="/usr/local/cuda"
 fi
