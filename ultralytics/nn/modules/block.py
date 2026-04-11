@@ -1368,17 +1368,17 @@ class AAttn(nn.Module):
 
         self.num_heads = num_heads
         self.head_dim = head_dim = dim // num_heads
-        all_head_dim = head_dim * self.num_heads
+        self.all_head_dim = all_head_dim = head_dim * self.num_heads
 
         self.qk = Conv(dim, all_head_dim * 2, 1, act=False)
         self.v = Conv(dim, all_head_dim, 1, act=False)
         self.proj = Conv(all_head_dim, dim, 1, act=False)
 
-        self.pe = Conv(all_head_dim, dim, 5, 1, 2, g=dim, act=False)
+        self.pe = Conv(all_head_dim, all_head_dim, 5, 1, 2, g=all_head_dim, act=False)
 
     def forward(self, x):
         """Processes the input tensor 'x' through the area-attention"""
-        B, C, H, W = x.shape
+        B, _, H, W = x.shape
         N = H * W
 
         qk = self.qk(x).flatten(2).transpose(1, 2)
@@ -1387,10 +1387,10 @@ class AAttn(nn.Module):
         v = v.flatten(2).transpose(1, 2).contiguous()
 
         if self.area > 1:
-            qk = qk.reshape(B * self.area, N // self.area, C * 2)
-            v = v.reshape(B * self.area, N // self.area, C)
+            qk = qk.reshape(B * self.area, N // self.area, self.all_head_dim * 2)
+            v = v.reshape(B * self.area, N // self.area, self.all_head_dim)
             B, N, _ = qk.shape
-        q, k = qk.split([C, C], dim=2)
+        q, k = qk.split([self.all_head_dim, self.all_head_dim], dim=2)
 
         if x.is_cuda and not FLASH_CONFIGURED:
             configure_flash_backend()
@@ -1447,9 +1447,9 @@ class AAttn(nn.Module):
             x = x.permute(0, 2, 1, 3).contiguous()
 
         if self.area > 1:
-            x = x.reshape(B // self.area, N * self.area, C)
+            x = x.reshape(B // self.area, N * self.area, self.all_head_dim)
             B, N, _ = x.shape
-        x = x.reshape(B, H, W, C).permute(0, 3, 1, 2).contiguous()
+        x = x.reshape(B, H, W, self.all_head_dim).permute(0, 3, 1, 2).contiguous()
 
         return self.proj(x + pp)
 
