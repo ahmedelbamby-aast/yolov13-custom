@@ -87,7 +87,14 @@ class ClassificationValidator(BaseValidator):
     def get_dataloader(self, dataset_path, batch_size):
         """Builds and returns a data loader for classification tasks with given parameters."""
         dataset = self.build_dataset(dataset_path)
-        return build_dataloader(dataset, batch_size, self.args.workers, rank=-1)
+        return build_dataloader(
+            dataset,
+            batch_size,
+            self.args.workers,
+            rank=-1,
+            prefetch_factor=getattr(self.args, "prefetch_factor", 2),
+            persistent_workers=getattr(self.args, "persistent_workers", True),
+        )
 
     def print_results(self):
         """Prints evaluation metrics for YOLO object detection model."""

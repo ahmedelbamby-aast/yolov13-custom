@@ -800,10 +800,6 @@ class Model(nn.Module, PyTorchModelHubMixin, repo_url="https://github.com/ultral
             args["resume"] = self.ckpt_path
 
         self.trainer = (trainer or self._smart_load("trainer"))(overrides=args, _callbacks=self.callbacks)
-        if not args.get("resume"):  # manually set model only if not resuming
-            self.trainer.model = self.trainer.get_model(weights=self.model if self.ckpt else None, cfg=self.model.yaml)
-            self.model = self.trainer.model
-
         self.trainer.hub_session = self.session  # attach optional HUB session
         self.trainer.train()
         # Update model and cfg after training

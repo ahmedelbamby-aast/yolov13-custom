@@ -39,6 +39,13 @@ All scripts accept:
 - `--flash-mode fallback`: force fallback attention (`Y13_DISABLE_FLASH=1`).
 - `--flash-mode turing`: force Turing flash path (`Y13_USE_TURING_FLASH=1`).
 
+Useful training speed knobs (pass via direct args or `--arg`):
+
+- `--ddp_find_unused_parameters false`
+- `--ddp_gradient_as_bucket_view true`
+- `--persistent_workers true`
+- `--prefetch_factor 2`
+
 The scripts set env flags before importing `ultralytics`, then re-run backend selection so the choice is deterministic.
 
 ## Generic Extra Overrides

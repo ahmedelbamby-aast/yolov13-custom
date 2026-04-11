@@ -13,6 +13,19 @@ fi
 uv pip install --python "${PY}" -e "${Y13_ROOT}"
 uv pip install --python "${PY}" rich
 
+# Torch stack defaults for turFlash-tested baseline (override via env vars if needed).
+Y13_TORCH_VERSION="${Y13_TORCH_VERSION:-2.8.0}"
+Y13_TORCHVISION_VERSION="${Y13_TORCHVISION_VERSION:-0.23.0}"
+TORCH_SPEC="torch==${Y13_TORCH_VERSION} torchvision==${Y13_TORCHVISION_VERSION}"
+if [[ -n "${Y13_TORCH_EXTRA_INDEX_URL:-}" ]]; then
+  uv pip install --python "${PY}" --extra-index-url "${Y13_TORCH_EXTRA_INDEX_URL}" ${TORCH_SPEC}
+else
+  uv pip install --python "${PY}" ${TORCH_SPEC}
+fi
+
+# Keep NCCL runtime aligned with torch 2.8 cu12 wheels.
+uv pip install --python "${PY}" "nvidia-nccl-cu12==${Y13_NCCL_VERSION:-2.27.3}"
+
 "${PY}" - <<'PY'
 from pathlib import Path
 import subprocess

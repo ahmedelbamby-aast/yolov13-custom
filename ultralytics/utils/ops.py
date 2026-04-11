@@ -653,7 +653,7 @@ def crop_mask(masks, boxes):
         (torch.Tensor): The masks are being cropped to the bounding box.
     """
     _, h, w = masks.shape
-    x1, y1, x2, y2 = torch.chunk(boxes[:, :, None], 4, 1)  # x1 shape(n,1,1)
+    x1, y1, x2, y2 = torch.chunk(boxes.clamp(min=0)[:, :, None], 4, 1)  # x1 shape(n,1,1)
     r = torch.arange(w, device=masks.device, dtype=x1.dtype)[None, None, :]  # rows shape(1,1,w)
     c = torch.arange(h, device=masks.device, dtype=x1.dtype)[None, :, None]  # cols shape(1,h,1)
 

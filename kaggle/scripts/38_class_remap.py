@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Remap YOLO dataset classes by selected class IDs/names.
 
-This utility keeps only selected classes, remaps them to contiguous IDs (0..N-1),
-updates data.yaml names/nc, and optionally deletes stale *.cache files.
+This utility first drops annotations for all non-selected classes, then remaps
+the remaining selected classes to contiguous IDs (0..N-1), updates
+data.yaml names/nc, and optionally deletes stale *.cache files.
 """
 
 from __future__ import annotations
@@ -120,23 +121,28 @@ def _parse_label_class(token: str) -> int:
     return int(float(token))
 
 
-def _remap_labels(label_dirs: list[Path], old_to_new: dict[int, int], dry_run: bool) -> dict:
+def _filter_then_remap_labels(label_dirs: list[Path], old_to_new: dict[int, int], dry_run: bool) -> dict:
     summary = {
         "files_total": 0,
         "files_touched": 0,
         "lines_total": 0,
+        "lines_selected": 0,
         "lines_kept": 0,
         "lines_dropped": 0,
+        "lines_remapped": 0,
         "parse_errors": 0,
     }
+    selected_ids = set(old_to_new)
 
     for label_dir in label_dirs:
         for txt in label_dir.rglob("*.txt"):
             summary["files_total"] += 1
             src = txt.read_text(encoding="utf-8").splitlines()
+            kept_parts: list[list[str]] = []
             out_lines: list[str] = []
             changed = False
 
+            # Phase 1: keep only selected classes and drop everything else.
             for ln in src:
                 s = ln.strip()
                 if not s:
@@ -154,16 +160,24 @@ def _remap_labels(label_dirs: list[Path], old_to_new: dict[int, int], dry_run: b
                     summary["lines_dropped"] += 1
                     continue
 
-                if old_id in old_to_new:
-                    new_id = old_to_new[old_id]
-                    if new_id != old_id or parts[0] != str(new_id):
-                        changed = True
-                    parts[0] = str(new_id)
-                    out_lines.append(" ".join(parts))
-                    summary["lines_kept"] += 1
-                else:
+                if old_id not in selected_ids:
                     changed = True
                     summary["lines_dropped"] += 1
+                    continue
+
+                kept_parts.append(parts)
+                summary["lines_selected"] += 1
+
+            # Phase 2: remap selected classes to contiguous IDs.
+            for parts in kept_parts:
+                old_id = _parse_label_class(parts[0])
+                new_id = old_to_new[old_id]
+                if new_id != old_id or parts[0] != str(new_id):
+                    changed = True
+                    summary["lines_remapped"] += 1
+                parts[0] = str(new_id)
+                out_lines.append(" ".join(parts))
+                summary["lines_kept"] += 1
 
             if changed:
                 summary["files_touched"] += 1
@@ -228,7 +242,7 @@ def main() -> None:
     if not label_dirs:
         raise RuntimeError("No label directories found. Provide --labels-dir explicitly.")
 
-    remap_summary = _remap_labels(label_dirs, old_to_new, args.dry_run)
+    remap_summary = _filter_then_remap_labels(label_dirs, old_to_new, args.dry_run)
 
     out_yaml = Path(args.out_data).resolve() if args.out_data else data_yaml
     updated = dict(data_dict)

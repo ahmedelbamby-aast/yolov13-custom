@@ -107,6 +107,7 @@ class BaseTrainer:
         self.validator = None
         self.metrics = None
         self.plots = {}
+        self.world_size = 1
         init_seeds(self.args.seed + 1 + RANK, deterministic=self.args.deterministic)
 
         # Dirs
@@ -198,14 +199,16 @@ class BaseTrainer:
                 self.args.batch = 16
 
             # Command
-            cmd, file = generate_ddp_command(world_size, self)
+            cmd, file = None, None
             try:
+                cmd, file = generate_ddp_command(world_size, self)
                 LOGGER.info(f"{colorstr('DDP:')} debug command {' '.join(cmd)}")
                 subprocess.run(cmd, check=True)
             except Exception as e:
                 raise e
             finally:
-                ddp_cleanup(self, str(file))
+                if file is not None:
+                    ddp_cleanup(self, str(file))
 
         else:
             self._do_train(world_size)
@@ -220,6 +223,7 @@ class BaseTrainer:
 
     def _setup_ddp(self, world_size):
         """Initializes and sets the DistributedDataParallel parameters for training."""
+        self.world_size = world_size
         torch.cuda.set_device(RANK)
         self.device = torch.device("cuda", RANK)
         # LOGGER.info(f'DDP info: RANK {RANK}, WORLD_SIZE {world_size}, DEVICE {self.device}')
@@ -233,6 +237,7 @@ class BaseTrainer:
 
     def _setup_train(self, world_size):
         """Builds dataloaders and optimizer on correct rank process."""
+        self.world_size = max(int(world_size), 1)
         # Model
         self.run_callbacks("on_pretrain_routine_start")
         ckpt = self.setup_model()
@@ -278,8 +283,8 @@ class BaseTrainer:
             self.model = nn.parallel.DistributedDataParallel(
                 self.model,
                 device_ids=[RANK],
-                find_unused_parameters=True,
-                gradient_as_bucket_view=False,
+                find_unused_parameters=bool(getattr(self.args, "ddp_find_unused_parameters", False)),
+                gradient_as_bucket_view=bool(getattr(self.args, "ddp_gradient_as_bucket_view", True)),
             )
             self.set_model_attributes()  # set again after DDP wrapper
 
@@ -479,9 +484,9 @@ class BaseTrainer:
 
             # Early Stopping
             if RANK != -1:  # if DDP training
-                broadcast_list = [self.stop if RANK == 0 else None]
-                dist.broadcast_object_list(broadcast_list, 0)  # broadcast 'stop' to all ranks
-                self.stop = broadcast_list[0]
+                stop_tensor = torch.tensor(int(self.stop) if RANK == 0 else 0, device=self.device, dtype=torch.int32)
+                dist.broadcast(stop_tensor, 0)  # broadcast stop flag to all ranks
+                self.stop = bool(stop_tensor.item())
             if self.stop:
                 break  # must break all DDP ranks
             epoch += 1
@@ -536,6 +541,15 @@ class BaseTrainer:
     def save_model(self):
         """Save model training checkpoints with additional metadata."""
         import io
+
+        ema = deepcopy(unwrap_model(self.ema.ema)).half()
+        if (
+            not all(torch.isfinite(v).all() for v in ema.state_dict().values() if isinstance(v, torch.Tensor))
+            and self.epoch > self.start_epoch  # at least save checkpoint for the first epoch
+        ):
+            LOGGER.warning(f"Skipping checkpoint save at epoch {self.epoch}: EMA contains NaN/Inf")
+            return False
+
 
         # Serialize ckpt to a byte buffer once (faster than repeated torch.save() calls)
         buffer = io.BytesIO()
@@ -615,7 +629,7 @@ class BaseTrainer:
             cfg = weights.yaml
         elif isinstance(self.args.pretrained, (str, Path)):
             weights, _ = attempt_load_one_weight(self.args.pretrained)
-        self.model = self.get_model(cfg=cfg, weights=weights, verbose=RANK == -1)  # calls Model(cfg, weights)
+        self.model = self.get_model(cfg=cfg, weights=weights, verbose=RANK in {-1, 0})  # calls Model(cfg, weights)
         return ckpt
 
     def optimizer_step(self):

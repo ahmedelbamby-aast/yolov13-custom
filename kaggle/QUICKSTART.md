@@ -42,12 +42,12 @@ bash kaggle/scripts/run_all.sh
 This performs:
 
 1. venv setup (`10_setup_uv.sh`)
-2. optional Roboflow dataset prep (`15_roboflow_ready.sh`) when `Y13_AUTO_ROBOFLOW_READY=1`
-2. dependency install (`20_install_deps.sh`)
-3. NVIDIA driver check/install step (`27_install_nvidia_driver_535.sh`)
-4. CUDA/GPU checks (`30_gpu_check.sh`, `32_cuda_sanity_report.sh`)
-5. optional DDP smoke train (`40_ddp_smoke.sh`)
-6. zip packaging (`50_package_zip.sh`)
+2. NVIDIA driver check/install step (`27_install_nvidia_driver_535.sh`)
+3. optional Roboflow dataset prep (`15_roboflow_ready.sh`) when `Y13_AUTO_ROBOFLOW_READY=1`
+4. dependency install (`20_install_deps.sh`)
+5. CUDA/GPU checks (`30_gpu_check.sh`, `32_cuda_sanity_report.sh`)
+6. optional DDP smoke train (`40_ddp_smoke.sh`)
+7. zip packaging (`50_package_zip.sh`)
 
 Output zip:
 
@@ -60,11 +60,24 @@ If you prefer explicit setup:
 ```bash
 cd /kaggle/work_here/yolov13
 bash kaggle/scripts/10_setup_uv.sh
-bash kaggle/scripts/20_install_deps.sh
 bash kaggle/scripts/27_install_nvidia_driver_535.sh
+bash kaggle/scripts/20_install_deps.sh
 bash kaggle/scripts/30_gpu_check.sh
 bash kaggle/scripts/32_cuda_sanity_report.sh
 ```
+
+Torch stack defaults to turFlash-tested runtime (`torch==2.8.0`, `torchvision==0.23.0`, `nvidia-nccl-cu12==2.27.3`).
+Optional override before `20_install_deps.sh`:
+
+```bash
+export Y13_TORCH_VERSION=2.8.0
+export Y13_TORCHVISION_VERSION=0.23.0
+export Y13_NCCL_VERSION=2.27.3
+export Y13_TORCH_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu124
+```
+
+For the cu12 baseline, turFlash installer uses the system CUDA toolchain (`/usr/local/cuda`) by default and prepends it to `PATH`.
+It also builds turFlash with `--no-deps` to avoid torch/NCCL version drift.
 
 ### 3.1) Optional one-shot Roboflow dataset prep
 
@@ -81,7 +94,10 @@ Useful env flags:
 
 - `Y13_ROBOFLOW_FORCE=1` re-download/re-extract
 - `Y13_ROBOFLOW_DATASET_NAME=...` custom destination folder name
-- `Y13_ROBOFLOW_REMAP_STUDENT_TEACHER=1` auto-run class remap (`student`, `teacher`)
+- `Y13_ROBOFLOW_REMAP_ENABLE=1` enable auto-remap after dataset extraction
+- `Y13_ROBOFLOW_REMAP_INCLUDE_NAMES=student,teacher` comma-separated class names to keep
+- `Y13_ROBOFLOW_REMAP_INCLUDE_IDS=0,9` comma-separated original class IDs to keep
+- `Y13_ROBOFLOW_REMAP_STUDENT_TEACHER=1` legacy shortcut for `student,teacher`
 - `Y13_AUTO_ROBOFLOW_READY=1` run this script automatically from `run_all.sh`
 
 ## 4) Flash backend controls (global)
@@ -828,7 +844,8 @@ source .venv/bin/activate
 
 # optional: prepare + normalize + remap Roboflow dataset first
 Y13_ROBOFLOW_FORCE=1 \
-Y13_ROBOFLOW_REMAP_STUDENT_TEACHER=1 \
+Y13_ROBOFLOW_REMAP_ENABLE=1 \
+Y13_ROBOFLOW_REMAP_INCLUDE_NAMES=student,teacher \
 bash kaggle/scripts/15_roboflow_ready.sh
 
 # benchmark 5 epochs using 5% subset

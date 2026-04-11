@@ -4,7 +4,7 @@ from copy import copy
 
 from ultralytics.models import yolo
 from ultralytics.nn.tasks import PoseModel
-from ultralytics.utils import DEFAULT_CFG, LOGGER
+from ultralytics.utils import DEFAULT_CFG, LOGGER, RANK
 from ultralytics.utils.plotting import plot_images, plot_results
 
 
@@ -37,7 +37,7 @@ class PoseTrainer(yolo.detect.DetectionTrainer):
 
     def get_model(self, cfg=None, weights=None, verbose=True):
         """Get pose estimation model with specified configuration and weights."""
-        model = PoseModel(cfg, ch=3, nc=self.data["nc"], data_kpt_shape=self.data["kpt_shape"], verbose=verbose)
+        model = PoseModel(cfg, ch=3, nc=self.data["nc"], data_kpt_shape=self.data["kpt_shape"], verbose=verbose and RANK == -1)
         if weights:
             model.load(weights)
 

@@ -87,7 +87,7 @@ class DetectionValidator(BaseValidator):
 
     def get_desc(self):
         """Return a formatted string summarizing class metrics of YOLO model."""
-        return ("%22s" + "%11s" * 7) % ("Class", "Images", "Instances", "Box(P", "R", "mAP50", "mAP75","mAP50-95)")
+        return ("%22s" + "%11s" * 7) % ("Class", "Images", "Instances", "Box(P", "R", "mAP50", "mAP75", "mAP50-95")
 
     def postprocess(self, preds):
         """Apply Non-maximum suppression to prediction outputs."""
@@ -241,7 +241,15 @@ class DetectionValidator(BaseValidator):
     def get_dataloader(self, dataset_path, batch_size):
         """Construct and return dataloader."""
         dataset = self.build_dataset(dataset_path, batch=batch_size, mode="val")
-        return build_dataloader(dataset, batch_size, self.args.workers, shuffle=False, rank=-1)  # return dataloader
+        return build_dataloader(
+            dataset,
+            batch_size,
+            self.args.workers,
+            shuffle=False,
+            rank=-1,
+            prefetch_factor=getattr(self.args, "prefetch_factor", 2),
+            persistent_workers=getattr(self.args, "persistent_workers", True),
+        )  # return dataloader
 
     def plot_val_samples(self, batch, ni):
         """Plot validation image samples."""

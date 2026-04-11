@@ -12,7 +12,10 @@ ZIP_PATH="${DATASETS_DIR}/${DATASET_NAME}.zip"
 FORCE="${Y13_ROBOFLOW_FORCE:-0}"
 KEEP_ZIP="${Y13_ROBOFLOW_KEEP_ZIP:-0}"
 NORMALIZE_YAML="${Y13_ROBOFLOW_NORMALIZE_YAML:-1}"
-REMAP_STUDENT_TEACHER="${Y13_ROBOFLOW_REMAP_STUDENT_TEACHER:-0}"
+REMAP_STUDENT_TEACHER="${Y13_ROBOFLOW_REMAP_STUDENT_TEACHER:-0}"  # backward-compatible shortcut
+REMAP_ENABLE="${Y13_ROBOFLOW_REMAP_ENABLE:-0}"
+REMAP_INCLUDE_NAMES="${Y13_ROBOFLOW_REMAP_INCLUDE_NAMES:-}"
+REMAP_INCLUDE_IDS="${Y13_ROBOFLOW_REMAP_INCLUDE_IDS:-}"
 
 mkdir -p "${DATASETS_DIR}"
 
@@ -85,12 +88,45 @@ PY
 
 unset Y13_ROBOFLOW_ZIP_PATH Y13_ROBOFLOW_TARGET_DIR Y13_ROBOFLOW_NORMALIZE_YAML
 
-if [[ "${REMAP_STUDENT_TEACHER}" == "1" ]]; then
+if [[ "${REMAP_STUDENT_TEACHER}" == "1" && -z "${REMAP_INCLUDE_NAMES}" && -z "${REMAP_INCLUDE_IDS}" ]]; then
+  REMAP_ENABLE=1
+  REMAP_INCLUDE_NAMES="student,teacher"
+fi
+
+if [[ -n "${REMAP_INCLUDE_NAMES}" || -n "${REMAP_INCLUDE_IDS}" ]]; then
+  REMAP_ENABLE=1
+fi
+
+if [[ "${REMAP_ENABLE}" == "1" ]]; then
   DATA_YAML_PATH="${TARGET_DIR}/data.yaml"
-  python "${SCRIPT_DIR}/38_class_remap.py" \
-    --data "${DATA_YAML_PATH}" \
-    --include-name student \
-    --include-name teacher
+  REMAP_CMD=(python "${SCRIPT_DIR}/38_class_remap.py" --data "${DATA_YAML_PATH}")
+
+  if [[ -n "${REMAP_INCLUDE_IDS}" ]]; then
+    IFS=',' read -r -a remap_ids <<< "${REMAP_INCLUDE_IDS}"
+    for cid in "${remap_ids[@]}"; do
+      cid="${cid//[[:space:]]/}"
+      [[ -z "${cid}" ]] && continue
+      REMAP_CMD+=(--include-id "${cid}")
+    done
+  fi
+
+  if [[ -n "${REMAP_INCLUDE_NAMES}" ]]; then
+    IFS=',' read -r -a remap_names <<< "${REMAP_INCLUDE_NAMES}"
+    for cname in "${remap_names[@]}"; do
+      cname="${cname#"${cname%%[![:space:]]*}"}"
+      cname="${cname%"${cname##*[![:space:]]}"}"
+      [[ -z "${cname}" ]] && continue
+      REMAP_CMD+=(--include-name "${cname}")
+    done
+  fi
+
+  if [[ "${#REMAP_CMD[@]}" -le 4 ]]; then
+    echo "[roboflow_ready] remap requested, but no classes were provided." >&2
+    echo "[roboflow_ready] use Y13_ROBOFLOW_REMAP_INCLUDE_NAMES or Y13_ROBOFLOW_REMAP_INCLUDE_IDS" >&2
+    exit 1
+  fi
+
+  "${REMAP_CMD[@]}"
 fi
 
 if [[ "${KEEP_ZIP}" != "1" ]]; then
