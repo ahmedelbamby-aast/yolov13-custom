@@ -27,9 +27,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--data", required=True, help="Dataset YAML path.")
     parser.add_argument("--epochs", type=int, default=100, help="Training epochs.")
     parser.add_argument("--imgsz", type=int, default=640, help="Image size.")
-    parser.add_argument("--batch", type=int, default=16, help="Batch size.")
+    parser.add_argument("--batch", type=float, default=16, help="Batch size or autobatch fraction (e.g. 0.80).")
     parser.add_argument("--device", default="0", help="Device string, e.g. '0', '0,1', 'cpu'.")
     parser.add_argument("--workers", type=int, default=8, help="Dataloader workers.")
+    parser.add_argument(
+        "--auto-flash-fallback",
+        action="store_true",
+        help="Retry training with --flash-mode fallback if run fails or loss becomes non-finite under flash.",
+    )
     parser.add_argument("--project", default="runs/train", help="Output project directory.")
     parser.add_argument("--name", default="exp", help="Run name.")
     parser.add_argument("--task", default=None, help="Optional task override (detect/segment/pose/obb).")
@@ -111,12 +116,19 @@ def _apply_flash_mode_to_env(env: dict[str, str], mode: str) -> None:
     if mode == "fallback":
         env["Y13_DISABLE_FLASH"] = "1"
         env["Y13_USE_TURING_FLASH"] = "0"
+        env["Y13_PREFER_FLASH4"] = "0"
     elif mode == "turing":
         env["Y13_DISABLE_FLASH"] = "0"
         env["Y13_USE_TURING_FLASH"] = "1"
+        env["Y13_PREFER_FLASH4"] = "0"
+    elif mode == "flash4":
+        env["Y13_DISABLE_FLASH"] = "0"
+        env["Y13_USE_TURING_FLASH"] = "0"
+        env["Y13_PREFER_FLASH4"] = "1"
     else:
         env["Y13_DISABLE_FLASH"] = "0"
         env.setdefault("Y13_USE_TURING_FLASH", "0")
+        env.setdefault("Y13_PREFER_FLASH4", "1")
 
 
 def _run_feature_projection(args: argparse.Namespace, save_dir: str | Path | None) -> None:
@@ -188,6 +200,18 @@ def _run_feature_projection(args: argparse.Namespace, save_dir: str | Path | Non
     print(f"[y13] feature projection complete. out_dir={out_dir} md={md_path}")
 
 
+def _normalize_batch_arg(batch: float) -> int | float:
+    """Keep float for autobatch fractions, cast whole-number values to int."""
+    if isinstance(batch, float) and batch >= 1.0 and batch.is_integer():
+        return int(batch)
+    return batch
+
+
+def _flash_nan_abort_seen(exc: Exception) -> bool:
+    msg = str(exc)
+    return ("Non-finite loss detected" in msg) or ("nan" in msg.lower() and "loss" in msg.lower())
+
+
 def main() -> None:
     parser = build_parser()
     args, unknown = parser.parse_known_args()
@@ -200,7 +224,7 @@ def main() -> None:
         "data": args.data,
         "epochs": args.epochs,
         "imgsz": args.imgsz,
-        "batch": args.batch,
+        "batch": _normalize_batch_arg(args.batch),
         "device": args.device,
         "workers": args.workers,
         "project": args.project,
@@ -216,7 +240,21 @@ def main() -> None:
     kwargs = merge_kwarg_sources(kwargs, extra_overrides, unknown_overrides)
     print_runtime_header("train", flash_backend, kwargs)
 
-    model.train(**kwargs)
+    try:
+        model.train(**kwargs)
+    except Exception as e:
+        should_retry = bool(args.auto_flash_fallback and args.flash_mode != "fallback" and _flash_nan_abort_seen(e))
+        if not should_retry:
+            raise
+
+        print("[y13] auto-flash-fallback: detected non-finite loss under flash; retrying with fallback backend")
+        apply_flash_mode("fallback")
+        YOLO_retry, flash_backend_retry = load_yolo_and_flash_backend()
+        model = YOLO_retry(args.model)
+        kwargs["name"] = f"{args.name}_fallback_retry"
+        print_runtime_header("train-retry", flash_backend_retry, kwargs)
+        model.train(**kwargs)
+
     try:
         from ultralytics.nn.modules import block as block_mod
 

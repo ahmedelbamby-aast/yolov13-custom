@@ -177,6 +177,12 @@ class v8DetectionLoss:
         self.bbox_loss = BboxLoss(m.reg_max).to(device)
         self.proj = torch.arange(m.reg_max, dtype=torch.float, device=device)
 
+        self.branch_div_weight = 0.0
+        model_branch_weights = [float(getattr(mod, "branch_div_weight", 0.0)) for mod in model.modules()]
+        if model_branch_weights:
+            self.branch_div_weight = max(model_branch_weights)
+        self.branch_div_modules = [mod for mod in model.modules() if hasattr(mod, "last_branch_diversity")]
+
     def preprocess(self, targets, batch_size, scale_tensor):
         """Preprocesses the target counts and matches with the input batch size to output a tensor."""
         nl, ne = targets.shape
@@ -205,7 +211,7 @@ class v8DetectionLoss:
 
     def __call__(self, preds, batch):
         """Calculate the sum of the loss for box, cls and dfl multiplied by batch size."""
-        loss = torch.zeros(3, device=self.device)  # box, cls, dfl
+        loss = torch.zeros(4, device=self.device)  # box, cls, dfl, branch_div
         feats = preds[1] if isinstance(preds, tuple) else preds
         pred_distri, pred_scores = torch.cat([xi.view(feats[0].shape[0], self.no, -1) for xi in feats], 2).split(
             (self.reg_max * 4, self.nc), 1
@@ -256,6 +262,13 @@ class v8DetectionLoss:
         loss[0] *= self.hyp.box  # box gain
         loss[1] *= self.hyp.cls  # cls gain
         loss[2] *= self.hyp.dfl  # dfl gain
+
+        if self.branch_div_weight > 0 and self.branch_div_modules:
+            branch_vals = [
+                m.last_branch_diversity for m in self.branch_div_modules if m.last_branch_diversity is not None
+            ]
+            if branch_vals:
+                loss[3] = torch.stack(branch_vals).mean() * self.branch_div_weight
 
         return loss.sum() * batch_size, loss.detach()  # loss(box, cls, dfl)
 

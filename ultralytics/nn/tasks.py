@@ -69,7 +69,7 @@ from ultralytics.nn.modules import (
     HyperACE,
     DownsampleConv,
     FullPAD_Tunnel,
-    DSC3k2
+    DSC3k2,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, colorstr, emojis, yaml_load
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
@@ -1003,7 +1003,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             C2fCIB,
             A2C2f,
             DSC3k2,
-            DSConv
+            DSConv,
         }:
             c1, c2 = ch[f], args[0]
             if c2 != nc:  # if c2 not equal to number of classes (i.e. for Classify() output)
@@ -1031,7 +1031,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
                 C2fCIB,
                 C2PSA,
                 A2C2f,
-                DSC3k2
+                DSC3k2,
             }:
                 args.insert(2, n)  # number of repeats
                 n = 1
@@ -1039,11 +1039,22 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
                 legacy = False
                 if scale in "lx":
                     args[3] = True
-            if m is A2C2f: 
+            if m is A2C2f:
                 legacy = False
-                if scale in "lx":  # for L/X sizes
-                    args.append(True)
-                    args.append(1.5)
+                a2 = args[3] if len(args) > 3 else True
+                area = args[4] if len(args) > 4 else 1
+                residual = args[5] if len(args) > 5 else False
+                mlp_ratio = args[6] if len(args) > 6 else 2.0
+                e_ratio = args[7] if len(args) > 7 else 0.5
+                groups = args[8] if len(args) > 8 else 1
+                shortcut_flag = args[9] if len(args) > 9 else True
+                attn_policy = args[10] if len(args) > 10 else "area"
+
+                if scale in "lx" and len(args) <= 6:  # preserve historical L/X defaults
+                    residual = True
+                    mlp_ratio = 1.5
+
+                args = [c1, c2, n, a2, area, residual, mlp_ratio, e_ratio, groups, shortcut_flag, attn_policy]
         elif m is AIFI:
             args = [ch[f], *args]
         elif m in {HGStem, HGBlock}:
@@ -1089,11 +1100,29 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             e2 = args[5] if len(args) > 5 else 1
             context = args[6] if len(args) > 6 else "both"
             channel_adjust = args[7] if len(args) > 7 else True
-            normalize = args[8] if len(args) > 8 else "node"
-            topk = args[9] if len(args) > 9 else 0
-            degree_norm = args[10] if len(args) > 10 else False
+            fuse_align_mode = args[8] if len(args) > 8 else "adaptive"
+            normalize = args[9] if len(args) > 9 else "node"
+            topk = args[10] if len(args) > 10 else 0
+            degree_norm = args[11] if len(args) > 11 else False
+            branch_div_weight = args[12] if len(args) > 12 else 0.0
 
-            args = [c1, c2, n, he, dsc3k, shortcut, e1, e2, context, channel_adjust, normalize, topk, degree_norm]
+            args = [
+                c1,
+                c2,
+                n,
+                he,
+                dsc3k,
+                shortcut,
+                e1,
+                e2,
+                context,
+                channel_adjust,
+                fuse_align_mode,
+                normalize,
+                topk,
+                degree_norm,
+                branch_div_weight,
+            ]
             n = 1
             if scale in "lx":  # for L/X sizes
                 args[9] = False
@@ -1103,7 +1132,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             args = [c1]
             if scale in "lx":  # for L/X sizes
                 args.append(False)
-                c2 =c1
+                c2 = c1
         elif m is FullPAD_Tunnel:
             c2 = ch[f[0]]
         else:

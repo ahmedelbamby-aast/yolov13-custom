@@ -13,8 +13,8 @@ def add_flash_mode_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--flash-mode",
         default="auto",
-        choices=("auto", "fallback", "turing"),
-        help="Flash backend mode: auto, force fallback, or force Turing flash.",
+        choices=("auto", "fallback", "turing", "flash4"),
+        help="Flash backend mode: auto, fallback, turing, or flash4 (CuTe on Blackwell/Hopper).",
     )
 
 
@@ -33,12 +33,24 @@ def apply_flash_mode(mode: str) -> None:
     if mode == "fallback":
         os.environ["Y13_DISABLE_FLASH"] = "1"
         os.environ["Y13_USE_TURING_FLASH"] = "0"
+        os.environ["Y13_PREFER_FLASH4"] = "0"
     elif mode == "turing":
         os.environ["Y13_DISABLE_FLASH"] = "0"
         os.environ["Y13_USE_TURING_FLASH"] = "1"
+        os.environ["Y13_PREFER_FLASH4"] = "0"
+    elif mode == "flash4":
+        os.environ["Y13_DISABLE_FLASH"] = "0"
+        os.environ["Y13_USE_TURING_FLASH"] = "0"
+        os.environ["Y13_PREFER_FLASH4"] = "1"
     else:  # auto
         os.environ["Y13_DISABLE_FLASH"] = "0"
         os.environ.setdefault("Y13_USE_TURING_FLASH", "0")
+        os.environ.setdefault("Y13_PREFER_FLASH4", "1")
+
+    # Runtime stability defaults for long runs on Blackwell/SM120.
+    os.environ.setdefault("Y13_FLASH_QUARANTINE", "1")
+    os.environ.setdefault("Y13_FLASH_FAIL_THRESHOLD", "64")
+    os.environ.setdefault("Y13_FLASH4_DTYPE", "auto")
 
 
 def _parse_scalar(value: str) -> Any:
@@ -128,7 +140,11 @@ def print_runtime_header(action: str, flash_backend: str, kwargs: dict[str, Any]
     print(f"[y13] action={action}")
     print(
         f"[y13] flash_mode_env: Y13_DISABLE_FLASH={os.environ.get('Y13_DISABLE_FLASH', '')} "
-        f"Y13_USE_TURING_FLASH={os.environ.get('Y13_USE_TURING_FLASH', '')}"
+        f"Y13_USE_TURING_FLASH={os.environ.get('Y13_USE_TURING_FLASH', '')} "
+        f"Y13_PREFER_FLASH4={os.environ.get('Y13_PREFER_FLASH4', '')} "
+        f"Y13_FLASH_QUARANTINE={os.environ.get('Y13_FLASH_QUARANTINE', '')} "
+        f"Y13_FLASH_FAIL_THRESHOLD={os.environ.get('Y13_FLASH_FAIL_THRESHOLD', '')} "
+        f"Y13_FLASH4_DTYPE={os.environ.get('Y13_FLASH4_DTYPE', '')}"
     )
     print(f"[y13] resolved_flash_backend={flash_backend}")
     print(f"[y13] kwargs={kwargs}")

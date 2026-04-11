@@ -42,10 +42,22 @@ def _log_tensorboard_graph(trainer):
         warnings.simplefilter("ignore", category=UserWarning)  # suppress jit trace warning
         warnings.simplefilter("ignore", category=torch.jit.TracerWarning)  # suppress jit trace warning
 
+        model_ref = de_parallel(trainer.model)
+        has_y13_dynamic = any(
+            m.__class__.__name__ in {"AAttn", "AdaHGComputation", "AdaHGConv", "C3AH", "FullPAD_Tunnel", "HyperACE"}
+            for m in model_ref.modules()
+        )
+        if has_y13_dynamic:
+            model_ref.eval()
+            with torch.no_grad():
+                _ = model_ref(im)
+            LOGGER.info(f"{PREFIX}model graph trace skipped (dynamic YOLOv13 modules detected), scalars only ✅")
+            return
+
         # Try simple method first (YOLO)
         try:
             trainer.model.eval()  # place in .eval() mode to avoid BatchNorm statistics changes
-            WRITER.add_graph(torch.jit.trace(de_parallel(trainer.model), im, strict=False), [])
+            WRITER.add_graph(torch.jit.trace(model_ref, im, strict=False), [])
             LOGGER.info(f"{PREFIX}model graph visualization added ✅")
             return
 

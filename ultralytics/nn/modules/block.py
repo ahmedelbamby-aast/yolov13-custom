@@ -1179,16 +1179,73 @@ USE_FLASH_ATTN = False
 FLASH_BACKEND = "fallback"
 FLASH_ERROR = ""
 FLASH_CONFIGURED = False
-DEFAULT_FLASH_HEAD_DIMS = {64, 128}
+DEFAULT_FLASH_HEAD_DIMS = (64, 128)
+FLASH_RUNTIME_GUARD = {
+    "disabled": False,
+    "disable_reason": "",
+    "failures": 0,
+    "max_failures": 64,
+}
+
+
+def _reset_flash_runtime_guard():
+    """Reset runtime guard state for flash backend stability."""
+    global FLASH_RUNTIME_GUARD
+    try:
+        max_failures = int(os.getenv("Y13_FLASH_FAIL_THRESHOLD", "64"))
+    except Exception:
+        max_failures = 64
+    FLASH_RUNTIME_GUARD = {
+        "disabled": False,
+        "disable_reason": "",
+        "failures": 0,
+        "max_failures": max(1, max_failures),
+    }
+
+
+def _runtime_flash_allowed():
+    """Whether flash backend is currently allowed by runtime guard."""
+    return not FLASH_RUNTIME_GUARD.get("disabled", False)
+
+
+def _mark_flash_failure(reason):
+    """Track unstable flash events and quarantine backend if recurrent."""
+    if not reason.startswith("flash_"):
+        return
+    FLASH_RUNTIME_GUARD["failures"] += 1
+    if os.getenv("Y13_FLASH_QUARANTINE", "1") != "1":
+        return
+    if FLASH_RUNTIME_GUARD["failures"] >= FLASH_RUNTIME_GUARD["max_failures"] and not FLASH_RUNTIME_GUARD["disabled"]:
+        FLASH_RUNTIME_GUARD["disabled"] = True
+        FLASH_RUNTIME_GUARD["disable_reason"] = reason
+        logger.warning(
+            "Flash backend quarantined after repeated runtime failures "
+            f"(failures={FLASH_RUNTIME_GUARD['failures']}, reason={reason})."
+        )
 
 
 def _supported_flash_head_dims():
     """Return currently enabled flash head dimensions for the active backend."""
-    dims = set(DEFAULT_FLASH_HEAD_DIMS)
+    if FLASH_BACKEND == "flash_attn4_cute":
+        return (32, 64, 128)
     if FLASH_BACKEND == "flash_attn_turing":
         if os.getenv("Y13_DISABLE_TURING_HEAD_DIM32", "0") != "1":
-            dims.add(32)
-    return dims
+            return (32, 64, 128)
+    return DEFAULT_FLASH_HEAD_DIMS
+
+
+def _sanitize_flash_qkv(q, k, v):
+    """Numerically stabilize q/k/v before flash invocation."""
+    had_non_finite = (not torch.isfinite(q).all()) or (not torch.isfinite(k).all()) or (not torch.isfinite(v).all())
+    if had_non_finite:
+        q = torch.nan_to_num(q, nan=0.0, posinf=1e4, neginf=-1e4)
+        k = torch.nan_to_num(k, nan=0.0, posinf=1e4, neginf=-1e4)
+        v = torch.nan_to_num(v, nan=0.0, posinf=1e4, neginf=-1e4)
+
+    q = torch.nan_to_num(q, nan=0.0, posinf=1e4, neginf=-1e4).clamp(min=-1e3, max=1e3)
+    k = torch.nan_to_num(k, nan=0.0, posinf=1e4, neginf=-1e4).clamp(min=-1e3, max=1e3)
+    v = torch.nan_to_num(v, nan=0.0, posinf=1e4, neginf=-1e4).clamp(min=-1e3, max=1e3)
+    return q, k, v, ("flash_input_sanitized" if had_non_finite else "")
 
 
 FLASH_TELEMETRY = {
@@ -1218,6 +1275,7 @@ def reset_flash_telemetry():
         "head_dims": defaultdict(int),
         "backends": defaultdict(int),
     }
+    _reset_flash_runtime_guard()
 
 
 def _record_flash_event(head_dim, used_flash, reason=""):
@@ -1270,8 +1328,44 @@ def format_flash_telemetry_summary():
         f"fallbacks={snap['fallback_hits']} hit_rate={hit_rate:.2f}% "
         f"cuda_total={cuda_total} cuda_hits={snap['cuda_flash_hits']} "
         f"cuda_fallbacks={snap['cuda_fallback_hits']} cuda_hit_rate={cuda_hit_rate:.2f}% "
-        f"head_dims={snap['head_dims']} fallback_reasons={snap['fallback_reasons']}"
+        f"head_dims={snap['head_dims']} fallback_reasons={snap['fallback_reasons']} "
+        f"guard_disabled={FLASH_RUNTIME_GUARD.get('disabled', False)} "
+        f"guard_failures={FLASH_RUNTIME_GUARD.get('failures', 0)}"
     )
+
+
+def _try_import_flash_attn_func(import_path):
+    """Import flash_attn_func from a known module path."""
+    module_name, attr_name = import_path.rsplit(".", 1)
+    module = __import__(module_name, fromlist=[attr_name])
+    return getattr(module, attr_name)
+
+
+def _resolve_flash_attn_backend(major, prefer_flash4):
+    """Resolve non-Turing flash backend for SM80+ GPUs."""
+    attempts = []
+
+    if prefer_flash4 and major >= 10:
+        attempts.append(("flash_attn4_cute", "flash_attn.cute.flash_attn_func"))
+
+    attempts.extend(
+        [
+            ("flash_attn", "flash_attn.flash_attn_interface.flash_attn_func"),
+            ("flash_attn", "flash_attn.flash_attn_func"),
+        ]
+    )
+
+    errors = []
+    for backend_name, import_path in attempts:
+        try:
+            return backend_name, _try_import_flash_attn_func(import_path)
+        except Exception as e:
+            errors.append(f"{import_path}: {e}")
+
+    if errors:
+        raise ImportError("; ".join(errors))
+
+    raise ImportError("no flash-attn import attempts configured")
 
 
 def configure_flash_backend(disable_flash=None, use_turing_flash=None):
@@ -1281,6 +1375,7 @@ def configure_flash_backend(disable_flash=None, use_turing_flash=None):
     USE_FLASH_ATTN = False
     FLASH_BACKEND = "fallback"
     FLASH_ERROR = ""
+    _reset_flash_runtime_guard()
 
     try:
         import torch
@@ -1289,17 +1384,17 @@ def configure_flash_backend(disable_flash=None, use_turing_flash=None):
         use_turing_flash = (
             (os.getenv("Y13_USE_TURING_FLASH", "0") == "1") if use_turing_flash is None else bool(use_turing_flash)
         )
+        prefer_flash4 = os.getenv("Y13_PREFER_FLASH4", "1") == "1"
 
         if torch.cuda.is_available() and not disable_flash:
             major, minor = torch.cuda.get_device_capability()
 
             if major >= 8:
                 try:
-                    from flash_attn.flash_attn_interface import flash_attn_func as _flash_attn_func
-
-                    globals()["flash_attn_func"] = _flash_attn_func
+                    backend_name, flash_func = _resolve_flash_attn_backend(major=major, prefer_flash4=prefer_flash4)
+                    globals()["flash_attn_func"] = flash_func
                     USE_FLASH_ATTN = True
-                    FLASH_BACKEND = "flash_attn"
+                    FLASH_BACKEND = backend_name
                 except Exception as e:
                     FLASH_ERROR = str(e)
 
@@ -1361,10 +1456,12 @@ class AAttn(nn.Module):
 
     """
 
-    def __init__(self, dim, num_heads, area=1):
+    def __init__(self, dim, num_heads, area=1, attn_policy="area"):
         """Initializes the area-attention module, a simple yet efficient attention module for YOLO."""
         super().__init__()
         self.area = area
+        self.base_area = area
+        self.attn_policy = attn_policy
 
         self.num_heads = num_heads
         self.head_dim = head_dim = dim // num_heads
@@ -1386,11 +1483,18 @@ class AAttn(nn.Module):
         pp = self.pe(v).contiguous()
         v = v.flatten(2).transpose(1, 2).contiguous()
 
-        if self.area > 1:
-            qk = qk.reshape(B * self.area, N // self.area, self.all_head_dim * 2)
-            v = v.reshape(B * self.area, N // self.area, self.all_head_dim)
+        area = self.base_area
+        if self.attn_policy == "window" and area == 1:
+            side = int(N**0.5)
+            if side * side == N and side > 1:
+                area = side
+
+        if area > 1:
+            qk = qk.reshape(B * area, N // area, self.all_head_dim * 2)
+            v = v.reshape(B * area, N // area, self.all_head_dim)
             B, N, _ = qk.shape
         q, k = qk.split([self.all_head_dim, self.all_head_dim], dim=2)
+        q_raw, k_raw, v_raw = q, k, v
 
         if x.is_cuda and not FLASH_CONFIGURED:
             configure_flash_backend()
@@ -1399,37 +1503,90 @@ class AAttn(nn.Module):
         can_use_flash = (
             x.is_cuda
             and USE_FLASH_ATTN
-            and FLASH_BACKEND in {"flash_attn", "flash_attn_turing"}
+            and FLASH_BACKEND in {"flash_attn", "flash_attn_turing", "flash_attn4_cute"}
             and "flash_attn_func" in globals()
             and self.head_dim in supported_head_dims
+            and _runtime_flash_allowed()
         )
 
+        flash_reason = ""
         if can_use_flash:
-            q = q.view(B, N, self.num_heads, self.head_dim)
-            k = k.view(B, N, self.num_heads, self.head_dim)
-            v = v.view(B, N, self.num_heads, self.head_dim)
+            q_flash = q_raw.view(B, N, self.num_heads, self.head_dim)
+            k_flash = k_raw.view(B, N, self.num_heads, self.head_dim)
+            v_flash = v_raw.view(B, N, self.num_heads, self.head_dim)
+            q_flash, k_flash, v_flash, flash_reason = _sanitize_flash_qkv(q_flash, k_flash, v_flash)
 
-            x = flash_attn_func(q.contiguous().half(), k.contiguous().half(), v.contiguous().half()).to(q.dtype)
-            _record_flash_event(self.head_dim, used_flash=True)
-        else:
+            if can_use_flash:
+                flash_success = False
+                last_error = ""
+                flash4_dtype_pref = os.getenv("Y13_FLASH4_DTYPE", "auto").lower()
+                if FLASH_BACKEND == "flash_attn4_cute":
+                    if flash4_dtype_pref == "fp16":
+                        dtype_candidates = [torch.float16]
+                        if torch.cuda.is_bf16_supported():
+                            dtype_candidates.append(torch.bfloat16)
+                    elif flash4_dtype_pref == "bf16":
+                        dtype_candidates = [torch.bfloat16] if torch.cuda.is_bf16_supported() else [torch.float16]
+                        if dtype_candidates[0] != torch.float16:
+                            dtype_candidates.append(torch.float16)
+                    else:
+                        dtype_candidates = (
+                            [torch.bfloat16, torch.float16] if torch.cuda.is_bf16_supported() else [torch.float16]
+                        )
+                else:
+                    dtype_candidates = [torch.float16]
+
+                for flash_dtype in dtype_candidates:
+                    try:
+                        flash_out = flash_attn_func(
+                            q_flash.contiguous().to(flash_dtype),
+                            k_flash.contiguous().to(flash_dtype),
+                            v_flash.contiguous().to(flash_dtype),
+                        )
+                        if isinstance(flash_out, tuple):
+                            flash_out = flash_out[0]
+                        if not torch.isfinite(flash_out).all():
+                            flash_reason = "flash_non_finite_output"
+                            continue
+
+                        x = flash_out.to(q_flash.dtype)
+                        _record_flash_event(self.head_dim, used_flash=True)
+                        flash_success = True
+                        break
+                    except Exception as e:
+                        last_error = f"flash_runtime_{type(e).__name__}"
+
+                if not flash_success:
+                    can_use_flash = False
+                    if last_error:
+                        flash_reason = last_error
+                    elif not flash_reason:
+                        flash_reason = "flash_non_finite_output"
+
+        if not can_use_flash:
             reason = ""
-            if not x.is_cuda:
+            if flash_reason:
+                reason = flash_reason
+            elif not x.is_cuda:
                 reason = "not_cuda"
             elif not USE_FLASH_ATTN:
                 reason = "flash_disabled_or_unavailable"
-            elif FLASH_BACKEND not in {"flash_attn", "flash_attn_turing"}:
+            elif FLASH_BACKEND not in {"flash_attn", "flash_attn_turing", "flash_attn4_cute"}:
                 reason = f"backend_{FLASH_BACKEND}"
             elif "flash_attn_func" not in globals():
                 reason = "missing_flash_attn_func"
             elif self.head_dim not in supported_head_dims:
                 reason = f"unsupported_head_dim_{self.head_dim}"
+            elif not _runtime_flash_allowed():
+                reason = f"flash_guard_quarantined_{FLASH_RUNTIME_GUARD.get('disable_reason', 'unknown')}"
             else:
                 reason = "fallback_other"
+            _mark_flash_failure(reason)
             _record_flash_event(self.head_dim, used_flash=False, reason=reason)
 
-            q = q.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
-            k = k.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
-            v = v.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
+            q = q_raw.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
+            k = k_raw.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
+            v = v_raw.view(B, N, self.num_heads, self.head_dim).permute(0, 2, 1, 3).contiguous()
 
             deterministic = torch.are_deterministic_algorithms_enabled()
             if deterministic:
@@ -1446,8 +1603,8 @@ class AAttn(nn.Module):
                 x = F.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=False)
             x = x.permute(0, 2, 1, 3).contiguous()
 
-        if self.area > 1:
-            x = x.reshape(B // self.area, N * self.area, self.all_head_dim)
+        if area > 1:
+            x = x.reshape(B // area, N * area, self.all_head_dim)
             B, N, _ = x.shape
         x = x.reshape(B, H, W, self.all_head_dim).permute(0, 3, 1, 2).contiguous()
 
@@ -1481,11 +1638,11 @@ class ABlock(nn.Module):
         recommend that dim//num_heads be a multiple of 32 or 64.
     """
 
-    def __init__(self, dim, num_heads, mlp_ratio=1.2, area=1):
+    def __init__(self, dim, num_heads, mlp_ratio=1.2, area=1, attn_policy="area"):
         """Initializes the ABlock with area-attention and feed-forward layers for faster feature extraction."""
         super().__init__()
 
-        self.attn = AAttn(dim, num_heads=num_heads, area=area)
+        self.attn = AAttn(dim, num_heads=num_heads, area=area, attn_policy=attn_policy)
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = nn.Sequential(Conv(dim, mlp_hidden_dim, 1), Conv(mlp_hidden_dim, dim, 1, act=False))
 
@@ -1535,7 +1692,9 @@ class A2C2f(nn.Module):
         >>> print(output.shape)
     """
 
-    def __init__(self, c1, c2, n=1, a2=True, area=1, residual=False, mlp_ratio=2.0, e=0.5, g=1, shortcut=True):
+    def __init__(
+        self, c1, c2, n=1, a2=True, area=1, residual=False, mlp_ratio=2.0, e=0.5, g=1, shortcut=True, attn_policy="area"
+    ):
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
         assert c_ % 32 == 0, "Dimension of ABlock be a multiple of 32."
@@ -1550,7 +1709,7 @@ class A2C2f(nn.Module):
         self.gamma = nn.Parameter(init_values * torch.ones((c2)), requires_grad=True) if a2 and residual else None
 
         self.m = nn.ModuleList(
-            nn.Sequential(*(ABlock(c_, num_heads, mlp_ratio, area) for _ in range(2)))
+            nn.Sequential(*(ABlock(c_, num_heads, mlp_ratio, area, attn_policy=attn_policy) for _ in range(2)))
             if a2
             else C3k(c_, c_, 2, shortcut, g)
             for _ in range(n)
@@ -2021,18 +2180,29 @@ class FuseModule(nn.Module):
         torch.Size([2, 64, 32, 32])
     """
 
-    def __init__(self, c_in, channel_adjust):
+    def __init__(self, c_in, channel_adjust, align_mode="adaptive"):
         super(FuseModule, self).__init__()
-        self.downsample = nn.AvgPool2d(kernel_size=2)
-        self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
+        self.align_mode = align_mode
         if channel_adjust:
             self.conv_out = Conv(4 * c_in, c_in, 1)
         else:
             self.conv_out = Conv(3 * c_in, c_in, 1)
 
+    def _align(self, src, size):
+        if src.shape[-2:] == size:
+            return src
+
+        if self.align_mode == "adaptive":
+            if src.shape[-2] > size[0] or src.shape[-1] > size[1]:
+                return F.adaptive_avg_pool2d(src, size)
+            return F.interpolate(src, size=size, mode="bilinear", align_corners=False)
+
+        return F.interpolate(src, size=size, mode="nearest")
+
     def forward(self, x):
-        x1_ds = self.downsample(x[0])
-        x3_up = self.upsample(x[2])
+        target_size = x[1].shape[-2:]
+        x1_ds = self._align(x[0], target_size)
+        x3_up = self._align(x[2], target_size)
         x_cat = torch.cat([x1_ds, x[1], x3_up], dim=1)
         out = self.conv_out(x_cat)
         return out
@@ -2083,9 +2253,11 @@ class HyperACE(nn.Module):
         e2=1,
         context="both",
         channel_adjust=True,
+        fuse_align_mode="adaptive",
         normalize="node",
         topk=0,
         degree_norm=False,
+        branch_div_weight=0.0,
     ):
         super().__init__()
         self.c = int(c2 * e1)
@@ -2095,15 +2267,30 @@ class HyperACE(nn.Module):
             DSC3k(self.c, self.c, 2, shortcut, k1=3, k2=7) if dsc3k else DSBottleneck(self.c, self.c, shortcut=shortcut)
             for _ in range(n)
         )
-        self.fuse = FuseModule(c1, channel_adjust)
-        self.branch1 = C3AH(self.c, self.c, e2, num_hyperedges, context, normalize=normalize, topk=topk, degree_norm=degree_norm)
-        self.branch2 = C3AH(self.c, self.c, e2, num_hyperedges, context, normalize=normalize, topk=topk, degree_norm=degree_norm)
+        self.fuse = FuseModule(c1, channel_adjust, align_mode=fuse_align_mode)
+        self.branch1 = C3AH(
+            self.c, self.c, e2, num_hyperedges, context, normalize=normalize, topk=topk, degree_norm=degree_norm
+        )
+        self.branch2 = C3AH(
+            self.c, self.c, e2, num_hyperedges, context, normalize=normalize, topk=topk, degree_norm=degree_norm
+        )
+        self.branch_div_weight = float(branch_div_weight)
+        self.last_branch_diversity = None
 
     def forward(self, X):
         x = self.fuse(X)
         y = list(self.cv1(x).chunk(3, 1))
         out1 = self.branch1(y[1])
         out2 = self.branch2(y[1])
+
+        if self.branch_div_weight > 0:
+            b = out1.shape[0]
+            z1 = F.normalize(out1.view(b, -1), dim=1)
+            z2 = F.normalize(out2.view(b, -1), dim=1)
+            self.last_branch_diversity = (z1 * z2).sum(dim=1).mean().detach()
+        else:
+            self.last_branch_diversity = None
+
         y.extend(m(y[-1]) for m in self.m)
         y[1] = out1
         y.append(out2)

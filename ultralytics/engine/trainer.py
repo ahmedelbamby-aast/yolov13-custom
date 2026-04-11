@@ -122,6 +122,9 @@ class BaseTrainer:
         self.save_period = self.args.save_period
 
         self.batch_size = self.args.batch
+        if isinstance(self.batch_size, float) and self.batch_size >= 1 and self.batch_size.is_integer():
+            self.batch_size = int(self.batch_size)
+            self.args.batch = self.batch_size
         self.epochs = self.args.epochs or 100  # in case users accidentally pass epochs=None with timed training
         self.start_epoch = 0
         if RANK == -1:
@@ -279,6 +282,40 @@ class BaseTrainer:
         self.scaler = (
             torch.amp.GradScaler("cuda", enabled=self.amp) if TORCH_2_4 else torch.cuda.amp.GradScaler(enabled=self.amp)
         )
+
+        compile_arg = getattr(self.args, "compile", False)
+        compile_mode = None
+        if isinstance(compile_arg, str):
+            mode_text = compile_arg.strip().lower()
+            if mode_text in {"", "false", "0", "none", "off"}:
+                compile_mode = None
+            elif mode_text in {"true", "1", "on", "yes", "default"}:
+                compile_mode = "default"
+            else:
+                compile_mode = compile_arg.strip()
+        elif compile_arg:
+            compile_mode = "default"
+
+        if compile_mode and world_size > 1:
+            LOGGER.warning("WARNING ⚠️ torch.compile requested but disabled for DDP training.")
+            compile_mode = None
+
+        if compile_mode and self.device.type == "cpu":
+            LOGGER.warning("WARNING ⚠️ torch.compile requested on CPU; disabling for training stability.")
+            compile_mode = None
+
+        if compile_mode and not hasattr(torch, "compile"):
+            LOGGER.warning("WARNING ⚠️ torch.compile requested but unavailable in this torch build.")
+            compile_mode = None
+
+        if compile_mode:
+            try:
+                kwargs = {} if compile_mode == "default" else {"mode": compile_mode}
+                self.model = torch.compile(self.model, **kwargs)
+                LOGGER.info(f"torch.compile enabled ✅ mode={compile_mode}")
+            except Exception as e:
+                LOGGER.warning(f"WARNING ⚠️ torch.compile initialization failed ({e}). Continuing without compile.")
+
         if world_size > 1:
             self.model = nn.parallel.DistributedDataParallel(
                 self.model,
@@ -308,6 +345,13 @@ class BaseTrainer:
             self.validator = self.get_validator()
             metric_keys = self.validator.metrics.keys + self.label_loss_items(prefix="val")
             self.metrics = dict(zip(metric_keys, [0] * len(metric_keys)))
+
+            # Clear forward-cached branch-diversity tensors created during model bootstrap forwards.
+            # Keeping stale autograd tensors on modules can break deepcopy inside ModelEMA initialization.
+            for mod in self.model.modules():
+                if hasattr(mod, "last_branch_diversity"):
+                    mod.last_branch_diversity = None
+
             self.ema = ModelEMA(self.model)
             if self.args.plots:
                 self.plot_training_labels()
@@ -409,6 +453,11 @@ class BaseTrainer:
                         loss_value = float(self.loss.detach().float().cpu())
                         LOGGER.warning(
                             "WARNING ⚠️ Non-finite loss detected (%.4g). Skipping optimizer step." % loss_value
+                        )
+                    if self.args.batch >= 1:
+                        raise RuntimeError(
+                            "Non-finite loss detected under fixed batch training. "
+                            "Try fallback flash mode or enable auto-flash-fallback retry."
                         )
                     self.optimizer.zero_grad(set_to_none=True)
                     continue
@@ -549,7 +598,6 @@ class BaseTrainer:
         ):
             LOGGER.warning(f"Skipping checkpoint save at epoch {self.epoch}: EMA contains NaN/Inf")
             return False
-
 
         # Serialize ckpt to a byte buffer once (faster than repeated torch.save() calls)
         buffer = io.BytesIO()
