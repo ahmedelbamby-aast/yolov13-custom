@@ -1077,15 +1077,26 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             c1 = ch[f[1]]
             c2 = args[0]
             c2 = make_divisible(min(c2, max_channels) * width, 8)
-            he = args[1] 
+            he = args[1]
             if scale in "n":
                 he = int(args[1] * 0.5)
             elif scale in "x":
                 he = int(args[1] * 1.5)
-            args = [c1, c2, n, he, *args[2:]]
+
+            dsc3k = args[2] if len(args) > 2 else True
+            shortcut = args[3] if len(args) > 3 else False
+            e1 = args[4] if len(args) > 4 else 0.5
+            e2 = args[5] if len(args) > 5 else 1
+            context = args[6] if len(args) > 6 else "both"
+            channel_adjust = args[7] if len(args) > 7 else True
+            normalize = args[8] if len(args) > 8 else "edge"
+            topk = args[9] if len(args) > 9 else 0
+            degree_norm = args[10] if len(args) > 10 else True
+
+            args = [c1, c2, n, he, dsc3k, shortcut, e1, e2, context, channel_adjust, normalize, topk, degree_norm]
             n = 1
             if scale in "lx":  # for L/X sizes
-                args.append(False)
+                args[9] = False
         elif m is DownsampleConv:
             c1 = ch[f]
             c2 = c1 * 2

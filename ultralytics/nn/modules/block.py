@@ -1718,12 +1718,25 @@ class AdaHyperedgeGen(nn.Module):
         torch.Size([2, 100, 16])
     """
 
-    def __init__(self, node_dim, num_hyperedges, num_heads=4, dropout=0.1, context="both"):
+    def __init__(
+        self,
+        node_dim,
+        num_hyperedges,
+        num_heads=4,
+        dropout=0.1,
+        context="both",
+        normalize="edge",
+        topk=0,
+        eps=1e-6,
+    ):
         super().__init__()
         self.num_heads = num_heads
         self.num_hyperedges = num_hyperedges
         self.head_dim = node_dim // num_heads
         self.context = context
+        self.normalize = normalize
+        self.topk = topk
+        self.eps = eps
 
         self.prototype_base = nn.Parameter(torch.Tensor(num_hyperedges, node_dim))
         nn.init.xavier_uniform_(self.prototype_base)
@@ -1738,6 +1751,27 @@ class AdaHyperedgeGen(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
         self.scaling = math.sqrt(self.head_dim)
+
+    def _normalize(self, logits):
+        if self.normalize == "node":
+            return F.softmax(logits, dim=1)
+        if self.normalize == "edge":
+            return F.softmax(logits, dim=2)
+        if self.normalize == "sinkhorn":
+            A = torch.exp(logits - logits.max(dim=2, keepdim=True).values)
+            for _ in range(2):
+                A = A / (A.sum(dim=2, keepdim=True) + self.eps)
+                A = A / (A.sum(dim=1, keepdim=True) + self.eps)
+            return A
+        raise ValueError(f"Unsupported normalize mode '{self.normalize}'.")
+
+    def _apply_topk(self, A):
+        if self.topk and self.topk > 0 and self.topk < A.shape[2]:
+            idx = A.topk(self.topk, dim=2).indices
+            mask = torch.zeros_like(A).scatter_(2, idx, 1.0)
+            A = A * mask
+            A = A / (A.sum(dim=2, keepdim=True) + self.eps)
+        return A
 
     def forward(self, X):
         B, N, D = X.shape
@@ -1763,8 +1797,9 @@ class AdaHyperedgeGen(nn.Module):
         logits = logits.view(B, self.num_heads, N, self.num_hyperedges).mean(dim=1)
 
         logits = self.dropout(logits)
-
-        return F.softmax(logits, dim=1)
+        A = self._normalize(logits)
+        A = self._apply_topk(A)
+        return A
 
 
 class AdaHGConv(nn.Module):
@@ -1796,19 +1831,47 @@ class AdaHGConv(nn.Module):
         torch.Size([2, 256, 128])
     """
 
-    def __init__(self, embed_dim, num_hyperedges=16, num_heads=4, dropout=0.1, context="both"):
+    def __init__(
+        self,
+        embed_dim,
+        num_hyperedges=16,
+        num_heads=4,
+        dropout=0.1,
+        context="both",
+        normalize="edge",
+        topk=0,
+        eps=1e-6,
+        degree_norm=True,
+    ):
         super().__init__()
-        self.edge_generator = AdaHyperedgeGen(embed_dim, num_hyperedges, num_heads, dropout, context)
+        self.eps = eps
+        self.degree_norm = degree_norm
+        self.edge_generator = AdaHyperedgeGen(
+            embed_dim,
+            num_hyperedges,
+            num_heads,
+            dropout,
+            context,
+            normalize=normalize,
+            topk=topk,
+            eps=eps,
+        )
         self.edge_proj = nn.Sequential(nn.Linear(embed_dim, embed_dim), nn.GELU())
         self.node_proj = nn.Sequential(nn.Linear(embed_dim, embed_dim), nn.GELU())
 
+    def _normalized_incidence(self, A):
+        Dv = A.sum(dim=2, keepdim=True).clamp_min(self.eps)
+        De = A.sum(dim=1, keepdim=True).clamp_min(self.eps)
+        return A / torch.sqrt(Dv) / torch.sqrt(De)
+
     def forward(self, X):
         A = self.edge_generator(X)
+        H = self._normalized_incidence(A) if self.degree_norm else A
 
-        He = torch.bmm(A.transpose(1, 2), X)
+        He = torch.bmm(H.transpose(1, 2), X)
         He = self.edge_proj(He)
 
-        X_new = torch.bmm(A, He)
+        X_new = torch.bmm(H, He)
         X_new = self.node_proj(X_new)
 
         return X_new + X
@@ -1841,11 +1904,28 @@ class AdaHGComputation(nn.Module):
         torch.Size([2, 64, 32, 32])
     """
 
-    def __init__(self, embed_dim, num_hyperedges=16, num_heads=8, dropout=0.1, context="both"):
+    def __init__(
+        self,
+        embed_dim,
+        num_hyperedges=16,
+        num_heads=8,
+        dropout=0.1,
+        context="both",
+        normalize="edge",
+        topk=0,
+        degree_norm=True,
+    ):
         super().__init__()
         self.embed_dim = embed_dim
         self.hgnn = AdaHGConv(
-            embed_dim=embed_dim, num_hyperedges=num_hyperedges, num_heads=num_heads, dropout=dropout, context=context
+            embed_dim=embed_dim,
+            num_hyperedges=num_hyperedges,
+            num_heads=num_heads,
+            dropout=dropout,
+            context=context,
+            normalize=normalize,
+            topk=topk,
+            degree_norm=degree_norm,
         )
 
     def forward(self, x):
@@ -1883,7 +1963,17 @@ class C3AH(nn.Module):
         torch.Size([2, 128, 32, 32])
     """
 
-    def __init__(self, c1, c2, e=1.0, num_hyperedges=8, context="both"):
+    def __init__(
+        self,
+        c1,
+        c2,
+        e=1.0,
+        num_hyperedges=8,
+        context="both",
+        normalize="edge",
+        topk=0,
+        degree_norm=True,
+    ):
         super().__init__()
         c_ = int(c2 * e)
         assert c_ % 16 == 0, "Dimension of AdaHGComputation should be a multiple of 16."
@@ -1891,7 +1981,14 @@ class C3AH(nn.Module):
         self.cv1 = Conv(c1, c_, 1, 1)
         self.cv2 = Conv(c1, c_, 1, 1)
         self.m = AdaHGComputation(
-            embed_dim=c_, num_hyperedges=num_hyperedges, num_heads=num_heads, dropout=0.1, context=context
+            embed_dim=c_,
+            num_hyperedges=num_hyperedges,
+            num_heads=num_heads,
+            dropout=0.1,
+            context=context,
+            normalize=normalize,
+            topk=topk,
+            degree_norm=degree_norm,
         )
         self.cv3 = Conv(2 * c_, c2, 1)
 
@@ -1986,6 +2083,9 @@ class HyperACE(nn.Module):
         e2=1,
         context="both",
         channel_adjust=True,
+        normalize="edge",
+        topk=0,
+        degree_norm=True,
     ):
         super().__init__()
         self.c = int(c2 * e1)
@@ -1996,8 +2096,8 @@ class HyperACE(nn.Module):
             for _ in range(n)
         )
         self.fuse = FuseModule(c1, channel_adjust)
-        self.branch1 = C3AH(self.c, self.c, e2, num_hyperedges, context)
-        self.branch2 = C3AH(self.c, self.c, e2, num_hyperedges, context)
+        self.branch1 = C3AH(self.c, self.c, e2, num_hyperedges, context, normalize=normalize, topk=topk, degree_norm=degree_norm)
+        self.branch2 = C3AH(self.c, self.c, e2, num_hyperedges, context, normalize=normalize, topk=topk, degree_norm=degree_norm)
 
     def forward(self, X):
         x = self.fuse(X)
@@ -2066,10 +2166,42 @@ class FullPAD_Tunnel(nn.Module):
         torch.Size([2, 64, 32, 32])
     """
 
-    def __init__(self):
+    def __init__(self, reduction=8, use_channel=True, use_spatial=True):
         super().__init__()
+        self.reduction = reduction
+        self.use_channel = use_channel
+        self.use_spatial = use_spatial
         self.gate = nn.Parameter(torch.tensor(0.0))
 
+        self._built = False
+        self.channel_reduce = None
+        self.channel_expand = None
+        self.spatial_conv = None
+
+    def _build(self, channels, device):
+        hidden = max(channels // self.reduction, 1)
+        if self.use_channel:
+            self.channel_reduce = nn.Conv2d(2 * channels, hidden, 1, 1, 0, bias=True).to(device)
+            self.channel_expand = nn.Conv2d(hidden, channels, 1, 1, 0, bias=True).to(device)
+        if self.use_spatial:
+            self.spatial_conv = nn.Conv2d(2 * channels, 1, 3, 1, 1, bias=True).to(device)
+        self._built = True
+
     def forward(self, x):
-        out = x[0] + self.gate * x[1]
-        return out
+        x0, x1 = x
+        if not self._built:
+            self._build(x0.shape[1], x0.device)
+
+        mod = x1
+        cat = torch.cat([x0, x1], dim=1)
+
+        if self.use_channel:
+            gc = F.adaptive_avg_pool2d(cat, 1)
+            gc = self.channel_expand(F.silu(self.channel_reduce(gc))).sigmoid()
+            mod = mod * gc
+
+        if self.use_spatial:
+            gs = self.spatial_conv(cat).sigmoid()
+            mod = mod * gs
+
+        return x0 + self.gate * mod

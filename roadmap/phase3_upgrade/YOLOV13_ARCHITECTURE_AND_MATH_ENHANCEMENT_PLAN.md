@@ -347,3 +347,39 @@ flowchart TD
 - dead-edge penalty
 
 #### Ma
+
+
+---
+
+## 8) Implementation status (phase 1)
+
+Implemented in codebase:
+
+- Adaptive FullPAD fusion:
+  - `FullPAD_Tunnel` upgraded from scalar-only residual to scalar-scaled channel/spatial adaptive gating.
+- Hypergraph routing upgrades:
+  - `AdaHyperedgeGen` now supports `normalize` in `{node, edge, sinkhorn}`.
+  - Optional sparse routing with `topk` masking and renormalization.
+- Degree-normalized propagation:
+  - `AdaHGConv` now supports degree-normalized incidence and configurable fallback.
+- Module plumbing:
+  - `AdaHGComputation`, `C3AH`, `HyperACE` signatures extended to pass `normalize`, `topk`, `degree_norm`.
+  - `parse_model` logic in `ultralytics/nn/tasks.py` updated accordingly.
+- YAML defaults:
+  - v13 YAML entries updated to use `normalize="edge"`, `topk=0`, `degree_norm=True` by default.
+
+Files touched in phase 1:
+
+- `ultralytics/nn/modules/block.py`
+- `ultralytics/nn/tasks.py`
+- `ultralytics/cfg/models/v13/yolov13.yaml`
+- `ultralytics/cfg/models/v13/yolov13s.yaml`
+- `ultralytics/cfg/models/v13/yolov13l.yaml`
+- `ultralytics/cfg/models/v13/yolov13x.yaml`
+
+Not yet implemented (phase 2+):
+
+- alignment-aware FuseModule replacement
+- explicit HyperACE branch-diversity loss wiring in training objective
+- optional P2 detection-head profile
+- AAttn windowed-policy path
