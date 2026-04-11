@@ -10,7 +10,7 @@ Focus:
 - expected KV cache hit/loss behavior in attention-heavy paths
 
 References in this codebase:
-- `ultralytics/cfg/models/v13/yolov13.yaml`
+- `ultralytics/cfg/models/v13/yolov13_2.yaml`
 - `ultralytics/nn/modules/block.py`
 - `ultralytics/nn/modules/conv.py`
 
@@ -366,16 +366,16 @@ Implemented in codebase:
   - `AdaHGComputation`, `C3AH`, `HyperACE` signatures extended to pass `normalize`, `topk`, `degree_norm`.
   - `parse_model` logic in `ultralytics/nn/tasks.py` updated accordingly.
 - YAML defaults:
-  - v13 YAML entries updated to use `normalize="edge"`, `topk=0`, `degree_norm=True` by default.
+  - New v13 _2 YAML variants carry upgraded defaults (`normalize="edge"`, `topk=0`, `degree_norm=True`) while base YAMLs stay unchanged.
 
 Files touched in phase 1:
 
 - `ultralytics/nn/modules/block.py`
 - `ultralytics/nn/tasks.py`
-- `ultralytics/cfg/models/v13/yolov13.yaml`
-- `ultralytics/cfg/models/v13/yolov13s.yaml`
-- `ultralytics/cfg/models/v13/yolov13l.yaml`
-- `ultralytics/cfg/models/v13/yolov13x.yaml`
+- `ultralytics/cfg/models/v13/yolov13_2.yaml`
+- `ultralytics/cfg/models/v13/yolov13s_2.yaml`
+- `ultralytics/cfg/models/v13/yolov13l_2.yaml`
+- `ultralytics/cfg/models/v13/yolov13x_2.yaml`
 
 Not yet implemented (phase 2+):
 

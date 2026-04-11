@@ -1725,7 +1725,7 @@ class AdaHyperedgeGen(nn.Module):
         num_heads=4,
         dropout=0.1,
         context="both",
-        normalize="edge",
+        normalize="node",
         topk=0,
         eps=1e-6,
     ):
@@ -1838,10 +1838,10 @@ class AdaHGConv(nn.Module):
         num_heads=4,
         dropout=0.1,
         context="both",
-        normalize="edge",
+        normalize="node",
         topk=0,
         eps=1e-6,
-        degree_norm=True,
+        degree_norm=False,
     ):
         super().__init__()
         self.eps = eps
@@ -1911,9 +1911,9 @@ class AdaHGComputation(nn.Module):
         num_heads=8,
         dropout=0.1,
         context="both",
-        normalize="edge",
+        normalize="node",
         topk=0,
-        degree_norm=True,
+        degree_norm=False,
     ):
         super().__init__()
         self.embed_dim = embed_dim
@@ -1970,9 +1970,9 @@ class C3AH(nn.Module):
         e=1.0,
         num_hyperedges=8,
         context="both",
-        normalize="edge",
+        normalize="node",
         topk=0,
-        degree_norm=True,
+        degree_norm=False,
     ):
         super().__init__()
         c_ = int(c2 * e)
@@ -2083,9 +2083,9 @@ class HyperACE(nn.Module):
         e2=1,
         context="both",
         channel_adjust=True,
-        normalize="edge",
+        normalize="node",
         topk=0,
-        degree_norm=True,
+        degree_norm=False,
     ):
         super().__init__()
         self.c = int(c2 * e1)
@@ -2166,7 +2166,7 @@ class FullPAD_Tunnel(nn.Module):
         torch.Size([2, 64, 32, 32])
     """
 
-    def __init__(self, reduction=8, use_channel=True, use_spatial=True):
+    def __init__(self, reduction=8, use_channel=False, use_spatial=False):
         super().__init__()
         self.reduction = reduction
         self.use_channel = use_channel
@@ -2193,7 +2193,8 @@ class FullPAD_Tunnel(nn.Module):
             self._build(x0.shape[1], x0.device)
 
         mod = x1
-        cat = torch.cat([x0, x1], dim=1)
+        if self.use_channel or self.use_spatial:
+            cat = torch.cat([x0, x1], dim=1)
 
         if self.use_channel:
             gc = F.adaptive_avg_pool2d(cat, 1)

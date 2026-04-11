@@ -1089,9 +1089,9 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             e2 = args[5] if len(args) > 5 else 1
             context = args[6] if len(args) > 6 else "both"
             channel_adjust = args[7] if len(args) > 7 else True
-            normalize = args[8] if len(args) > 8 else "edge"
+            normalize = args[8] if len(args) > 8 else "node"
             topk = args[9] if len(args) > 9 else 0
-            degree_norm = args[10] if len(args) > 10 else True
+            degree_norm = args[10] if len(args) > 10 else False
 
             args = [c1, c2, n, he, dsc3k, shortcut, e1, e2, context, channel_adjust, normalize, topk, degree_norm]
             n = 1
