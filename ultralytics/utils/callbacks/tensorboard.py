@@ -30,6 +30,55 @@ def _log_scalars(scalars, step=0):
             WRITER.add_scalar(k, v, step)
 
 
+def _log_images(path_prefix, images, step=0):
+    """Log image batches to TensorBoard.
+
+    Supports BCHW tensors in [0,1] and logs up to 4 images.
+    """
+    if WRITER is None or images is None:
+        return
+    if not torch.is_tensor(images):
+        return
+    if images.ndim != 4:
+        return
+    count = min(4, int(images.shape[0]))
+    imgs = images[:count].detach().cpu()
+    imgs = imgs.clamp(0, 1)
+    for i in range(count):
+        WRITER.add_image(f"{path_prefix}/img_{i}", imgs[i], step)
+
+
+def _log_model_histograms(trainer, step=0):
+    """Log lightweight parameter histograms for monitoring drift/stability."""
+    if WRITER is None:
+        return
+    model = de_parallel(trainer.model)
+    logged = 0
+    for name, p in model.named_parameters():
+        if not p.requires_grad:
+            continue
+        if p.data.numel() < 32:
+            continue
+        WRITER.add_histogram(f"params/{name}", p.data.detach().cpu(), step)
+        logged += 1
+        if logged >= 24:
+            break
+
+
+def _log_train_val_pair(trainer, step=0):
+    """Log paired train-vs-val scalars for quick comparison panels in TensorBoard."""
+    if WRITER is None:
+        return
+    tl = trainer.label_loss_items(trainer.tloss, prefix="train")
+    for key in ("box_loss", "cls_loss", "dfl_loss", "branch_div_loss"):
+        tk = f"train/{key}"
+        vk = f"val/{key}"
+        if tk in tl and vk in trainer.metrics:
+            WRITER.add_scalars(f"compare/{key}", {"train": tl[tk], "val": trainer.metrics[vk]}, step)
+            WRITER.add_scalar(f"compare/{key}/train", tl[tk], step)
+            WRITER.add_scalar(f"compare/{key}/val", trainer.metrics[vk], step)
+
+
 def _log_tensorboard_graph(trainer):
     """Log model graph to TensorBoard."""
     # Input image
@@ -99,11 +148,27 @@ def on_train_epoch_end(trainer):
     """Logs scalar statistics at the end of a training epoch."""
     _log_scalars(trainer.label_loss_items(trainer.tloss, prefix="train"), trainer.epoch + 1)
     _log_scalars(trainer.lr, trainer.epoch + 1)
+    if trainer.epoch == 0:
+        batch = getattr(trainer, "batch", None)
+        imgs = batch.get("img") if isinstance(batch, dict) else None
+        _log_images("train/samples", imgs, trainer.epoch + 1)
 
 
 def on_fit_epoch_end(trainer):
     """Logs epoch metrics at end of training epoch."""
     _log_scalars(trainer.metrics, trainer.epoch + 1)
+    if WRITER:
+        WRITER.add_text("tb_debug/on_fit_epoch_end", f"epoch={trainer.epoch + 1}", trainer.epoch + 1)
+    _log_train_val_pair(trainer, trainer.epoch + 1)
+    if trainer.epoch % 10 == 0:
+        _log_model_histograms(trainer, trainer.epoch + 1)
+
+
+def on_train_end(trainer):
+    """Flush and close TensorBoard writer cleanly at train end."""
+    if WRITER:
+        WRITER.flush()
+        WRITER.close()
 
 
 callbacks = (
@@ -112,6 +177,7 @@ callbacks = (
         "on_train_start": on_train_start,
         "on_fit_epoch_end": on_fit_epoch_end,
         "on_train_epoch_end": on_train_epoch_end,
+        "on_train_end": on_train_end,
     }
     if SummaryWriter
     else {}
