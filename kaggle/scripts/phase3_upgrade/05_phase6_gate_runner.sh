@@ -11,9 +11,12 @@ source .venv/bin/activate
 {
   echo "[phase6] log=$LOG"
   echo "[phase6] start $(date -Is)"
+  python3 kaggle/scripts/phase3_upgrade/00_alignment_schema_check.py
   python3 kaggle/scripts/phase3_upgrade/01_env_report.py
   python3 kaggle/scripts/phase3_upgrade/02_cli_python_parity_gate.py
   python3 kaggle/scripts/phase3_upgrade/03_stress_gate.py
   python3 kaggle/scripts/phase3_upgrade/04_autobatch_ddp_notes.py
+  python3 kaggle/scripts/34_phase3_custom_delta_audit.py
+  python3 kaggle/scripts/36_phase3_final_gate.py
   echo "[phase6] complete $(date -Is)"
 } | tee -a "$LOG"

@@ -38,6 +38,10 @@ All scripts accept:
 - `--flash-mode auto`: default behavior.
 - `--flash-mode fallback`: force fallback attention (`Y13_DISABLE_FLASH=1`).
 - `--flash-mode turing`: force Turing flash path (`Y13_USE_TURING_FLASH=1`).
+- `--flash-mode flash4`: force FlashAttention-4 preference (`Y13_PREFER_FLASH4=1`).
+
+If `--flash-mode auto` is used, `Y13_FLASH_MODE` can override runtime selection with one of
+`fallback|turing|flash4|auto`.
 
 Useful training speed knobs (pass via direct args or `--arg`):
 

@@ -137,10 +137,20 @@ All scripts accept:
 ### Environment toggle
 
 ```bash
+export Y13_FLASH_MODE=auto   # auto|fallback|turing|flash4
 export Y13_USE_TURING_FLASH=1
 export Y13_DISABLE_FLASH=0
 # export Y13_DISABLE_FLASH=1  # force fallback
 ```
+
+When `Y13_FLASH_MODE` is set, it takes precedence over legacy flash flags and normalizes behavior
+across local scripts and Kaggle automation.
+
+## Migration Notes
+
+- Upstream-style usage remains valid (`from ultralytics import YOLO`, CLI modes/tasks).
+- Fork-only behavior remains additive and namespaced with `Y13_*` controls and v13 model configs.
+- Canonical release publication target remains `https://github.com/ahmedelbamby-aast/yolov13-custom`.
 
 ## Benchmarks and Reports
 

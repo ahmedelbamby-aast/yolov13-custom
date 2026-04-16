@@ -39,4 +39,7 @@ Current status:
 - Standardized per-phase DDP gate script is added and validated on Phase 3.
 - T4 GPU benchmark blocker is resolved with controlled benchmark runner (`scripts/benchmark.py`).
 - Phase3 final integration gate is passing end-to-end (train/val/predict/export/benchmark).
+- Alignment artifact workflow is now standardized under
+  `specs/001-align-upstream-custom/artifacts/` with schema, parity, exception, and release evidence files.
+- Phase6 gate runner now includes schema check, custom delta audit, and final gate JSON normalization.
 - Next execution step: release merge from `phase3-upgrade-ultralytics-and-deps` to `main`.

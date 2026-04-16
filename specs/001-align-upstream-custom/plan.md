@@ -10,7 +10,8 @@
 Deliver fork-wide behavioral parity with upstream Ultralytics for all core workflows while
 preserving existing YOLOv13 custom capabilities. The plan uses an auditable parity baseline,
 explicit exception governance, and release gates that require both upstream-compatibility
-success and custom-regression success before approval.
+success and custom-regression success before approval, and it treats canonical publication
+to the fork repository as a release-blocking Definition of Done requirement.
 
 ## Technical Context
 
@@ -20,8 +21,8 @@ success and custom-regression success before approval.
 **Testing**: pytest test suite (`tests/`), CLI/API parity gate scripts (`kaggle/scripts/phase3_upgrade/`), script-level smoke suites  
 **Target Platform**: Linux, Windows, macOS; GPU-enabled environments for DDP and flash-backend validation  
 **Project Type**: Python library + CLI + automation scripts  
-**Performance Goals**: Maintain upstream-equivalent functional behavior while preserving benchmark reproducibility and existing fork reliability gates  
-**Constraints**: No public API contract breaks by default; custom features must be additive and namespaced; release blocked on failing critical parity/regression checks  
+**Performance Goals**: Maintain upstream-equivalent functional behavior; 100% in-scope migration scripts execute without interface edits; preserve benchmark reproducibility and existing reliability gates  
+**Constraints**: No public API contract breaks by default; custom features must be additive and namespaced; release blocked on failing critical parity/regression checks or failed canonical publication push  
 **Scale/Scope**: All upstream tasks and modes plus auxiliary developer workflows for one alignment wave
 
 ## Constitution Check
@@ -36,6 +37,8 @@ success and custom-regression success before approval.
   upstream behavior without a justified exception.
 - Compatibility and regression gates are defined: import smoke, task/mode parity checks,
   script no-regression checks, and custom-feature regression gates.
+- High-priority workflows are explicitly defined as all in-scope workflows for this release:
+  Python API, CLI modes, task families, and auxiliary developer workflows.
 - Documentation update plan is included for `README.md`, `scripts/README.md`, and release
   migration notes when behavior changes.
 - No justified violations at plan time. Constitution gate status: PASS (pre-research).
@@ -50,6 +53,12 @@ C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\
 ├── research.md
 ├── data-model.md
 ├── quickstart.md
+├── artifacts/
+│   ├── upstream-baseline.json
+│   ├── parity-inventory.yaml
+│   ├── custom-feature-registry.yaml
+│   ├── parity-exceptions.yaml
+│   └── release-evidence.yaml
 ├── contracts/
 │   └── parity-contract.md
 └── tasks.md
@@ -110,7 +119,9 @@ Design outputs derived from `spec.md` and `research.md`:
 2. Interface contract documenting required user-facing compatibility and exception semantics.
 3. Quickstart defining operator workflow for running parity + custom gates and assembling
    release readiness evidence.
-4. Agent context refresh for OpenCode to reflect planning artifacts and governance constraints.
+4. Explicit SC-001 measurement source using WorkflowParityItem ratio with approved intentional
+   differences excluded from denominator.
+5. Agent context refresh for OpenCode to reflect planning artifacts and governance constraints.
 
 Output artifacts:
 

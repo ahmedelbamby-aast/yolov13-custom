@@ -9,14 +9,36 @@ import subprocess
 import time
 from pathlib import Path
 
+from phase3_upgrade.common_artifacts import (
+    load_release_evidence,
+    normalized_step_result,
+    save_gate_json,
+    save_release_evidence,
+    utc_now_iso,
+)
+
 
 def step(result: dict, name: str, fn):
+    started = utc_now_iso()
     t0 = time.time()
     try:
         out = fn()
-        result["steps"][name] = {"status": "ok", "elapsed_s": time.time() - t0, "output": out}
+        result["steps"][name] = normalized_step_result(
+            name=name,
+            status="ok",
+            started_at=started,
+            ended_at=utc_now_iso(),
+            details={"elapsed_s": round(time.time() - t0, 3), "output": out},
+        )
     except Exception as e:
-        result["steps"][name] = {"status": "fail", "elapsed_s": time.time() - t0, "error": str(e)[:1200]}
+        result["steps"][name] = normalized_step_result(
+            name=name,
+            status="fail",
+            started_at=started,
+            ended_at=utc_now_iso(),
+            details={"elapsed_s": round(time.time() - t0, 3)},
+            error=str(e)[:1200],
+        )
         result["status"] = "fail"
 
 
@@ -30,6 +52,7 @@ def main() -> None:
         "phase": "phase3",
         "gate": "final_integration",
         "status": "ok",
+        "started_at": utc_now_iso(),
         "steps": {},
     }
 
@@ -115,8 +138,22 @@ def main() -> None:
 
     result["ok_steps"] = sum(1 for s in result["steps"].values() if s["status"] == "ok")
     result["fail_steps"] = sum(1 for s in result["steps"].values() if s["status"] == "fail")
-    out_path = Path("/kaggle/working/phase3_final_gate.json")
-    out_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
+    result["ended_at"] = utc_now_iso()
+
+    evidence = load_release_evidence()
+    gates = evidence.setdefault("gates", {})
+    release_gate = gates.setdefault("release_summary", {})
+    release_gate["status"] = "pass" if result["status"] == "ok" else "fail"
+    refs = release_gate.setdefault("evidence_refs", [])
+    refs.append("phase3_final_gate.json")
+    evidence["status"] = "approved" if result["status"] == "ok" else "blocked"
+    if result["status"] != "ok":
+        blocking = evidence.setdefault("blocking_reasons", [])
+        if "failed_release_summary_gate" not in blocking:
+            blocking.append("failed_release_summary_gate")
+    save_release_evidence(evidence)
+
+    out_path = save_gate_json("phase3_final_gate.json", result)
     print(json.dumps(result, indent=2))
     print(f"saved={out_path}")
 

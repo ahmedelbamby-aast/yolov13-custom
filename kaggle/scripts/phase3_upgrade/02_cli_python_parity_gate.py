@@ -10,6 +10,15 @@ import sys
 import time
 from pathlib import Path
 
+from common_artifacts import (
+    load_parity_exceptions,
+    load_parity_inventory,
+    load_release_evidence,
+    save_gate_json,
+    save_release_evidence,
+    utc_now_iso,
+)
+
 
 ROOT = Path("/kaggle/work_here/yolov13")
 OUT = Path("/kaggle/working/phase3_upgrade/cli_python_parity_gate.json")
@@ -135,6 +144,7 @@ def main() -> None:
 
     report = {
         "status": status,
+        "started_at": utc_now_iso(),
         "workers": workers,
         "steps": steps,
         "artifacts": {
@@ -145,7 +155,47 @@ def main() -> None:
         },
     }
 
+    parity = load_parity_inventory()
+    exceptions = load_parity_exceptions().get("exceptions", [])
+    approved_exception_workflows = {
+        x.get("workflow_id") for x in exceptions if x.get("approval_state") in {"auto_approved", "manually_approved"}
+    }
+
+    workflows = parity.get("workflows", [])
+    denominator = sum(1 for w in workflows if w.get("workflow_id") not in approved_exception_workflows)
+    numerator = sum(
+        1
+        for w in workflows
+        if w.get("workflow_id") not in approved_exception_workflows and w.get("status") == "aligned"
+    )
+    sc_001_ratio = (numerator / denominator) if denominator else 0.0
+    report["sc_001"] = {
+        "numerator_aligned": numerator,
+        "denominator_excluding_approved_exceptions": denominator,
+        "ratio": round(sc_001_ratio, 6),
+        "pass": sc_001_ratio >= 0.95,
+    }
+    report["ended_at"] = utc_now_iso()
+
     OUT.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    save_gate_json("cli_python_parity_gate.json", report)
+
+    evidence = load_release_evidence()
+    gates = evidence.setdefault("gates", {})
+    compatibility = gates.setdefault("compatibility", {})
+    compatibility["status"] = "pass" if status == "ok" else "fail"
+    refs = compatibility.setdefault("evidence_refs", [])
+    refs.append("cli_python_parity_gate.json")
+    metrics = evidence.setdefault("metrics", {})
+    metrics["sc_001_ratio"] = report["sc_001"]["ratio"]
+    metrics["sc_001_numerator_aligned"] = numerator
+    metrics["sc_001_denominator_in_scope_excluding_approved_exceptions"] = denominator
+    if status != "ok":
+        evidence["status"] = "blocked"
+        blocking = evidence.setdefault("blocking_reasons", [])
+        if "failed_cli_python_parity_gate" not in blocking:
+            blocking.append("failed_cli_python_parity_gate")
+    save_release_evidence(evidence)
     print(json.dumps(report, indent=2))
     print(f"saved={OUT}")
     if status != "ok":

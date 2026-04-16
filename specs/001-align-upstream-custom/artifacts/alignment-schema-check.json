@@ -1,0 +1,16 @@
+{
+  "status": "ok",
+  "artifacts_dir": "C:\\Users\\Ahmed\\yolov13_custom\\specs\\001-align-upstream-custom\\artifacts",
+  "checks": {
+    "baseline": true,
+    "parity_workflows": 3,
+    "custom_features": 3,
+    "exception_validation": {
+      "total": 0,
+      "complete": 0,
+      "incomplete": 0,
+      "missing_details": []
+    }
+  },
+  "failures": []
+}

@@ -1,0 +1,26 @@
+version: 1
+release_id: 001-align-upstream-custom
+baseline_ref: d93fb45e033d9447fe58918b1265687d8aabb0b5
+status: blocked
+blocking_reasons:
+  - pending_compatibility_gates
+  - pending_custom_regression_gates
+  - pending_publication_push
+gates:
+  compatibility:
+    status: pending
+    evidence_refs: []
+  custom_regression:
+    status: pending
+    evidence_refs: []
+  release_summary:
+    status: pending
+    evidence_refs: []
+publication:
+  canonical_repo: https://github.com/ahmedelbamby-aast/yolov13-custom
+  push_status: pending
+  push_evidence_refs: []
+metrics:
+  sc_001_ratio: null
+  sc_001_numerator_aligned: 0
+  sc_001_denominator_in_scope_excluding_approved_exceptions: 0

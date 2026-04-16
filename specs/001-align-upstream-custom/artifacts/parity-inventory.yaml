@@ -1,0 +1,18 @@
+version: 1
+baseline_ref: d93fb45e033d9447fe58918b1265687d8aabb0b5
+workflows:
+  - workflow_id: python-api-train-detect
+    category: python_api
+    status: pending_alignment
+    evidence_refs: []
+    notes: ""
+  - workflow_id: cli-train-detect
+    category: cli_mode
+    status: pending_alignment
+    evidence_refs: []
+    notes: ""
+  - workflow_id: script-train-passthrough
+    category: aux_tooling
+    status: pending_alignment
+    evidence_refs: []
+    notes: ""

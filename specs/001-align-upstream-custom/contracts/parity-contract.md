@@ -50,6 +50,15 @@ aligned with upstream while preserving custom features.
 - Release decision MUST be `blocked` when any release-blocking gate fails.
 - Release decision MAY be `approved` only with complete evidence package containing parity,
   custom regression, and exception documentation.
+- Release decision MUST remain `blocked` until canonical publication push succeeds to
+  `https://github.com/ahmedelbamby-aast/yolov13-custom`.
+
+### 6) SC-001 Measurement Contract
+
+- SC-001 MUST be computed as:
+  - `aligned WorkflowParityItems / in-scope WorkflowParityItems`
+- Approved intentional differences MUST be excluded from the denominator.
+- Gate outputs MUST publish numerator, denominator, and ratio as machine-readable values.
 
 ## Required Evidence Artifacts
 

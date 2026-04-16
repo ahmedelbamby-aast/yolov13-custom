@@ -1,0 +1,9 @@
+{
+  "repo_url": "https://github.com/ultralytics/ultralytics",
+  "reference_type": "branch",
+  "reference_value": "upstream/main",
+  "resolved_commit": "d93fb45e033d9447fe58918b1265687d8aabb0b5",
+  "nearest_tag": "v8.4.38",
+  "captured_at": "2026-04-16",
+  "scope_definition": "All in-scope workflows for this release: Python API, CLI modes, task families, and auxiliary developer workflows."
+}

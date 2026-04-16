@@ -1,0 +1,12 @@
+version: 1
+exceptions: []
+
+# Required fields for each exception item:
+# - exception_id
+# - workflow_id
+# - rationale
+# - risk_level
+# - owner
+# - rollback_or_mitigation
+# - remediation_date
+# - approval_state

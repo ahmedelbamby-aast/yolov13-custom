@@ -6,14 +6,21 @@ from __future__ import annotations
 import argparse
 import ast
 import os
+from pathlib import Path
 from typing import Any
+
+
+FLASH_MODE_CHOICES = ("auto", "fallback", "turing", "flash4")
+
+# Shared artifact directory used by alignment gates.
+FEATURE_ARTIFACTS_DIR = Path(os.environ.get("Y13_FEATURE_ARTIFACTS_DIR", "specs/001-align-upstream-custom/artifacts"))
 
 
 def add_flash_mode_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--flash-mode",
         default="auto",
-        choices=("auto", "fallback", "turing", "flash4"),
+        choices=FLASH_MODE_CHOICES,
         help="Flash backend mode: auto, fallback, turing, or flash4 (CuTe on Blackwell/Hopper).",
     )
 
@@ -30,27 +37,38 @@ def add_extra_overrides_arg(parser: argparse.ArgumentParser) -> None:
 
 def apply_flash_mode(mode: str) -> None:
     """Set env flags before importing ultralytics modules."""
-    if mode == "fallback":
+    resolved = mode
+    if mode == "auto":
+        env_mode = os.environ.get("Y13_FLASH_MODE", "").strip().lower()
+        if env_mode in FLASH_MODE_CHOICES:
+            resolved = env_mode
+
+    if resolved == "fallback":
         os.environ["Y13_DISABLE_FLASH"] = "1"
         os.environ["Y13_USE_TURING_FLASH"] = "0"
         os.environ["Y13_PREFER_FLASH4"] = "0"
-    elif mode == "turing":
+    elif resolved == "turing":
         os.environ["Y13_DISABLE_FLASH"] = "0"
         os.environ["Y13_USE_TURING_FLASH"] = "1"
         os.environ["Y13_PREFER_FLASH4"] = "0"
-    elif mode == "flash4":
+    elif resolved == "flash4":
         os.environ["Y13_DISABLE_FLASH"] = "0"
         os.environ["Y13_USE_TURING_FLASH"] = "0"
         os.environ["Y13_PREFER_FLASH4"] = "1"
     else:  # auto
         os.environ["Y13_DISABLE_FLASH"] = "0"
-        os.environ.setdefault("Y13_USE_TURING_FLASH", "0")
-        os.environ.setdefault("Y13_PREFER_FLASH4", "1")
+        os.environ["Y13_USE_TURING_FLASH"] = "0"
+        os.environ["Y13_PREFER_FLASH4"] = "0"
 
     # Runtime stability defaults for long runs on Blackwell/SM120.
     os.environ.setdefault("Y13_FLASH_QUARANTINE", "1")
     os.environ.setdefault("Y13_FLASH_FAIL_THRESHOLD", "64")
     os.environ.setdefault("Y13_FLASH4_DTYPE", "auto")
+
+
+def artifact_path(name: str) -> Path:
+    """Return resolved feature artifact path for a filename."""
+    return FEATURE_ARTIFACTS_DIR / name
 
 
 def _parse_scalar(value: str) -> Any:

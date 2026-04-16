@@ -14,6 +14,35 @@ export Y13_USE_TURING_FLASH="${Y13_USE_TURING_FLASH:-1}"
 export Y13_INSTALL_TURING_FLASH="${Y13_INSTALL_TURING_FLASH:-0}"
 export Y13_DISABLE_FLASH="${Y13_DISABLE_FLASH:-0}"
 
+# Canonical flash mode precedence:
+# 1) Y13_FLASH_MODE (fallback|turing|flash4|auto)
+# 2) explicit legacy env flags above
+# 3) default fallback to turing for Kaggle workflows
+if [[ -n "${Y13_FLASH_MODE:-}" ]]; then
+  case "${Y13_FLASH_MODE}" in
+    fallback)
+      export Y13_DISABLE_FLASH=1
+      export Y13_USE_TURING_FLASH=0
+      export Y13_PREFER_FLASH4=0
+      ;;
+    turing)
+      export Y13_DISABLE_FLASH=0
+      export Y13_USE_TURING_FLASH=1
+      export Y13_PREFER_FLASH4=0
+      ;;
+    flash4)
+      export Y13_DISABLE_FLASH=0
+      export Y13_USE_TURING_FLASH=0
+      export Y13_PREFER_FLASH4=1
+      ;;
+    auto)
+      export Y13_DISABLE_FLASH=0
+      export Y13_USE_TURING_FLASH=0
+      export Y13_PREFER_FLASH4=0
+      ;;
+  esac
+fi
+
 export LD_LIBRARY_PATH="/usr/local/nvidia/lib64:/usr/local/cuda/lib64:${LD_LIBRARY_PATH:-}"
 
 if [[ -d "${Y13_VENV}" ]]; then

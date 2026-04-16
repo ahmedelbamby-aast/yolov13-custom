@@ -17,12 +17,12 @@
 
 **Purpose**: Initialize alignment artifacts and baseline references used by all stories.
 
-- [ ] T001 Create alignment artifact directory index in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\README.md`
-- [ ] T002 Pin upstream baseline metadata in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\upstream-baseline.json`
-- [ ] T003 [P] Seed parity inventory template in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\parity-inventory.yaml`
-- [ ] T004 [P] Seed custom feature registry template in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\custom-feature-registry.yaml`
-- [ ] T005 [P] Seed parity exception register template in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\parity-exceptions.yaml`
-- [ ] T006 Configure release evidence template in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
+- [X] T001 Create alignment artifact directory index in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\README.md`
+- [X] T002 Pin upstream baseline metadata in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\upstream-baseline.json`
+- [X] T003 [P] Seed parity inventory template in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\parity-inventory.yaml`
+- [X] T004 [P] Seed custom feature registry template in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\custom-feature-registry.yaml`
+- [X] T005 [P] Seed parity exception register template in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\parity-exceptions.yaml`
+- [X] T006 Configure release evidence template in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
 
 ---
 
@@ -32,13 +32,13 @@
 
 **CRITICAL**: No user story implementation begins until this phase is complete.
 
-- [ ] T007 Implement shared artifact IO helpers in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\common_artifacts.py`
-- [ ] T008 [P] Implement alignment schema validation entrypoint in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\00_alignment_schema_check.py`
-- [ ] T009 [P] Implement baseline and exception data loaders in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\34_phase3_custom_delta_audit.py`
-- [ ] T010 [P] Implement normalized gate-result serializer in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\36_phase3_final_gate.py`
-- [ ] T011 Add release-blocking decision aggregator in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\03_stress_gate.py`
-- [ ] T012 Add shared artifact path constants for scripts in `C:\Users\Ahmed\yolov13_custom\scripts\_common.py`
-- [ ] T013 Add operator run order for parity/custom gates in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\quickstart.md`
+- [X] T007 Implement shared artifact IO helpers in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\common_artifacts.py`
+- [X] T008 [P] Implement alignment schema validation entrypoint in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\00_alignment_schema_check.py`
+- [X] T009 [P] Implement baseline and exception data loaders in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\34_phase3_custom_delta_audit.py`
+- [X] T010 [P] Implement normalized gate-result serializer in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\36_phase3_final_gate.py`
+- [X] T011 Add release-blocking decision aggregator in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\03_stress_gate.py`
+- [X] T012 Add shared artifact path constants for scripts in `C:\Users\Ahmed\yolov13_custom\scripts\_common.py`
+- [X] T013 Add operator run order for parity/custom gates in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\quickstart.md`
 
 **Checkpoint**: Foundation complete; user stories can proceed.
 
@@ -64,6 +64,7 @@
 - [ ] T020 [US1] Align core developer script passthrough semantics in `C:\Users\Ahmed\yolov13_custom\scripts\train.py`, `C:\Users\Ahmed\yolov13_custom\scripts\val.py`, `C:\Users\Ahmed\yolov13_custom\scripts\test.py`, `C:\Users\Ahmed\yolov13_custom\scripts\predict.py`, `C:\Users\Ahmed\yolov13_custom\scripts\export.py`, `C:\Users\Ahmed\yolov13_custom\scripts\benchmark.py`
 - [ ] T021 [US1] Align API-style wrappers to upstream call patterns in `C:\Users\Ahmed\yolov13_custom\scripts\api_style\common.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\train_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\val_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\test_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\predict_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\export_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\benchmark_api.py`
 - [ ] T022 [US1] Record US1 parity status and evidence references in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\parity-inventory.yaml`
+- [X] T043 [US1] Implement SC-001 metric computation using WorkflowParityItem ratio in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\02_cli_python_parity_gate.py`
 
 **Checkpoint**: User Story 1 is independently functional and testable.
 
@@ -83,11 +84,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Normalize flash-mode vocabulary and env precedence in `C:\Users\Ahmed\yolov13_custom\scripts\_common.py` and `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\common.sh`
-- [ ] T027 [US2] Preserve additive namespaced v13 configs in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\*.yaml`
+- [X] T026 [US2] Normalize flash-mode vocabulary and env precedence in `C:\Users\Ahmed\yolov13_custom\scripts\_common.py` and `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\common.sh`
+- [ ] T027 [US2] Preserve additive namespaced core v13 detect configs in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x.yaml`
+- [ ] T044 [US2] Preserve additive namespaced v13 task configs for segment and pose in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x-pose.yaml`
+- [ ] T045 [US2] Preserve additive namespaced v13 task configs for obb and variant families in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l_2_p2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13n-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13n-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13n-obb.yaml`
 - [ ] T028 [US2] Align task-aware preflight behavior without removing custom checks in `C:\Users\Ahmed\yolov13_custom\ultralytics\data\utils.py` and `C:\Users\Ahmed\yolov13_custom\ultralytics\engine\trainer.py`
 - [ ] T029 [US2] Update custom feature preservation statuses in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\custom-feature-registry.yaml`
-- [ ] T030 [US2] Publish preserved custom usage and migration notes in `C:\Users\Ahmed\yolov13_custom\README.md` and `C:\Users\Ahmed\yolov13_custom\scripts\README.md`
+- [X] T030 [US2] Publish preserved custom usage and migration notes in `C:\Users\Ahmed\yolov13_custom\README.md` and `C:\Users\Ahmed\yolov13_custom\scripts\README.md`
 
 **Checkpoint**: User Story 2 is independently functional and testable.
 
@@ -106,11 +109,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T033 [US3] Implement parity exception record generation with owner/risk/remediation fields in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\34_phase3_custom_delta_audit.py`
-- [ ] T034 [US3] Implement release evidence package assembler and decision writer in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\36_phase3_final_gate.py`
-- [ ] T035 [US3] Emit consolidated machine-readable status from gate runner in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\05_phase6_gate_runner.sh`
-- [ ] T036 [US3] Persist cycle release evidence artifacts in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
-- [ ] T037 [US3] Update parity contract and operator governance flow in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\contracts\parity-contract.md` and `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\quickstart.md`
+- [X] T033 [US3] Implement parity exception record generation with owner/risk/remediation fields in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\34_phase3_custom_delta_audit.py`
+- [X] T034 [US3] Implement release evidence package assembler and decision writer in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\36_phase3_final_gate.py`
+- [X] T035 [US3] Emit consolidated machine-readable status from gate runner in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\05_phase6_gate_runner.sh`
+- [X] T036 [US3] Persist cycle release evidence artifacts in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
+- [X] T037 [US3] Update parity contract and operator governance flow in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\contracts\parity-contract.md` and `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\quickstart.md`
 
 **Checkpoint**: User Story 3 is independently functional and testable.
 
@@ -121,10 +124,11 @@
 **Purpose**: Final validation, documentation consistency, and publication readiness.
 
 - [ ] T038 [P] Run full parity stress and CLI/Python gate suite in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\03_stress_gate.py` and `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\02_cli_python_parity_gate.py`
-- [ ] T039 [P] Refresh alignment tracking documentation in `C:\Users\Ahmed\yolov13_custom\roadmap\phase3_upgrade\README.md` and `C:\Users\Ahmed\yolov13_custom\README.md`
+- [X] T039 [P] Refresh alignment tracking documentation in `C:\Users\Ahmed\yolov13_custom\roadmap\phase3_upgrade\README.md` and `C:\Users\Ahmed\yolov13_custom\README.md`
 - [ ] T040 Execute quickstart end-to-end validation and sign-off updates in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\quickstart.md` and `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
 - [ ] T041 Record approved exceptions and remediation schedule in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\parity-exceptions.yaml`
-- [ ] T042 Record canonical publication readiness for `https://github.com/ahmedelbamby-aast/yolov13-custom` in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
+- [X] T042 Record canonical publication readiness for `https://github.com/ahmedelbamby-aast/yolov13-custom` in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
+- [ ] T046 Execute canonical publication push to `https://github.com/ahmedelbamby-aast/yolov13-custom` and persist push evidence in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
 
 ---
 
@@ -150,6 +154,7 @@
 - Story tests/gates before story implementation updates.
 - Core behavior alignment before artifact status updates.
 - Evidence capture before story checkpoint sign-off.
+- Canonical publication push task (T046) is release-blocking and must complete before sign-off.
 
 ---
 
@@ -162,7 +167,7 @@
 T014, T015, T016
 
 # Then implementation sequence
-T017 -> T018 -> T019 -> T020 -> T021 -> T022
+T017 -> T018 -> T019 -> T020 -> T021 -> T022 -> T043
 ```
 
 ### User Story 2
@@ -172,7 +177,7 @@ T017 -> T018 -> T019 -> T020 -> T021 -> T022
 T023, T024, T025
 
 # Then implementation sequence
-T026 -> T027 -> T028 -> T029 -> T030
+T026 -> T027 -> T044 -> T045 -> T028 -> T029 -> T030
 ```
 
 ### User Story 3

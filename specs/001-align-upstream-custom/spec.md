@@ -12,6 +12,11 @@
 - Q: What parity level defines "identically aligned"? -> A: Upstream-equivalent behavior for all core workflows, with explicit documented exceptions for preserved custom features.
 - Q: What is the scope of core workflow parity in this release? -> A: Include all modes/tasks plus auxiliary tooling in one wave.
 - Q: Who approves intentional parity exceptions? -> A: Exceptions are auto-approved when mandatory parity and regression tests pass.
+- Q: Should canonical publication be release-blocking for this feature? -> A: Yes, publishing approved updates to the canonical repository is part of Definition of Done and release sign-off.
+- Q: What threshold replaces "majority of scripts run successfully"? -> A: 100% of in-scope migration scripts must run successfully without interface edits.
+- Q: What defines "high-priority workflows" for mandatory compatibility checks? -> A: All in-scope workflows for this release, including Python API, CLI modes, task families, and auxiliary developer workflows.
+- Q: Which canonical term should be used for per-workflow parity tracking? -> A: WorkflowParityItem is the canonical term (formerly referred to as "Parity Delta Record").
+- Q: How is SC-001 measured? -> A: `(aligned WorkflowParityItems) / (total in-scope WorkflowParityItems)` with approved intentional differences excluded from the denominator.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -30,8 +35,9 @@ flows and confirming they complete in the fork with equivalent outcomes.
 
 1. **Given** a documented upstream usage flow, **When** a developer runs the equivalent flow on
    the fork, **Then** the workflow completes without requiring fork-specific call changes.
-2. **Given** a developer migrates existing scripts from upstream, **When** scripts are executed
-   against the fork, **Then** the majority of scripts run successfully without interface edits.
+2. **Given** a developer migrates existing scripts from upstream, **When** in-scope migration
+   scripts are executed against the fork, **Then** 100% of those scripts run successfully
+   without interface edits.
 
 ---
 
@@ -102,6 +108,8 @@ aligned areas, preserved custom differences, and approved exceptions.
   compatibility and custom-regression gates pass and the exception record is complete.
 - **FR-005**: The system MUST define and execute compatibility checks for all high-priority
   workflows before release approval.
+- **FR-014**: For this release, high-priority workflows are defined as all in-scope workflows,
+  including Python API, CLI modes, task families, and auxiliary developer workflows.
 - **FR-006**: The system MUST define and execute regression checks for all preserved custom
   workflows before release approval.
 - **FR-007**: The system MUST block release approval when any critical compatibility or custom
@@ -113,7 +121,8 @@ aligned areas, preserved custom differences, and approved exceptions.
 - **FR-010**: The system MUST maintain traceable evidence for each release decision, including
   parity status, exception list, and test outcomes.
 - **FR-011**: Approved fork updates MUST be pushed to
-  `https://github.com/ahmedelbamby-aast/yolov13-custom` as the canonical publication target.
+  `https://github.com/ahmedelbamby-aast/yolov13-custom` as the canonical publication target,
+  and release sign-off for this feature MUST remain blocked until publication succeeds.
 
 ### API Parity & Compatibility Requirements *(mandatory for this repository)*
 
@@ -134,8 +143,8 @@ aligned areas, preserved custom differences, and approved exceptions.
   outcomes used as the reference for alignment.
 - **Custom Feature Registry**: Approved list of fork-specific capabilities that must remain
   supported through alignment cycles.
-- **Parity Delta Record**: Structured log of alignment status, intentional differences,
-  unresolved gaps, and ownership.
+- **WorkflowParityItem** (formerly referred to as "Parity Delta Record"): Structured record of
+  alignment status, intentional differences, unresolved gaps, and ownership for each workflow.
 - **Release Evidence Package**: Collection of compatibility results, custom regression results,
   exception approvals, and migration notes tied to a release decision.
 
@@ -144,7 +153,9 @@ aligned areas, preserved custom differences, and approved exceptions.
 ### Measurable Outcomes
 
 - **SC-001**: At least 95% of in-scope upstream baseline workflows run successfully in the fork
-  without requiring user-facing call pattern changes.
+  without requiring user-facing call pattern changes, measured as `(aligned WorkflowParityItems)
+  / (total in-scope WorkflowParityItems)` with approved intentional differences excluded from
+  the denominator.
 - **SC-002**: 100% of release-blocking custom features in the custom feature registry pass
   regression checks in each release candidate.
 - **SC-003**: 100% of intentional upstream differences are documented with owner, rationale,

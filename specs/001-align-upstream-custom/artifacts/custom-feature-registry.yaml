@@ -1,0 +1,26 @@
+version: 1
+features:
+  - feature_id: y13-flash-backend-controls
+    name: Y13 flash backend controls
+    criticality: release_blocking
+    expected_outcome: Deterministic flash-mode behavior with fallback and turing compatibility.
+    regression_test_refs:
+      - tests/test_engine.py
+      - kaggle/scripts/35_phase_ddp_gate.py
+    owner: y13-maintainers
+  - feature_id: y13-task-preflight
+    name: Task-aware dataset preflight
+    criticality: release_blocking
+    expected_outcome: Detect/segment/pose/obb schema validation fails fast with actionable diagnostics.
+    regression_test_refs:
+      - kaggle/scripts/33_phase1_task_preflight_smoke.py
+      - ultralytics/data/utils.py
+    owner: y13-maintainers
+  - feature_id: y13-multi-task-configs
+    name: YOLOv13 multi-task model configs
+    criticality: release_blocking
+    expected_outcome: v13 detect/segment/pose/obb YAML families remain available and valid.
+    regression_test_refs:
+      - tests/test_exports.py
+      - ultralytics/cfg/models/v13
+    owner: y13-maintainers

@@ -6,6 +6,16 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from phase3_upgrade.common_artifacts import (
+    load_baseline,
+    load_parity_exceptions,
+    load_release_evidence,
+    save_parity_exceptions,
+    save_release_evidence,
+    save_gate_json,
+    validate_exception_records,
+)
+
 
 def has_text(path: Path, needle: str) -> bool:
     try:
@@ -22,7 +32,7 @@ def main() -> None:
     )
 
     checks = {
-        "version_8_4_33": has_text(repo / "ultralytics" / "__init__.py", '__version__ = "8.4.33"'),
+        "version_8_4_37": has_text(repo / "ultralytics" / "__init__.py", '__version__ = "8.4.37"'),
         "trainer_task_preflight": has_text(
             repo / "ultralytics" / "engine" / "trainer.py", "check_det_dataset(self.args.data, task=self.args.task)"
         ),
@@ -68,15 +78,47 @@ def main() -> None:
     script_root = repo / "scripts"
     checks["developer_scripts_present"] = all((script_root / name).exists() for name in script_files)
 
+    baseline = load_baseline()
+    exceptions_doc = load_parity_exceptions()
+    exception_validation = validate_exception_records(exceptions_doc.get("exceptions", []))
+    checks["baseline_ref_present"] = bool(baseline.get("resolved_commit"))
+    checks["exceptions_records_complete"] = exception_validation["incomplete"] == 0
+
+    exceptions_doc.setdefault("exceptions", [])
+    if not exceptions_doc["exceptions"]:
+        exceptions_doc["exceptions"].append(
+            {
+                "exception_id": "E-PLACEHOLDER-001",
+                "workflow_id": "placeholder-workflow",
+                "rationale": "No approved parity exceptions in this cycle",
+                "risk_level": "low",
+                "owner": "y13-maintainers",
+                "rollback_or_mitigation": "No-op",
+                "remediation_date": "2026-12-31",
+                "approval_state": "rejected",
+            }
+        )
+        save_parity_exceptions(exceptions_doc)
+
     out = {
         "total": len(checks),
         "ok": sum(1 for v in checks.values() if v),
         "fail": sum(1 for v in checks.values() if not v),
         "checks": checks,
+        "baseline_ref": baseline.get("resolved_commit"),
+        "exceptions": exception_validation,
     }
 
-    out_path = Path("/kaggle/working/phase3_custom_delta_audit.json")
-    out_path.write_text(json.dumps(out, indent=2), encoding="utf-8")
+    out_path = save_gate_json("phase3_custom_delta_audit.json", out)
+
+    evidence = load_release_evidence()
+    gates = evidence.setdefault("gates", {})
+    custom_regression = gates.setdefault("custom_regression", {})
+    custom_regression["status"] = "pass" if out["fail"] == 0 else "fail"
+    refs = custom_regression.setdefault("evidence_refs", [])
+    refs.append("phase3_custom_delta_audit.json")
+    save_release_evidence(evidence)
+
     print(json.dumps(out, indent=2))
     print(f"saved={out_path}")
 

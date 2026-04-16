@@ -10,10 +10,11 @@ from pathlib import Path
 
 from ultralytics import YOLO
 
+from common_artifacts import load_release_evidence, save_gate_json, save_release_evidence, utc_now_iso
+
 
 OUT = Path("/kaggle/working/phase3_upgrade/stress_gate.json")
 PROJECT = Path("/kaggle/working/phase3_upgrade/stress_runs")
-
 
 
 def main() -> None:
@@ -30,6 +31,7 @@ def main() -> None:
 
     report = {
         "status": "fail",
+        "started_at": utc_now_iso(),
         "workers": workers,
         "prefetch_factor": prefetch,
         "attempts": [],
@@ -73,7 +75,23 @@ def main() -> None:
             entry["traceback_tail"] = "\n".join(traceback.format_exc().splitlines()[-40:])
         report["attempts"].append(entry)
 
+    report["ended_at"] = utc_now_iso()
     OUT.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+    evidence = load_release_evidence()
+    gates = evidence.setdefault("gates", {})
+    stress_gate = gates.setdefault("compatibility", {})
+    stress_gate["status"] = "pass" if report["status"] == "ok" else "fail"
+    refs = stress_gate.setdefault("evidence_refs", [])
+    refs.append("stress_gate.json")
+    if report["status"] != "ok":
+        evidence["status"] = "blocked"
+        blocking = evidence.setdefault("blocking_reasons", [])
+        if "failed_stress_gate" not in blocking:
+            blocking.append("failed_stress_gate")
+    save_release_evidence(evidence)
+
+    save_gate_json("stress_gate.json", report)
     print(json.dumps(report, indent=2))
     print(f"saved={OUT}")
     if report["status"] != "ok":
