@@ -1,18 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 -> 1.1.0
+- Version change: 1.1.0 -> 1.1.1
 - Modified principles:
-  - I. Upstream API Parity First -> I. Upstream Contract Preservation
-  - II. Additive Customization Only -> II. Additive and Namespaced Customization
-  - III. Evidence-Driven Upstream Synchronization -> III. Fail-Fast Data and Runtime Determinism
-  - IV. Compatibility and Regression Gates -> IV. Reliability for Distributed and Long-Running Training
-  - V. Developer Experience Consistency -> V. Evidence-Based Quality and Release Gates
+  - II. Additive and Namespaced Customization -> II. Additive and Namespaced Customization
 - Added sections:
-  - Engineering Constitutes
-  - Operating Practices
+  - None
 - Removed sections:
-  - API and Architecture Constraints
-  - Delivery Workflow and Review Gates
+  - None
 - Templates requiring updates:
   - ⚠ pending: .specify/templates/plan-template.md
   - ⚠ pending: .specify/templates/spec-template.md
@@ -38,7 +32,10 @@ impact, migration note, and remediation target. This rule protects drop-in usabi
 Fork features MUST be additive and explicitly scoped (for example, v13 model configs,
 `Y13_*` runtime controls, and script-level flags). Shared upstream behavior MUST NOT be
 silently replaced unless required for correctness, security, or hard reliability defects.
-All replacements MUST include rationale and rollback guidance.
+Custom features that are currently supported by this fork MUST NOT be deleted during
+upstream alignment. Any proposal to remove a custom feature requires an explicit deprecation
+decision, migration path, and owner-approved exception record. All replacements MUST include
+rationale and rollback guidance.
 
 ### III. Fail-Fast Data and Runtime Determinism
 Dataset/task contracts MUST be validated before heavy execution (especially detect/segment/
@@ -97,4 +94,4 @@ task-relevant integration checks, and no-regression script checks before release
 - Runtime and developer guidance in `README.md`, `scripts/README.md`, and `roadmap/` MUST
   remain aligned with this constitution.
 
-**Version**: 1.1.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-16
+**Version**: 1.1.1 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-16
