@@ -1,100 +1,100 @@
 <!--
 Sync Impact Report
-- Version change: N/A (template placeholders) -> 1.0.0
+- Version change: 1.0.0 -> 1.1.0
 - Modified principles:
-  - Template Principle 1 -> I. Upstream API Parity First
-  - Template Principle 2 -> II. Additive Customization Only
-  - Template Principle 3 -> III. Evidence-Driven Upstream Synchronization
-  - Template Principle 4 -> IV. Compatibility and Regression Gates
-  - Template Principle 5 -> V. Developer Experience Consistency
+  - I. Upstream API Parity First -> I. Upstream Contract Preservation
+  - II. Additive Customization Only -> II. Additive and Namespaced Customization
+  - III. Evidence-Driven Upstream Synchronization -> III. Fail-Fast Data and Runtime Determinism
+  - IV. Compatibility and Regression Gates -> IV. Reliability for Distributed and Long-Running Training
+  - V. Developer Experience Consistency -> V. Evidence-Based Quality and Release Gates
 - Added sections:
+  - Engineering Constitutes
+  - Operating Practices
+- Removed sections:
   - API and Architecture Constraints
   - Delivery Workflow and Review Gates
-- Removed sections:
-  - None
 - Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md
-  - ✅ .specify/templates/spec-template.md
-  - ✅ .specify/templates/tasks-template.md
+  - ⚠ pending: .specify/templates/plan-template.md
+  - ⚠ pending: .specify/templates/spec-template.md
+  - ⚠ pending: .specify/templates/tasks-template.md
   - ⚠ pending: .specify/templates/commands/*.md (directory not present)
-  - ✅ README.md reviewed (no amendment needed)
+  - ⚠ pending: README.md and scripts/README.md normalization notes
 - Follow-up TODOs:
-  - None
+  - Normalize flash-mode vocabulary across script families.
+  - Add fork-specific tests for Y13 backend, preflight schema, and DDP hardening.
 -->
 
 # YOLOv13 Custom Fork Constitution
 
 ## Core Principles
 
-### I. Upstream API Parity First
-All public APIs exposed by this fork MUST preserve upstream Ultralytics call patterns and
-behavior by default, including import paths and primary constructors such as
-`from ultralytics import YOLO` and `YOLO("model")`. Any divergence from upstream semantics
-MUST be additive, explicitly documented, and protected by compatibility tests. This keeps
-developer onboarding friction low and prevents ecosystem breakage.
+### I. Upstream Contract Preservation
+Public Python and CLI contracts MUST remain upstream-compatible by default, including
+`from ultralytics import YOLO`, model loading semantics, and task/mode argument behavior.
+Any intentional contract difference MUST be documented as a compatibility exception with
+impact, migration note, and remediation target. This rule protects drop-in usability.
 
-### II. Additive Customization Only
-YOLOv13 custom features MUST be implemented as additive extensions, not replacements of
-upstream behavior, unless replacement is required to fix correctness or security defects.
-Custom capabilities MUST use explicit namespacing and configuration boundaries (for example,
-v13 configs and `Y13_*` environment flags) so upstream-compatible workflows remain intact.
-This preserves mergeability with upstream and avoids hidden coupling.
+### II. Additive and Namespaced Customization
+Fork features MUST be additive and explicitly scoped (for example, v13 model configs,
+`Y13_*` runtime controls, and script-level flags). Shared upstream behavior MUST NOT be
+silently replaced unless required for correctness, security, or hard reliability defects.
+All replacements MUST include rationale and rollback guidance.
 
-### III. Evidence-Driven Upstream Synchronization
-Every upstream sync or parity change MUST include a documented delta analysis that covers
-API surface, key module patterns, and behavioral differences against the chosen upstream
-reference (commit or release tag). Unresolved drifts MUST be tracked with owner and target
-milestone. This ensures parity work is measurable and auditable rather than ad hoc.
+### III. Fail-Fast Data and Runtime Determinism
+Dataset/task contracts MUST be validated before heavy execution (especially detect/segment/
+pose/obb schema differences). Runtime backend selection MUST be deterministic and applied
+before or at controlled model initialization boundaries. The system MUST fail early with
+actionable diagnostics when schema or backend constraints are violated.
 
-### IV. Compatibility and Regression Gates
-Changes affecting entry points, trainers, validators, predictors, exporters, or model loading
-MUST pass compatibility gates before merge: import smoke tests, task-relevant integration
-tests (detect/segment/pose/obb when affected), and no-regression checks for existing scripts.
-If a gate is skipped, a written exception with risk and rollback plan is mandatory.
+### IV. Reliability for Distributed and Long-Running Training
+Distributed and long-running execution paths MUST prioritize stability over novelty: safe
+synchronization, non-finite guardrails, controlled restart/resume behavior, and explicit
+failure containment. DDP, checkpointing, and runtime fallback behavior MUST remain robust
+under partial failure and constrained hardware conditions.
 
-### V. Developer Experience Consistency
-Documentation, examples, and scripts MUST maintain the same API consumption style as
-Ultralytics wherever possible, with custom extensions clearly marked and optional.
-User-facing guidance MUST include both upstream-equivalent usage and fork-specific usage,
-including defaults and migration notes. This keeps the fork easy to adopt for existing
-Ultralytics users.
+### V. Evidence-Based Quality and Release Gates
+Claims of parity, stability, or performance MUST be backed by executable gates and
+machine-readable artifacts (logs, metrics, summaries, and status JSON). Changes to entry
+points, train/val/predict/export/benchmark flows, or backend control MUST pass import smoke,
+task-relevant integration checks, and no-regression script checks before release.
 
-## API and Architecture Constraints
+## Engineering Constitutes
 
-- Package import stability is mandatory: `ultralytics` remains the top-level public module.
-- Public API additions MUST be backward-compatible and MUST NOT shadow or alter existing
-  upstream signatures without a documented compatibility layer.
-- Custom model/config assets MUST reside in clearly scoped locations (for example,
-  `ultralytics/cfg/models/v13/`) to reduce conflict during upstream merges.
-- Core behavior changes in shared modules MUST include inline rationale in PR/spec artifacts,
-  plus explicit reference to upstream source behavior.
-- External dependency upgrades MUST be justified with parity, security, or reliability impact.
+- Baseline Declaration Clause: each parity initiative MUST pin upstream repository and commit/
+  tag reference in plan artifacts.
+- Delta Accounting Clause: each meaningful change MUST be classified as parity sync, custom
+  feature, reliability fix, tooling, or docs-only.
+- Compatibility Gate Clause: any change affecting entrypoints or core flows MUST pass defined
+  smoke/integration/regression checks before merge.
+- Exception Clause: skipped gates or intentional parity breaks MUST include owner, risk,
+  rollback strategy, and remediation date.
+- Artifact Clause: gate and benchmark outputs MUST be persisted in traceable locations.
+- Documentation Sync Clause: behavior changes MUST update user docs and script guidance.
 
-## Delivery Workflow and Review Gates
+## Operating Practices
 
-1. Establish upstream baseline: record upstream repo URL and reference commit/tag for each
-   parity initiative.
-2. Produce delta inventory: list changed modules, APIs, and behavior differences in spec/plan.
-3. Implement with additive-first strategy and minimal shared-core churn.
-4. Validate gates: run compatibility smoke checks and affected task tests before merge.
-5. Update developer guidance: refresh README/examples/scripts where behavior or options change.
-6. Record outcome: store parity status and remaining drift items in roadmap/spec artifacts.
+- Scripts SHOULD remain thin wrappers over native Ultralytics API calls with full argument
+  passthrough rather than parallel logic stacks.
+- Benchmarking SHOULD use controlled export formats, explicit backend labels, and
+  machine-readable summaries to support apples-to-apples comparisons.
+- Kaggle and remote bootstrap workflows SHOULD be deterministic and reproducible across runs.
+- Roadmap/spec artifacts SHOULD remain evidence-linked to executed gates and produced outputs.
+- New custom features SHOULD ship with targeted tests, not only manual gate scripts.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-- This constitution supersedes conflicting local process notes for architecture and API parity
-  decisions in this repository.
-- Amendments require: (a) proposed change text, (b) rationale and impact, (c) template sync
-  review across `.specify/templates/`, and (d) update of the Sync Impact Report header.
-- Versioning policy for this constitution uses semantic versioning:
-  - MAJOR: backward-incompatible principle or governance changes.
-  - MINOR: new principle/section or materially expanded mandatory guidance.
-  - PATCH: clarifications, wording improvements, and non-semantic edits.
-- Compliance review is required in every plan and implementation review that touches API,
-  architecture, or developer workflow. Non-compliance MUST be tracked with explicit exception
-  owner, risk, and remediation date.
-- Operational guidance remains in `README.md` and feature artifacts under `roadmap/` and
-  `specs/`; those documents MUST remain consistent with this constitution.
+- This constitution governs architecture, API surface, reliability expectations, and release
+  readiness decisions for this repository.
+- Amendments require: proposed text, rationale, impact assessment, dependent-template review,
+  and Sync Impact Report updates in this file.
+- Constitution versioning uses semantic rules:
+  - MAJOR: incompatible redefinition/removal of core principles or governance rules.
+  - MINOR: added principles/sections or materially expanded mandatory requirements.
+  - PATCH: clarifications, editorial refinements, and non-semantic wording updates.
+- Compliance checks are mandatory for plans and implementation reviews affecting APIs,
+  data contracts, runtime backends, DDP behavior, or release gates.
+- Non-compliance MUST be logged as a named exception with owner, risk, and due date.
+- Runtime and developer guidance in `README.md`, `scripts/README.md`, and `roadmap/` MUST
+  remain aligned with this constitution.
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-16
+**Version**: 1.1.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-16
