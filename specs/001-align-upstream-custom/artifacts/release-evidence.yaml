@@ -30,7 +30,7 @@ publication:
   push_status: pass
   push_evidence_refs:
   - branch: 003-align-upstream-custom
-    commit: 64c474428c5e3993bcaed1779a829105702ba0f0
+    commit: 0147aedcf5964b78f61a6f5ad2a60d36ea8230e7
     remote: origin
     pushed_at: 2026-04-17 00:00:00+00:00
 operations:
