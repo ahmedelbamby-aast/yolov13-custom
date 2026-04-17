@@ -1,6 +1,7 @@
 # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
 
 import subprocess
+from pathlib import Path
 
 import pytest
 from PIL import Image
@@ -27,6 +28,20 @@ def test_special_modes():
     run("yolo version")
     run("yolo settings reset")
     run("yolo cfg")
+
+
+def test_cli_mode_parity_minimal():
+    """Smoke test that standard upstream CLI mode invocation works."""
+    run("yolo predict model=yolo11n.pt source=ultralytics/assets/bus.jpg imgsz=32")
+
+
+def test_phase6_runner_has_heartbeat_support():
+    """Ensure phase6 runner includes heartbeat progress output."""
+    root = Path(__file__).resolve().parents[1]
+    runner = root / "kaggle" / "scripts" / "phase3_upgrade" / "05_phase6_gate_runner.sh"
+    text = runner.read_text(encoding="utf-8")
+    assert "phase3_upgrade_gate_heartbeat.jsonl" in text
+    assert "heartbeat" in text
 
 
 @pytest.mark.parametrize("task,model,data", TASK_MODEL_DATA)
@@ -75,7 +90,7 @@ def test_fastsam(task="segment", model=WEIGHTS_DIR / "FastSAM-s.pt", data="coco8
     from ultralytics.models.sam import Predictor
 
     # Create a FastSAM model
-    sam_model = FastSAM(model)  # or FastSAM-x.pt
+    sam_model = FastSAM(str(model))  # or FastSAM-x.pt
 
     # Run inference on an image
     for s in (source, Image.open(source)):
@@ -93,7 +108,7 @@ def test_mobilesam():
     from ultralytics import SAM
 
     # Load the model
-    model = SAM(WEIGHTS_DIR / "mobile_sam.pt")
+    model = SAM(str(WEIGHTS_DIR / "mobile_sam.pt"))
 
     # Source
     source = ASSETS / "zidane.jpg"

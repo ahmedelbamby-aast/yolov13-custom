@@ -16,6 +16,70 @@ def test_func(*args):  # noqa
     print("callback test passed")
 
 
+def test_flash_backend_toggle_env_contract():
+    """Validate flash backend env toggles are deterministic."""
+    import os
+
+    from scripts._common import apply_flash_mode
+
+    apply_flash_mode("fallback")
+    assert os.environ.get("Y13_DISABLE_FLASH") == "1"
+    assert os.environ.get("Y13_USE_TURING_FLASH") == "0"
+    assert os.environ.get("Y13_PREFER_FLASH4") == "0"
+
+    apply_flash_mode("turing")
+    assert os.environ.get("Y13_DISABLE_FLASH") == "0"
+    assert os.environ.get("Y13_USE_TURING_FLASH") == "1"
+    assert os.environ.get("Y13_PREFER_FLASH4") == "0"
+
+    apply_flash_mode("flash4")
+    assert os.environ.get("Y13_DISABLE_FLASH") == "0"
+    assert os.environ.get("Y13_USE_TURING_FLASH") == "0"
+    assert os.environ.get("Y13_PREFER_FLASH4") == "1"
+
+
+def test_release_blocking_logic_reference_present():
+    """Ensure release-blocking aggregator script exists for governance path."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    target = root / "kaggle" / "scripts" / "phase3_upgrade" / "03_stress_gate.py"
+    assert target.exists()
+
+
+def test_host_runtime_profile_detection_shape():
+    """Ensure runtime host profile includes required portability keys."""
+    from scripts._common import detect_host_runtime_profile
+
+    profile = detect_host_runtime_profile()
+    required = {
+        "os_family",
+        "headless",
+        "accelerator_profile",
+        "gpu_count",
+        "gpu_names",
+        "cuda_available",
+        "flash_recommendation",
+    }
+    assert required.issubset(profile.keys())
+    assert profile["accelerator_profile"] in {"cpu-only", "single-gpu", "multi-gpu"}
+
+
+def test_release_blocking_path_flagged_when_final_gate_fails():
+    """US3: release evidence must include final gate blocking reason when summary gate fails."""
+    import yaml
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    p = root / "specs" / "001-align-upstream-custom" / "artifacts" / "release-evidence.yaml"
+    data = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    blocking = set(data.get("blocking_reasons", []) or [])
+    release_summary = ((data.get("gates") or {}).get("release_summary") or {}).get("status")
+
+    if release_summary == "fail":
+        assert "failed_release_summary_gate" in blocking
+
+
 def test_export():
     """Tests the model exporting function by adding a callback and asserting its execution."""
     exporter = Exporter()
@@ -51,7 +115,7 @@ def test_detect():
     # Confirm there is no issue with sys.argv being empty.
     with mock.patch.object(sys, "argv", []):
         result = pred(source=ASSETS, model=MODEL)
-        assert len(result), "predictor test failed"
+        assert list(result), "predictor test failed"
 
     overrides["resume"] = trainer.last
     trainer = detect.DetectionTrainer(overrides=overrides)
@@ -89,7 +153,7 @@ def test_segment():
     pred.add_callback("on_predict_start", test_func)
     assert test_func in pred.callbacks["on_predict_start"], "callback test failed"
     result = pred(source=ASSETS, model=WEIGHTS_DIR / "yolo11n-seg.pt")
-    assert len(result), "predictor test failed"
+    assert list(result), "predictor test failed"
 
     # Test resume
     overrides["resume"] = trainer.last
@@ -128,4 +192,4 @@ def test_classify():
     pred.add_callback("on_predict_start", test_func)
     assert test_func in pred.callbacks["on_predict_start"], "callback test failed"
     result = pred(source=ASSETS, model=trainer.best)
-    assert len(result), "predictor test failed"
+    assert list(result), "predictor test failed"

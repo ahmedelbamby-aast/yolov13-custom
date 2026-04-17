@@ -1,10 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 -> 1.1.1
+- Version change: 1.1.1 -> 1.2.0
 - Modified principles:
-  - II. Additive and Namespaced Customization -> II. Additive and Namespaced Customization
+  - III. Fail-Fast Data and Runtime Determinism -> III. Fail-Fast Data and Runtime Determinism
+  - IV. Reliability for Distributed and Long-Running Training -> IV. Reliability for Distributed and Long-Running Training
+  - V. Evidence-Based Quality and Release Gates -> V. Evidence-Based Quality and Release Gates
 - Added sections:
-  - None
+  - VI. Server Safety and Change Control
 - Removed sections:
   - None
 - Templates requiring updates:
@@ -12,10 +14,10 @@ Sync Impact Report
   - ⚠ pending: .specify/templates/spec-template.md
   - ⚠ pending: .specify/templates/tasks-template.md
   - ⚠ pending: .specify/templates/commands/*.md (directory not present)
-  - ⚠ pending: README.md and scripts/README.md normalization notes
+  - ✅ updated: specs/001-align-upstream-custom/spec.md
 - Follow-up TODOs:
-  - Normalize flash-mode vocabulary across script families.
-  - Add fork-specific tests for Y13 backend, preflight schema, and DDP hardening.
+  - Add remote execution helpers for live logs and 5-minute progress polling.
+  - Add platform-aware flash install/detect gates for Windows, macOS, Linux, GPU, and CPU-only hosts.
 -->
 
 # YOLOv13 Custom Fork Constitution
@@ -41,19 +43,29 @@ rationale and rollback guidance.
 Dataset/task contracts MUST be validated before heavy execution (especially detect/segment/
 pose/obb schema differences). Runtime backend selection MUST be deterministic and applied
 before or at controlled model initialization boundaries. The system MUST fail early with
-actionable diagnostics when schema or backend constraints are violated.
+actionable diagnostics when schema or backend constraints are violated. Long-running
+remote execution MUST provide operator-visible progress via live logs or periodic status
+checks at least once every 5 minutes.
 
 ### IV. Reliability for Distributed and Long-Running Training
 Distributed and long-running execution paths MUST prioritize stability over novelty: safe
 synchronization, non-finite guardrails, controlled restart/resume behavior, and explicit
 failure containment. DDP, checkpointing, and runtime fallback behavior MUST remain robust
-under partial failure and constrained hardware conditions.
+under partial failure and constrained hardware conditions. Implementations MUST be
+platform-adaptive and operate correctly on Windows, macOS, Linux, and headless servers,
+including CPU-only, single-GPU, and multi-GPU topologies.
 
 ### V. Evidence-Based Quality and Release Gates
 Claims of parity, stability, or performance MUST be backed by executable gates and
 machine-readable artifacts (logs, metrics, summaries, and status JSON). Changes to entry
 points, train/val/predict/export/benchmark flows, or backend control MUST pass import smoke,
-task-relevant integration checks, and no-regression script checks before release.
+task-relevant integration checks, and no-regression script checks before release. Bootstrap
+and runtime flows MUST verify virtual environment activation and backend readiness.
+
+### VI. Server Safety and Change Control
+The team MUST NOT reboot, shut down, delete system files, or run destructive server-level
+operations unless the developer is informed in advance and explicitly grants approval.
+Operational safety takes precedence over speed for infrastructure-impacting actions.
 
 ## Engineering Constitutes
 
@@ -67,6 +79,16 @@ task-relevant integration checks, and no-regression script checks before release
   rollback strategy, and remediation date.
 - Artifact Clause: gate and benchmark outputs MUST be persisted in traceable locations.
 - Documentation Sync Clause: behavior changes MUST update user docs and script guidance.
+- Remote Progress Clause: long-running remote jobs MUST expose live logs or automated progress
+  checks at a maximum 5-minute interval.
+- Server Safety Clause: destructive host operations (reboot/shutdown/system-file deletion) are
+  forbidden without explicit developer authorization.
+- Platform Adaptation Clause: scripts and runtime behavior MUST adapt to host OS and hardware
+  (Windows/macOS/Linux, CPU-only, single-GPU, multi-GPU) without manual code rewrites.
+- Flash Automation Clause: the system MUST auto-detect available GPU capability, install/test
+  the best supported flash backend, and prefer Flash Tur for T4-compatible environments.
+- Environment Activation Clause: bootstrap scripts MUST create a dedicated virtual environment,
+  and execution scripts MUST run inside that environment.
 
 ## Operating Practices
 
@@ -77,6 +99,8 @@ task-relevant integration checks, and no-regression script checks before release
 - Kaggle and remote bootstrap workflows SHOULD be deterministic and reproducible across runs.
 - Roadmap/spec artifacts SHOULD remain evidence-linked to executed gates and produced outputs.
 - New custom features SHOULD ship with targeted tests, not only manual gate scripts.
+- Remote runs SHOULD write a durable log file (`tee` or equivalent) that can be tailed without
+  waiting for job completion.
 
 ## Governance
 
@@ -89,9 +113,9 @@ task-relevant integration checks, and no-regression script checks before release
   - MINOR: added principles/sections or materially expanded mandatory requirements.
   - PATCH: clarifications, editorial refinements, and non-semantic wording updates.
 - Compliance checks are mandatory for plans and implementation reviews affecting APIs,
-  data contracts, runtime backends, DDP behavior, or release gates.
+  data contracts, runtime backends, DDP behavior, server safety, or release gates.
 - Non-compliance MUST be logged as a named exception with owner, risk, and due date.
 - Runtime and developer guidance in `README.md`, `scripts/README.md`, and `roadmap/` MUST
   remain aligned with this constitution.
 
-**Version**: 1.1.1 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-16
+**Version**: 1.2.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-17

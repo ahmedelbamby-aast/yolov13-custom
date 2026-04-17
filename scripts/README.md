@@ -4,6 +4,13 @@ This folder provides modular, direct scripts for common workflows.
 
 The goal is to feel like normal Ultralytics usage, while making runtime behavior explicit and easy to toggle.
 
+## Environment policy
+
+- Always create and use a dedicated virtual environment before running scripts.
+- Kaggle bootstrap does this via `kaggle/scripts/10_setup_uv.sh`.
+- For local development, create and activate `.venv` first, then run script commands.
+- Script runs and gates are expected to execute inside the active virtual environment.
+
 ## Design
 
 - Each script is standalone from a developer perspective.
@@ -184,6 +191,12 @@ Each script prints:
 - final kwargs passed to Ultralytics
 
 This makes runs easy to audit and reproduce.
+
+## Remote progress policy
+
+- Long-running remote workflows should emit a live log and/or periodic heartbeats.
+- Recommended heartbeat cadence is every 5 minutes (`Y13_PROGRESS_INTERVAL_S=300`).
+- Phase gates write progress evidence under alignment artifacts and runtime logs.
 
 ## Post-train Feature Projection (new)
 

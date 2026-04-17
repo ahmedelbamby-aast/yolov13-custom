@@ -52,18 +52,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T014 [P] [US1] Add import/constructor parity smoke coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_python.py`
-- [ ] T015 [P] [US1] Add CLI mode parity smoke coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_cli.py`
-- [ ] T016 [P] [US1] Add API-style wrapper parity matrix test in `C:\Users\Ahmed\yolov13_custom\tests\test_integrations.py`
+- [X] T014 [P] [US1] Add import/constructor parity smoke coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_python.py`
+- [X] T015 [P] [US1] Add CLI mode parity smoke coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_cli.py`
+- [X] T016 [P] [US1] Add API-style wrapper parity matrix test in `C:\Users\Ahmed\yolov13_custom\tests\test_integrations.py`
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Align top-level lazy exports and model availability semantics in `C:\Users\Ahmed\yolov13_custom\ultralytics\__init__.py`
-- [ ] T018 [US1] Align CLI entry argument normalization with upstream behavior in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\__init__.py`
-- [ ] T019 [US1] Align model/task mode dispatch defaults in `C:\Users\Ahmed\yolov13_custom\ultralytics\engine\model.py`
-- [ ] T020 [US1] Align core developer script passthrough semantics in `C:\Users\Ahmed\yolov13_custom\scripts\train.py`, `C:\Users\Ahmed\yolov13_custom\scripts\val.py`, `C:\Users\Ahmed\yolov13_custom\scripts\test.py`, `C:\Users\Ahmed\yolov13_custom\scripts\predict.py`, `C:\Users\Ahmed\yolov13_custom\scripts\export.py`, `C:\Users\Ahmed\yolov13_custom\scripts\benchmark.py`
-- [ ] T021 [US1] Align API-style wrappers to upstream call patterns in `C:\Users\Ahmed\yolov13_custom\scripts\api_style\common.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\train_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\val_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\test_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\predict_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\export_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\benchmark_api.py`
-- [ ] T022 [US1] Record US1 parity status and evidence references in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\parity-inventory.yaml`
+- [X] T017 [US1] Align top-level lazy exports and model availability semantics in `C:\Users\Ahmed\yolov13_custom\ultralytics\__init__.py`
+- [X] T018 [US1] Align CLI entry argument normalization with upstream behavior in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\__init__.py`
+- [X] T019 [US1] Align model/task mode dispatch defaults in `C:\Users\Ahmed\yolov13_custom\ultralytics\engine\model.py`
+- [X] T020 [US1] Align core developer script passthrough semantics in `C:\Users\Ahmed\yolov13_custom\scripts\train.py`, `C:\Users\Ahmed\yolov13_custom\scripts\val.py`, `C:\Users\Ahmed\yolov13_custom\scripts\test.py`, `C:\Users\Ahmed\yolov13_custom\scripts\predict.py`, `C:\Users\Ahmed\yolov13_custom\scripts\export.py`, `C:\Users\Ahmed\yolov13_custom\scripts\benchmark.py`
+- [X] T021 [US1] Align API-style wrappers to upstream call patterns in `C:\Users\Ahmed\yolov13_custom\scripts\api_style\common.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\train_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\val_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\test_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\predict_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\export_api.py`, `C:\Users\Ahmed\yolov13_custom\scripts\api_style\benchmark_api.py`
+- [X] T022 [US1] Record US1 parity status and evidence references in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\parity-inventory.yaml`
 - [X] T043 [US1] Implement SC-001 metric computation using WorkflowParityItem ratio in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\02_cli_python_parity_gate.py`
 
 **Checkpoint**: User Story 1 is independently functional and testable.
@@ -78,18 +78,18 @@
 
 ### Tests for User Story 2
 
-- [ ] T023 [P] [US2] Add flash-backend toggle regression coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_engine.py`
-- [ ] T024 [P] [US2] Add v13 multi-task config regression coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_exports.py`
-- [ ] T025 [P] [US2] Add DDP and task-preflight custom gate assertions in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\35_phase_ddp_gate.py` and `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\33_phase1_task_preflight_smoke.py`
+- [X] T023 [P] [US2] Add flash-backend toggle regression coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_engine.py`
+- [X] T024 [P] [US2] Add v13 multi-task config regression coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_exports.py`
+- [X] T025 [P] [US2] Add DDP and task-preflight custom gate assertions in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\35_phase_ddp_gate.py` and `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\33_phase1_task_preflight_smoke.py`
 
 ### Implementation for User Story 2
 
 - [X] T026 [US2] Normalize flash-mode vocabulary and env precedence in `C:\Users\Ahmed\yolov13_custom\scripts\_common.py` and `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\common.sh`
-- [ ] T027 [US2] Preserve additive namespaced core v13 detect configs in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x.yaml`
-- [ ] T044 [US2] Preserve additive namespaced v13 task configs for segment and pose in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x-pose.yaml`
-- [ ] T045 [US2] Preserve additive namespaced v13 task configs for obb and variant families in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l_2_p2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13n-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13n-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13n-obb.yaml`
-- [ ] T028 [US2] Align task-aware preflight behavior without removing custom checks in `C:\Users\Ahmed\yolov13_custom\ultralytics\data\utils.py` and `C:\Users\Ahmed\yolov13_custom\ultralytics\engine\trainer.py`
-- [ ] T029 [US2] Update custom feature preservation statuses in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\custom-feature-registry.yaml`
+- [X] T027 [US2] Preserve additive namespaced core v13 detect configs in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x.yaml`
+- [X] T044 [US2] Preserve additive namespaced v13 task configs for segment and pose in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x-pose.yaml`
+- [X] T045 [US2] Preserve additive namespaced v13 task configs for obb and variant families in `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x-obb.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13s_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13x_2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13l_2_p2.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13n-seg.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13n-pose.yaml`, `C:\Users\Ahmed\yolov13_custom\ultralytics\cfg\models\v13\yolov13n-obb.yaml`
+- [X] T028 [US2] Align task-aware preflight behavior without removing custom checks in `C:\Users\Ahmed\yolov13_custom\ultralytics\data\utils.py` and `C:\Users\Ahmed\yolov13_custom\ultralytics\engine\trainer.py`
+- [X] T029 [US2] Update custom feature preservation statuses in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\custom-feature-registry.yaml`
 - [X] T030 [US2] Publish preserved custom usage and migration notes in `C:\Users\Ahmed\yolov13_custom\README.md` and `C:\Users\Ahmed\yolov13_custom\scripts\README.md`
 
 **Checkpoint**: User Story 2 is independently functional and testable.
@@ -104,8 +104,8 @@
 
 ### Tests for User Story 3
 
-- [ ] T031 [P] [US3] Add exception-completeness validation coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_integrations.py`
-- [ ] T032 [P] [US3] Add release-blocking decision-path coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_engine.py`
+- [X] T031 [P] [US3] Add exception-completeness validation coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_integrations.py`
+- [X] T032 [P] [US3] Add release-blocking decision-path coverage in `C:\Users\Ahmed\yolov13_custom\tests\test_engine.py`
 
 ### Implementation for User Story 3
 
@@ -123,12 +123,19 @@
 
 **Purpose**: Final validation, documentation consistency, and publication readiness.
 
-- [ ] T038 [P] Run full parity stress and CLI/Python gate suite in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\03_stress_gate.py` and `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\02_cli_python_parity_gate.py`
+- [X] T038 [P] Run full parity stress and CLI/Python gate suite in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\03_stress_gate.py` and `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\02_cli_python_parity_gate.py`
 - [X] T039 [P] Refresh alignment tracking documentation in `C:\Users\Ahmed\yolov13_custom\roadmap\phase3_upgrade\README.md` and `C:\Users\Ahmed\yolov13_custom\README.md`
-- [ ] T040 Execute quickstart end-to-end validation and sign-off updates in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\quickstart.md` and `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
-- [ ] T041 Record approved exceptions and remediation schedule in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\parity-exceptions.yaml`
+- [X] T040 Execute quickstart end-to-end validation and sign-off updates in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\quickstart.md` and `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
+- [X] T041 Record approved exceptions and remediation schedule in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\parity-exceptions.yaml`
 - [X] T042 Record canonical publication readiness for `https://github.com/ahmedelbamby-aast/yolov13-custom` in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
-- [ ] T046 Execute canonical publication push to `https://github.com/ahmedelbamby-aast/yolov13-custom` and persist push evidence in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
+- [X] T046 Execute canonical publication push to `https://github.com/ahmedelbamby-aast/yolov13-custom` and persist push evidence in `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
+- [X] T047 Implement live-log or 5-minute heartbeat progress emission for long-running remote gates in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\05_phase6_gate_runner.sh`, `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\03_stress_gate.py`, and `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\36_phase3_final_gate.py`
+- [X] T048 Add server-safety guardrails that block reboot/shutdown/system-file destructive operations without explicit authorization in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\common.sh` and `C:\Users\Ahmed\yolov13_custom\scripts\_common.py`
+- [X] T049 Add cross-platform host profile detection (Windows/macOS/Linux, headless, CPU/single-GPU/multi-GPU) and artifact serialization in `C:\Users\Ahmed\yolov13_custom\scripts\_common.py` and `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\phase3_upgrade\common_artifacts.py`
+- [X] T050 Add hardware-aware flash backend auto-install/test orchestration with T4 Flash Tur preference and deterministic fallback in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\20_install_deps.sh`, `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\25_install_turing_flash.sh`, and `C:\Users\Ahmed\yolov13_custom\scripts\_common.py`
+- [X] T051 Enforce virtual environment creation and activation requirements across bootstrap and run entrypoints in `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\10_setup_uv.sh`, `C:\Users\Ahmed\yolov13_custom\kaggle\scripts\run_all.sh`, and `C:\Users\Ahmed\yolov13_custom\scripts\README.md`
+- [X] T052 [P] Add coverage for remote progress heartbeat, server-safety policy, and host-profile detection in `C:\Users\Ahmed\yolov13_custom\tests\test_integrations.py`, `C:\Users\Ahmed\yolov13_custom\tests\test_engine.py`, and `C:\Users\Ahmed\yolov13_custom\tests\test_cli.py`
+- [X] T053 [P] Extend quickstart and release evidence templates with platform and safety proof points in `C:\Users\Ahmed\yolov13_custom\kaggle\QUICKSTART.md` and `C:\Users\Ahmed\yolov13_custom\specs\001-align-upstream-custom\artifacts\release-evidence.yaml`
 
 ---
 

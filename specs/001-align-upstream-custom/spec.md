@@ -18,6 +18,14 @@
 - Q: Which canonical term should be used for per-workflow parity tracking? -> A: WorkflowParityItem is the canonical term (formerly referred to as "Parity Delta Record").
 - Q: How is SC-001 measured? -> A: `(aligned WorkflowParityItems) / (total in-scope WorkflowParityItems)` with approved intentional differences excluded from the denominator.
 
+### Session 2026-04-17
+
+- Q: How should long-running remote server jobs expose progress? -> A: They must provide live log streaming or automated progress checks at least every 5 minutes.
+- Q: What guardrail applies to destructive server actions during implementation and validation? -> A: Reboot/shutdown/system-file deletion is forbidden unless the developer is informed and explicitly grants approval.
+- Q: What runtime portability level is required for this alignment wave? -> A: Installation and core workflows must support Windows, macOS, Linux, and headless environments across CPU-only, single-GPU, and multi-GPU hosts.
+- Q: How must flash backend setup behave across hardware profiles? -> A: The system must auto-detect hardware capability, auto-install and test a suitable flash backend where supported, and prefer Flash Tur for T4-compatible environments.
+- Q: What is the virtual environment policy for automation scripts? -> A: Auto-run bootstrap scripts must create and activate a dedicated virtual environment before dependency install and workflow execution.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Use Fork Like Upstream (Priority: P1)
@@ -90,6 +98,13 @@ aligned areas, preserved custom differences, and approved exceptions.
 - What happens when a custom capability and upstream behavior compete for the same user-facing
   option or name?
 - How is release readiness handled if parity checks pass but custom regression checks fail?
+- What happens when a long-running remote gate cannot emit progress heartbeats or live logs?
+- How is safety enforced when a workflow requests reboot/shutdown/system-file deletion without
+  explicit developer approval?
+- What happens when flash backend installation fails on unsupported GPU architecture or CPU-only
+  environments?
+- How does bootstrap behavior adapt when OS/package manager/runtime assumptions differ across
+  Windows, macOS, Linux, and headless servers?
 
 ## Requirements *(mandatory)*
 
@@ -123,6 +138,22 @@ aligned areas, preserved custom differences, and approved exceptions.
 - **FR-011**: Approved fork updates MUST be pushed to
   `https://github.com/ahmedelbamby-aast/yolov13-custom` as the canonical publication target,
   and release sign-off for this feature MUST remain blocked until publication succeeds.
+- **FR-015**: Long-running remote workflows and release gates MUST emit observable progress by
+  either (a) live log streaming or (b) periodic status updates at intervals no greater than
+  5 minutes.
+- **FR-016**: The system MUST NOT execute reboot, shutdown, server deletion, or system-file
+  deletion operations unless explicit developer authorization is recorded for that action.
+- **FR-017**: Bootstrap, install, and core workflow entrypoints MUST support Windows, macOS,
+  Linux, and headless-server contexts with CPU-only, single-GPU, and multi-GPU hardware
+  profiles.
+- **FR-018**: Runtime bootstrap MUST auto-detect hardware capability and attempt suitable flash
+  backend installation and validation when supported, while preserving a safe fallback path.
+- **FR-019**: For T4-compatible environments, flash backend selection MUST prefer Flash Tur
+  (`flash-attention-turing`) when installation and validation succeed.
+- **FR-020**: Initial auto-run scripts MUST create and activate a dedicated virtual environment
+  before dependency installation, script execution, and gate execution.
+- **FR-021**: Machine-setup guidance and automation steps MUST remain synchronized with the
+  project quickstart so operators can run the system consistently on non-Kaggle machines.
 
 ### API Parity & Compatibility Requirements *(mandatory for this repository)*
 
@@ -136,6 +167,10 @@ aligned areas, preserved custom differences, and approved exceptions.
   listed in this specification.
 - **AP-005**: If compatibility is intentionally broken, the spec MUST include a justified
   exception with owner, risk, and remediation target.
+- **AP-006**: Script/API entrypoints for long-running operations MUST provide operator-visible
+  progress output compatible with non-interactive terminals.
+- **AP-007**: Platform/hardware detection and flash backend selection MUST be additive and MUST
+  NOT break upstream-compatible call patterns for Python API or CLI usage.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -147,6 +182,12 @@ aligned areas, preserved custom differences, and approved exceptions.
   alignment status, intentional differences, unresolved gaps, and ownership for each workflow.
 - **Release Evidence Package**: Collection of compatibility results, custom regression results,
   exception approvals, and migration notes tied to a release decision.
+- **HostRuntimeProfile**: Structured record of host OS, headless mode, accelerator topology
+  (CPU-only/single-GPU/multi-GPU), and selected backend path used by workflows.
+- **ProgressHeartbeat**: Timestamped progress record emitted by long-running workflows no less
+  frequently than every 5 minutes, linked to job and log references.
+- **SafetyAuthorizationRecord**: Approval record containing owner, timestamp, and reason for any
+  explicitly authorized destructive infrastructure action.
 
 ## Success Criteria *(mandatory)*
 
@@ -162,6 +203,13 @@ aligned areas, preserved custom differences, and approved exceptions.
   risk level, and remediation date before release sign-off.
 - **SC-004**: Time to produce a release readiness decision is reduced by at least 40% through
   standardized parity and regression evidence compared to the prior manual process.
+- **SC-005**: 100% of release-blocking long-running workflows publish either live logs or
+  periodic progress heartbeats at intervals no greater than 5 minutes.
+- **SC-006**: 100% of destructive infrastructure actions (if any) include explicit developer
+  authorization evidence before execution.
+- **SC-007**: Cross-platform bootstrap and core workflow smoke checks pass for all declared
+  host profiles in scope (Windows, macOS, Linux, headless; CPU-only/single-GPU/multi-GPU as
+  applicable to test matrix).
 
 ## Assumptions
 
@@ -172,3 +220,5 @@ aligned areas, preserved custom differences, and approved exceptions.
 - Teams accept explicitly documented intentional differences when required to preserve custom value.
 - The canonical destination for publishing approved fork changes is
   `https://github.com/ahmedelbamby-aast/yolov13-custom`.
+- Flash backend preference for T4-compatible environments uses Flash Tur when available and
+  validated, with deterministic fallback when unavailable.

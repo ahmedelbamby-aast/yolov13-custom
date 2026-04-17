@@ -1010,3 +1010,15 @@ Use notebooks from `notebooks/` with the same venv in `/kaggle/work_here/yolov13
 - Developer script guide: `scripts/README.md`
 - L-task benchmark report: `kaggle/reports/BENCHMARK_L_FLASH_TASKS_COMPARISON.md`
 - turFlash/T4 research and gap analysis: `roadmap/phase3_upgrade/TURFLASH_T4_RESEARCH_AND_GAP_ANALYSIS.md`
+
+## 13) Fresh install + heartbeat policy
+
+- Fresh install can be forced with `Y13_FRESH_VENV=1 bash kaggle/scripts/run_all.sh`.
+- Long-running gates should emit progress every 5 minutes (or set `Y13_PROGRESS_INTERVAL_S`).
+- Phase6 runner records heartbeat lines in `/kaggle/working/phase3_upgrade_gate_heartbeat.jsonl`.
+- For remote monitoring, keep one terminal for active run and another for:
+
+```bash
+tail -f /kaggle/working/phase3_upgrade_gate_heartbeat.jsonl
+tail -f /kaggle/working/logs_latest.txt
+```

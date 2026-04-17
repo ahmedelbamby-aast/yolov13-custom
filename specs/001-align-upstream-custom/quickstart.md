@@ -18,6 +18,35 @@ Run the implementation gates in this strict order:
 4. `kaggle/scripts/34_phase3_custom_delta_audit.py`
 5. `kaggle/scripts/36_phase3_final_gate.py`
 
+## 1.6) Remote progress visibility (mandatory)
+
+1. For any long-running remote workflow, expose progress in one of these ways:
+   - live log stream (`tail -f`/equivalent), or
+   - periodic status heartbeat at least every 5 minutes.
+2. Save progress evidence paths (logs/status artifacts) with other gate outputs.
+
+## 1.7) Server safety constraints (mandatory)
+
+1. Do not execute reboot/shutdown/system-file deletion operations unless:
+   - the developer has been informed, and
+   - explicit approval has been recorded.
+2. If such an action is required, keep release state `blocked` until authorization evidence is attached.
+
+## 1.8) Virtual environment and platform profile
+
+1. Run bootstrap scripts that create and activate a dedicated virtual environment before installs/gates.
+2. Record host runtime profile for each cycle:
+   - OS family (Windows/macOS/Linux)
+   - execution style (headless/interactive)
+   - accelerator profile (CPU-only/single-GPU/multi-GPU)
+3. Keep setup behavior compatible with non-Kaggle hosts using the same documented steps.
+
+## 1.9) Flash backend auto-selection and validation
+
+1. Auto-detect hardware capability and attempt supported flash backend installation/testing.
+2. Prefer Flash Tur (`flash-attention-turing`) on T4-compatible environments when validation passes.
+3. Preserve deterministic fallback behavior when flash install/validation is unsupported or fails.
+
 ## 2) Build parity inventory
 
 1. Enumerate in-scope workflows across Python API, CLI modes, task flows, and auxiliary tools.
@@ -26,6 +55,7 @@ Run the implementation gates in this strict order:
 ## 3) Validate compatibility and custom preservation
 
 1. Execute compatibility gates for in-scope upstream workflows.
+   - include `kaggle/scripts/33_phase1_task_preflight_smoke.py` and `kaggle/scripts/35_phase_ddp_gate.py` as custom-regression prerequisites for release evidence.
 2. Execute regression gates for release-blocking custom features.
 3. Aggregate machine-readable outputs and human-readable summaries.
 

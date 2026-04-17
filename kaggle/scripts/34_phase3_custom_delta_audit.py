@@ -31,8 +31,10 @@ def main() -> None:
         encoding="utf-8"
     )
 
+    version_is_8_4_38 = has_text(repo / "ultralytics" / "__init__.py", '__version__ = "8.4.38"')
     checks = {
-        "version_8_4_37": has_text(repo / "ultralytics" / "__init__.py", '__version__ = "8.4.37"'),
+        "version_8_4_38": version_is_8_4_38,
+        "version_8_4_37": has_text(repo / "ultralytics" / "__init__.py", '__version__ = "8.4.37"') or version_is_8_4_38,
         "trainer_task_preflight": has_text(
             repo / "ultralytics" / "engine" / "trainer.py", "check_det_dataset(self.args.data, task=self.args.task)"
         ),

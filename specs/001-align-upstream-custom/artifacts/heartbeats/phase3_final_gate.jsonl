@@ -1,0 +1,61 @@
+{"job": "phase3_final_gate", "status": "started", "ts": "2026-04-17T12:57:04.717346+00:00", "details": {"interval_s": 60}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T12:57:04.717989+00:00", "details": {"step": "train"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T12:57:40.328070+00:00", "details": {"step": "train"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T12:57:40.328384+00:00", "details": {"step": "val"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T12:57:44.577114+00:00", "details": {"step": "val"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T12:57:44.577566+00:00", "details": {"step": "predict"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T12:57:44.929401+00:00", "details": {"step": "predict"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T12:57:44.929684+00:00", "details": {"step": "export"}}
+{"job": "phase3_final_gate", "status": "step_fail", "ts": "2026-04-17T12:57:46.293286+00:00", "details": {"step": "export", "error": "Unsupported: ONNX export of operator adaptive pooling, since output_size is not constant.. Please feel free to request support or submit a pull request on PyTorch GitHub: https://github.com/pytorch/pytorch/issues  [Caused by the value '465 "}}
+{"job": "phase3_final_gate", "status": "completed", "ts": "2026-04-17T12:57:46.302079+00:00", "details": {}}
+{"job": "phase3_final_gate", "status": "started", "ts": "2026-04-17T16:36:27.832450+00:00", "details": {"interval_s": 60}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:36:27.833026+00:00", "details": {"step": "train"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:37:03.191444+00:00", "details": {"step": "train"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:37:03.191818+00:00", "details": {"step": "val"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:37:07.254275+00:00", "details": {"step": "val"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:37:07.254724+00:00", "details": {"step": "predict"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:37:07.591717+00:00", "details": {"step": "predict"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:37:07.592008+00:00", "details": {"step": "export"}}
+{"job": "phase3_final_gate", "status": "step_fail", "ts": "2026-04-17T16:37:08.888682+00:00", "details": {"step": "export", "error": "Unsupported: ONNX export of operator adaptive pooling, since output_size is not constant.. Please feel free to request support or submit a pull request on PyTorch GitHub: https://github.com/pytorch/pytorch/issues  [Caused by the value '465 "}}
+{"job": "phase3_final_gate", "status": "completed", "ts": "2026-04-17T16:37:08.896434+00:00", "details": {}}
+{"job": "phase3_final_gate", "status": "started", "ts": "2026-04-17T16:38:34.936954+00:00", "details": {"interval_s": 60}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:38:34.937488+00:00", "details": {"step": "train"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:39:10.128874+00:00", "details": {"step": "train"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:39:10.129305+00:00", "details": {"step": "val"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:39:14.352270+00:00", "details": {"step": "val"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:39:14.352714+00:00", "details": {"step": "predict"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:39:14.707666+00:00", "details": {"step": "predict"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:39:14.708010+00:00", "details": {"step": "export"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:39:19.308980+00:00", "details": {"step": "export"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:39:19.309281+00:00", "details": {"step": "benchmark"}}
+{"job": "phase3_final_gate", "status": "running", "ts": "2026-04-17T16:39:34.937736+00:00", "details": {"interval_s": 60}}
+{"job": "phase3_final_gate", "status": "running", "ts": "2026-04-17T16:40:34.938397+00:00", "details": {"interval_s": 60}}
+{"job": "phase3_final_gate", "status": "step_fail", "ts": "2026-04-17T16:41:09.868132+00:00", "details": {"step": "benchmark", "error": "Benchmark failures: [{'format': 'engine', 'status': 'fail', 'error': \"'NoneType' object does not support the context manager protocol\"}]"}}
+{"job": "phase3_final_gate", "status": "completed", "ts": "2026-04-17T16:41:09.868561+00:00", "details": {}}
+{"job": "phase3_final_gate", "status": "started", "ts": "2026-04-17T16:47:37.028645+00:00", "details": {"interval_s": 60}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:47:37.029249+00:00", "details": {"step": "train"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:48:11.860014+00:00", "details": {"step": "train"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:48:11.860447+00:00", "details": {"step": "val"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:48:15.865550+00:00", "details": {"step": "val"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:48:15.866056+00:00", "details": {"step": "predict"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:48:16.202140+00:00", "details": {"step": "predict"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:48:16.202432+00:00", "details": {"step": "export"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:48:20.596560+00:00", "details": {"step": "export"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T16:48:20.596920+00:00", "details": {"step": "benchmark"}}
+{"job": "phase3_final_gate", "status": "running", "ts": "2026-04-17T16:48:37.029417+00:00", "details": {"interval_s": 60}}
+{"job": "phase3_final_gate", "status": "running", "ts": "2026-04-17T16:49:37.030039+00:00", "details": {"interval_s": 60}}
+{"job": "phase3_final_gate", "status": "running", "ts": "2026-04-17T16:50:37.030741+00:00", "details": {"interval_s": 60}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T16:51:14.121865+00:00", "details": {"step": "benchmark"}}
+{"job": "phase3_final_gate", "status": "completed", "ts": "2026-04-17T16:51:14.122390+00:00", "details": {}}
+{"job": "phase3_final_gate", "status": "started", "ts": "2026-04-17T18:28:51.122926+00:00", "details": {"interval_s": 300}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T18:28:51.123497+00:00", "details": {"step": "train"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T18:29:26.376629+00:00", "details": {"step": "train"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T18:29:26.376982+00:00", "details": {"step": "val"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T18:29:30.462722+00:00", "details": {"step": "val"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T18:29:30.463241+00:00", "details": {"step": "predict"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T18:29:30.815690+00:00", "details": {"step": "predict"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T18:29:30.815985+00:00", "details": {"step": "export"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T18:29:35.195421+00:00", "details": {"step": "export"}}
+{"job": "phase3_final_gate", "status": "step_start", "ts": "2026-04-17T18:29:35.195742+00:00", "details": {"step": "benchmark"}}
+{"job": "phase3_final_gate", "status": "step_ok", "ts": "2026-04-17T18:32:26.895408+00:00", "details": {"step": "benchmark"}}
+{"job": "phase3_final_gate", "status": "completed", "ts": "2026-04-17T18:32:26.895886+00:00", "details": {}}

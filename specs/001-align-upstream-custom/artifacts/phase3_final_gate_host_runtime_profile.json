@@ -1,0 +1,13 @@
+{
+  "detected_at": "2026-04-17T18:28:51.122307+00:00",
+  "os_family": "linux",
+  "machine": "x86_64",
+  "headless": true,
+  "accelerator_profile": "multi-gpu",
+  "gpu_count": 2,
+  "gpu_names": [
+    "Tesla T4",
+    "Tesla T4"
+  ],
+  "cuda_available": true
+}

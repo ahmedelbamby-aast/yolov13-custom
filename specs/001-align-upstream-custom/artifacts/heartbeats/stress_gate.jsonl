@@ -1,0 +1,14 @@
+{"job": "stress_gate", "status": "started", "ts": "2026-04-17T12:54:27.246401+00:00", "details": {"interval_s": 60}}
+{"job": "stress_gate", "status": "attempt_start", "ts": "2026-04-17T12:54:27.484585+00:00", "details": {"batch": 8, "run_name": "stress_b8"}}
+{"job": "stress_gate", "status": "running", "ts": "2026-04-17T12:55:27.247465+00:00", "details": {"interval_s": 60}}
+{"job": "stress_gate", "status": "attempt_ok", "ts": "2026-04-17T12:55:57.694540+00:00", "details": {"batch": 8}}
+{"job": "stress_gate", "status": "completed", "ts": "2026-04-17T12:55:57.695210+00:00", "details": {}}
+{"job": "stress_gate", "status": "started", "ts": "2026-04-17T16:51:26.468923+00:00", "details": {"interval_s": 60}}
+{"job": "stress_gate", "status": "attempt_start", "ts": "2026-04-17T16:51:26.721077+00:00", "details": {"batch": 8, "run_name": "stress_b8"}}
+{"job": "stress_gate", "status": "running", "ts": "2026-04-17T16:52:26.471856+00:00", "details": {"interval_s": 60}}
+{"job": "stress_gate", "status": "attempt_ok", "ts": "2026-04-17T16:52:27.356744+00:00", "details": {"batch": 8}}
+{"job": "stress_gate", "status": "completed", "ts": "2026-04-17T16:52:27.357565+00:00", "details": {}}
+{"job": "stress_gate", "status": "started", "ts": "2026-04-17T18:27:22.099193+00:00", "details": {"interval_s": 300}}
+{"job": "stress_gate", "status": "attempt_start", "ts": "2026-04-17T18:27:22.349966+00:00", "details": {"batch": 8, "run_name": "stress_b8"}}
+{"job": "stress_gate", "status": "attempt_ok", "ts": "2026-04-17T18:28:22.724173+00:00", "details": {"batch": 8}}
+{"job": "stress_gate", "status": "completed", "ts": "2026-04-17T18:28:22.724972+00:00", "details": {}}

@@ -2192,6 +2192,15 @@ class FuseModule(nn.Module):
         if src.shape[-2:] == size:
             return src
 
+        is_onnx_export = False
+        try:
+            is_onnx_export = bool(torch.onnx.is_in_onnx_export())
+        except Exception:
+            is_onnx_export = False
+
+        if is_onnx_export:
+            return F.interpolate(src, size=size, mode="nearest")
+
         if self.align_mode == "adaptive":
             if src.shape[-2] > size[0] or src.shape[-1] > size[1]:
                 return F.adaptive_avg_pool2d(src, size)

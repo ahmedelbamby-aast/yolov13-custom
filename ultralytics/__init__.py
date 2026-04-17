@@ -1,6 +1,6 @@
 # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
 
-__version__ = "8.4.37"
+__version__ = "8.4.38"
 
 import importlib
 import os
@@ -17,6 +17,11 @@ from ultralytics.utils.downloads import download
 settings = SETTINGS
 
 MODELS = ("YOLO", "YOLOWorld", "NAS", "SAM", "FastSAM", "RTDETR")
+try:
+    if hasattr(importlib.import_module("ultralytics.models"), "YOLOE"):
+        MODELS = ("YOLO", "YOLOWorld", "YOLOE", "NAS", "SAM", "FastSAM", "RTDETR")
+except Exception:
+    pass
 
 __all__ = (
     "__version__",

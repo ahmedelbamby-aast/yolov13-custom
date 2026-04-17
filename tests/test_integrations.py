@@ -1,6 +1,7 @@
 # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
 
 import contextlib
+import importlib.util
 import os
 import subprocess
 import time
@@ -12,6 +13,55 @@ from tests import MODEL, SOURCE, TMP
 from ultralytics import YOLO, download
 from ultralytics.utils import DATASETS_DIR, SETTINGS
 from ultralytics.utils.checks import check_requirements
+
+
+def test_api_style_wrapper_scripts_exist():
+    """Ensure API-style wrapper entrypoints required by parity tasks are present."""
+    root = Path(__file__).resolve().parents[1]
+    required = [
+        root / "scripts" / "api_style" / "common.py",
+        root / "scripts" / "api_style" / "train_api.py",
+        root / "scripts" / "api_style" / "val_api.py",
+        root / "scripts" / "api_style" / "test_api.py",
+        root / "scripts" / "api_style" / "predict_api.py",
+        root / "scripts" / "api_style" / "export_api.py",
+        root / "scripts" / "api_style" / "benchmark_api.py",
+    ]
+    assert all(p.exists() for p in required)
+
+
+def test_heartbeat_helpers_present_for_long_running_jobs():
+    """Ensure heartbeat helpers required by constitution are available."""
+    root = Path(__file__).resolve().parents[1]
+    module_path = root / "kaggle" / "scripts" / "phase3_upgrade" / "common_artifacts.py"
+    spec = importlib.util.spec_from_file_location("y13_common_artifacts", module_path)
+    assert spec is not None and spec.loader is not None
+    common_artifacts = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(common_artifacts)
+
+    assert hasattr(common_artifacts, "append_progress_heartbeat")
+    assert hasattr(common_artifacts, "HeartbeatTicker")
+
+
+def test_parity_exceptions_schema_completeness():
+    """US3: ensure every parity exception record includes required governance fields."""
+    import yaml
+
+    root = Path(__file__).resolve().parents[1]
+    p = root / "specs" / "001-align-upstream-custom" / "artifacts" / "parity-exceptions.yaml"
+    data = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    required = {
+        "exception_id",
+        "workflow_id",
+        "rationale",
+        "risk_level",
+        "owner",
+        "rollback_or_mitigation",
+        "remediation_date",
+        "approval_state",
+    }
+    for item in data.get("exceptions", []):
+        assert required.issubset(set(item.keys()))
 
 
 @pytest.mark.skipif(not check_requirements("ray", install=False), reason="ray[tune] not installed")

@@ -6,7 +6,14 @@ from __future__ import annotations
 import argparse
 import sys
 
-from common import apply_flash_mode, print_runtime, resolve_flash_backend
+from common import (
+    apply_flash_mode,
+    merge_kwarg_sources,
+    parse_kv_overrides,
+    parse_unknown_cli_overrides,
+    print_runtime,
+    resolve_flash_backend,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -20,12 +27,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--half", action="store_true")
     p.add_argument("--int8", action="store_true")
     p.add_argument("--dynamic", action="store_true")
-    p.add_argument("--flash-mode", choices=("auto", "fallback", "turing"), default="auto")
+    p.add_argument("--flash-mode", choices=("auto", "fallback", "turing", "flash4"), default="auto")
+    p.add_argument("--arg", action="append", default=[], metavar="KEY=VALUE")
     return p
 
 
 def main() -> None:
-    args = build_parser().parse_args()
+    parser = build_parser()
+    args, unknown = parser.parse_known_args()
     apply_flash_mode(args.flash_mode)
 
     from ultralytics import YOLO
@@ -42,6 +51,7 @@ def main() -> None:
         "int8": args.int8,
         "dynamic": args.dynamic,
     }
+    kwargs = merge_kwarg_sources(kwargs, parse_kv_overrides(args.arg), parse_unknown_cli_overrides(unknown))
     print_runtime("export", args.flash_mode, backend, kwargs)
 
     artifact = model.export(**kwargs)

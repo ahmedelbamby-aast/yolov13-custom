@@ -1,0 +1,19 @@
+{
+  "status": "ok",
+  "started_at": "2026-04-17T18:27:22.099011+00:00",
+  "workers": 4,
+  "prefetch_factor": 8,
+  "attempts": [
+    {
+      "batch": 8,
+      "name": "stress_b8",
+      "status": "ok",
+      "error": null,
+      "best": "/kaggle/working/phase3_upgrade/stress_runs/stress_b8/weights/best.pt",
+      "best_exists": true
+    }
+  ],
+  "max_stable_batch": 8,
+  "host_runtime_profile": "/kaggle/work_here/yolov13/specs/001-align-upstream-custom/artifacts/stress_gate_host_runtime_profile.json",
+  "ended_at": "2026-04-17T18:28:22.725119+00:00"
+}

@@ -9,7 +9,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-from common import apply_flash_mode, print_runtime, resolve_flash_backend
+from common import (
+    apply_flash_mode,
+    merge_kwarg_sources,
+    parse_kv_overrides,
+    parse_unknown_cli_overrides,
+    print_runtime,
+    resolve_flash_backend,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -54,11 +61,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--feature-projection-flash-mode",
         default="same",
-        choices=("same", "auto", "fallback", "turing"),
+        choices=("same", "auto", "fallback", "turing", "flash4"),
     )
     p.add_argument("--feature-projection-wait-seconds", type=int, default=300)
     p.add_argument("--feature-projection-poll-seconds", type=int, default=10)
-    p.add_argument("--flash-mode", choices=("auto", "fallback", "turing"), default="auto")
+    p.add_argument("--flash-mode", choices=("auto", "fallback", "turing", "flash4"), default="auto")
+    p.add_argument("--arg", action="append", default=[], metavar="KEY=VALUE")
     return p
 
 
@@ -66,12 +74,19 @@ def _apply_flash_mode_to_env(env: dict[str, str], mode: str) -> None:
     if mode == "fallback":
         env["Y13_DISABLE_FLASH"] = "1"
         env["Y13_USE_TURING_FLASH"] = "0"
+        env["Y13_PREFER_FLASH4"] = "0"
     elif mode == "turing":
         env["Y13_DISABLE_FLASH"] = "0"
         env["Y13_USE_TURING_FLASH"] = "1"
+        env["Y13_PREFER_FLASH4"] = "0"
+    elif mode == "flash4":
+        env["Y13_DISABLE_FLASH"] = "0"
+        env["Y13_USE_TURING_FLASH"] = "0"
+        env["Y13_PREFER_FLASH4"] = "1"
     else:
         env["Y13_DISABLE_FLASH"] = "0"
-        env.setdefault("Y13_USE_TURING_FLASH", "0")
+        env["Y13_USE_TURING_FLASH"] = "0"
+        env["Y13_PREFER_FLASH4"] = "0"
 
 
 def _run_feature_projection(args: argparse.Namespace, save_dir: str | Path | None) -> None:
@@ -144,7 +159,8 @@ def _run_feature_projection(args: argparse.Namespace, save_dir: str | Path | Non
 
 
 def main() -> None:
-    args = build_parser().parse_args()
+    parser = build_parser()
+    args, unknown = parser.parse_known_args()
     apply_flash_mode(args.flash_mode)
 
     from ultralytics import YOLO
@@ -175,6 +191,8 @@ def main() -> None:
         train_kwargs["cache"] = args.cache
     if args.fraction is not None:
         train_kwargs["fraction"] = args.fraction
+
+    train_kwargs = merge_kwarg_sources(train_kwargs, parse_kv_overrides(args.arg), parse_unknown_cli_overrides(unknown))
 
     print_runtime("train", args.flash_mode, backend, train_kwargs)
     results = model.train(**train_kwargs)

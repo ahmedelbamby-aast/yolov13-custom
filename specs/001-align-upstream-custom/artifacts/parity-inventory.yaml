@@ -3,16 +3,22 @@ baseline_ref: d93fb45e033d9447fe58918b1265687d8aabb0b5
 workflows:
   - workflow_id: python-api-train-detect
     category: python_api
-    status: pending_alignment
-    evidence_refs: []
-    notes: ""
+    status: aligned
+    evidence_refs:
+      - cli_python_parity_gate.json
+      - stress_gate.json
+    notes: "Python API smoke parity verified in phase3 gates."
   - workflow_id: cli-train-detect
     category: cli_mode
-    status: pending_alignment
-    evidence_refs: []
-    notes: ""
+    status: aligned
+    evidence_refs:
+      - cli_python_parity_gate.json
+      - stress_gate.json
+    notes: "CLI train behavior matches expected upstream usage patterns."
   - workflow_id: script-train-passthrough
     category: aux_tooling
-    status: pending_alignment
-    evidence_refs: []
-    notes: ""
+    status: aligned
+    evidence_refs:
+      - stress_gate.json
+      - phase3_final_gate.json
+    notes: "Developer scripts accept passthrough overrides and execute end-to-end gates."

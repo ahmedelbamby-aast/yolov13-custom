@@ -5,8 +5,12 @@ features:
     criticality: release_blocking
     expected_outcome: Deterministic flash-mode behavior with fallback and turing compatibility.
     regression_test_refs:
-      - tests/test_engine.py
+      - tests/test_engine.py::test_flash_backend_toggle_env_contract
       - kaggle/scripts/35_phase_ddp_gate.py
+    status: preserved
+    evidence_refs:
+      - phase3_ddp_gate.json
+      - stress_gate.json
     owner: y13-maintainers
   - feature_id: y13-task-preflight
     name: Task-aware dataset preflight
@@ -15,12 +19,20 @@ features:
     regression_test_refs:
       - kaggle/scripts/33_phase1_task_preflight_smoke.py
       - ultralytics/data/utils.py
+    status: preserved
+    evidence_refs:
+      - phase1_task_preflight_smoke.json
+      - phase3_final_gate.json
     owner: y13-maintainers
   - feature_id: y13-multi-task-configs
     name: YOLOv13 multi-task model configs
     criticality: release_blocking
     expected_outcome: v13 detect/segment/pose/obb YAML families remain available and valid.
     regression_test_refs:
-      - tests/test_exports.py
+      - tests/test_exports.py::test_v13_multitask_yaml_presence
       - ultralytics/cfg/models/v13
+    status: preserved
+    evidence_refs:
+      - phase3_custom_delta_audit.json
+      - phase3_final_gate.json
     owner: y13-maintainers

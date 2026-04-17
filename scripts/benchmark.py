@@ -63,7 +63,8 @@ def _run_single_format(model_path: str, task: str, fmt: str, kwargs: dict) -> di
         "device": kwargs["device"],
         "half": use_half,
         "int8": kwargs.get("int8", False),
-        "dynamic": True,
+        # Keep dynamic batch-path for ONNX only; TensorRT engine export is more reliable with static spatial profile.
+        "dynamic": fmt == "onnx",
         "verbose": False,
     }
     export_kwargs.update({k: v for k, v in kwargs.items() if k in {"workspace", "opset", "simplify", "nms"}})

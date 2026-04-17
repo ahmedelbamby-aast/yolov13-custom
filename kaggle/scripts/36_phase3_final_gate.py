@@ -10,9 +10,12 @@ import time
 from pathlib import Path
 
 from phase3_upgrade.common_artifacts import (
+    HeartbeatTicker,
+    append_progress_heartbeat,
     load_release_evidence,
     normalized_step_result,
     save_gate_json,
+    save_host_runtime_profile,
     save_release_evidence,
     utc_now_iso,
 )
@@ -21,6 +24,7 @@ from phase3_upgrade.common_artifacts import (
 def step(result: dict, name: str, fn):
     started = utc_now_iso()
     t0 = time.time()
+    append_progress_heartbeat("phase3_final_gate", "step_start", {"step": name})
     try:
         out = fn()
         result["steps"][name] = normalized_step_result(
@@ -30,6 +34,7 @@ def step(result: dict, name: str, fn):
             ended_at=utc_now_iso(),
             details={"elapsed_s": round(time.time() - t0, 3), "output": out},
         )
+        append_progress_heartbeat("phase3_final_gate", "step_ok", {"step": name})
     except Exception as e:
         result["steps"][name] = normalized_step_result(
             name=name,
@@ -40,6 +45,7 @@ def step(result: dict, name: str, fn):
             error=str(e)[:1200],
         )
         result["status"] = "fail"
+        append_progress_heartbeat("phase3_final_gate", "step_fail", {"step": name, "error": str(e)[:240]})
 
 
 def main() -> None:
@@ -55,6 +61,9 @@ def main() -> None:
         "started_at": utc_now_iso(),
         "steps": {},
     }
+
+    profile_path = save_host_runtime_profile("phase3_final_gate_host_runtime_profile.json")
+    result["host_runtime_profile"] = str(profile_path)
 
     project = Path("/kaggle/working/phase3_final_gate")
     run_name = "train_detect_1e"
@@ -126,15 +135,16 @@ def main() -> None:
             "formats": [r.get("format") for r in results],
         }
 
-    step(result, "train", train_step)
-    if result["status"] == "ok":
-        step(result, "val", val_step)
-    if result["status"] == "ok":
-        step(result, "predict", predict_step)
-    if result["status"] == "ok":
-        step(result, "export", export_step)
-    if result["status"] == "ok":
-        step(result, "benchmark", benchmark_step)
+    with HeartbeatTicker("phase3_final_gate", interval_s=int(os.environ.get("Y13_PROGRESS_INTERVAL_S", "300"))):
+        step(result, "train", train_step)
+        if result["status"] == "ok":
+            step(result, "val", val_step)
+        if result["status"] == "ok":
+            step(result, "predict", predict_step)
+        if result["status"] == "ok":
+            step(result, "export", export_step)
+        if result["status"] == "ok":
+            step(result, "benchmark", benchmark_step)
 
     result["ok_steps"] = sum(1 for s in result["steps"].values() if s["status"] == "ok")
     result["fail_steps"] = sum(1 for s in result["steps"].values() if s["status"] == "fail")
@@ -146,6 +156,8 @@ def main() -> None:
     release_gate["status"] = "pass" if result["status"] == "ok" else "fail"
     refs = release_gate.setdefault("evidence_refs", [])
     refs.append("phase3_final_gate.json")
+    refs.append("phase3_final_gate_host_runtime_profile.json")
+    refs.append("heartbeats/phase3_final_gate.jsonl")
     evidence["status"] = "approved" if result["status"] == "ok" else "blocked"
     if result["status"] != "ok":
         blocking = evidence.setdefault("blocking_reasons", [])

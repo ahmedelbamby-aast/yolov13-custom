@@ -9,15 +9,43 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 1
 fi
 
+if [[ "${Y13_FRESH_VENV:-0}" == "1" && -d "${Y13_ROOT}/.venv" ]]; then
+  echo "[setup] removing existing virtual environment for fresh install: ${Y13_ROOT}/.venv"
+  rm -rf "${Y13_ROOT}/.venv"
+fi
+
+PYTHON_BIN="${Y13_PYTHON_BIN:-}"
+if [[ -z "${PYTHON_BIN}" ]]; then
+  if [[ -x "/usr/bin/python3" ]]; then
+    PYTHON_BIN="/usr/bin/python3"
+  elif command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="$(command -v python3)"
+  elif command -v python >/dev/null 2>&1; then
+    PYTHON_BIN="$(command -v python)"
+  else
+    echo "python interpreter not found" >&2
+    exit 1
+  fi
+fi
+
 if [[ ! -x "${Y13_ROOT}/.venv/bin/python" ]]; then
-  uv venv "${Y13_ROOT}/.venv" --python /usr/bin/python3 --system-site-packages
+  uv venv "${Y13_ROOT}/.venv" --python "${PYTHON_BIN}" --system-site-packages
 else
   echo "Using existing virtual environment: ${Y13_ROOT}/.venv"
 fi
 
-uv pip install --python "${Y13_ROOT}/.venv/bin/python" --upgrade pip setuptools wheel
+VENV_PY="${Y13_ROOT}/.venv/bin/python"
+if [[ ! -x "${VENV_PY}" && -x "${Y13_ROOT}/.venv/Scripts/python.exe" ]]; then
+  VENV_PY="${Y13_ROOT}/.venv/Scripts/python.exe"
+fi
+if [[ ! -x "${VENV_PY}" ]]; then
+  echo "virtual environment python not found after creation" >&2
+  exit 1
+fi
 
-"${Y13_ROOT}/.venv/bin/python" -V
+uv pip install --python "${VENV_PY}" --upgrade pip setuptools wheel
+
+"${VENV_PY}" -V
 
 ACTIVATE_PATH="${Y13_ROOT}/.venv/bin/activate"
 MARKER="# Y13: ensure torch CUDA shared libs are discoverable (turFlash import)"

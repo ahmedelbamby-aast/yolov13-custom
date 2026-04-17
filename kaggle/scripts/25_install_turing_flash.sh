@@ -10,6 +10,9 @@ if [[ "${Y13_INSTALL_TURING_FLASH:-0}" != "1" ]]; then
 fi
 
 PY="${Y13_ROOT}/.venv/bin/python"
+if [[ ! -x "${PY}" && -x "${Y13_ROOT}/.venv/Scripts/python.exe" ]]; then
+  PY="${Y13_ROOT}/.venv/Scripts/python.exe"
+fi
 if [[ ! -x "${PY}" ]]; then
   echo "Missing venv. Run 10_setup_uv.sh first." >&2
   exit 1
@@ -45,6 +48,16 @@ export CXX=g++
 export CC=gcc
 export MAX_JOBS="${Y13_TURFLASH_MAX_JOBS:-2}"
 export TORCH_CUDA_ARCH_LIST="${Y13_TORCH_CUDA_ARCH_LIST:-7.5}"
+
+if ! command -v nvidia-smi >/dev/null 2>&1; then
+  echo "[turflash] nvidia-smi not found; skipping Turing build on non-GPU host."
+  exit 0
+fi
+
+if ! nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | grep -qi 't4'; then
+  echo "[turflash] T4 GPU not detected; skipping Turing-specific build."
+  exit 0
+fi
 
 if [[ -d "/usr/local/cuda" ]]; then
   export CUDA_HOME="/usr/local/cuda"

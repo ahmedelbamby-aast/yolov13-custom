@@ -5,12 +5,23 @@ from __future__ import annotations
 
 import argparse
 import ast
+import json
 import os
+import platform
+import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 
 FLASH_MODE_CHOICES = ("auto", "fallback", "turing", "flash4")
+DESTRUCTIVE_SERVER_ACTIONS = {
+    "reboot",
+    "shutdown",
+    "delete_server",
+    "delete_system_files",
+    "format_disk",
+}
 
 # Shared artifact directory used by alignment gates.
 FEATURE_ARTIFACTS_DIR = Path(os.environ.get("Y13_FEATURE_ARTIFACTS_DIR", "specs/001-align-upstream-custom/artifacts"))
@@ -64,6 +75,111 @@ def apply_flash_mode(mode: str) -> None:
     os.environ.setdefault("Y13_FLASH_QUARANTINE", "1")
     os.environ.setdefault("Y13_FLASH_FAIL_THRESHOLD", "64")
     os.environ.setdefault("Y13_FLASH4_DTYPE", "auto")
+
+
+def auto_configure_flash_environment() -> dict[str, Any]:
+    """Set flash env defaults from detected hardware profile."""
+    profile = detect_host_runtime_profile()
+    recommendation = profile.get("flash_recommendation", "fallback")
+    os.environ.setdefault("Y13_HOST_ACCELERATOR_PROFILE", str(profile.get("accelerator_profile", "unknown")))
+    os.environ.setdefault("Y13_HOST_OS_FAMILY", str(profile.get("os_family", "unknown")))
+
+    if recommendation == "turing":
+        os.environ.setdefault("Y13_USE_TURING_FLASH", "1")
+        os.environ.setdefault("Y13_DISABLE_FLASH", "0")
+    elif recommendation == "auto":
+        os.environ.setdefault("Y13_USE_TURING_FLASH", "0")
+        os.environ.setdefault("Y13_DISABLE_FLASH", "0")
+    else:
+        os.environ.setdefault("Y13_USE_TURING_FLASH", "0")
+        os.environ.setdefault("Y13_DISABLE_FLASH", "1")
+
+    return profile
+
+
+def enforce_server_safety(action: str, approved: bool | None = None) -> None:
+    """Block destructive server operations unless explicit approval exists."""
+    normalized = (action or "").strip().lower()
+    if normalized not in DESTRUCTIVE_SERVER_ACTIONS:
+        return
+
+    if approved is None:
+        approved = os.environ.get("Y13_DEVELOPER_APPROVED_DESTRUCTIVE", "0") == "1"
+
+    if not approved:
+        raise PermissionError(
+            "Destructive server action blocked. Inform developer and set "
+            "Y13_DEVELOPER_APPROVED_DESTRUCTIVE=1 only with explicit approval."
+        )
+
+
+def detect_host_runtime_profile() -> dict[str, Any]:
+    """Detect host OS/headless/accelerator profile for portability-aware flows."""
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+    is_headless = not any(os.environ.get(k) for k in ("DISPLAY", "WAYLAND_DISPLAY", "MIR_SOCKET"))
+
+    gpu_names: list[str] = []
+    gpu_count = 0
+    cuda_available = False
+
+    try:
+        import torch
+
+        cuda_available = bool(torch.cuda.is_available())
+        if cuda_available:
+            gpu_count = int(torch.cuda.device_count())
+            gpu_names = [str(torch.cuda.get_device_name(i)) for i in range(gpu_count)]
+    except Exception:
+        pass
+
+    if gpu_count == 0:
+        try:
+            proc = subprocess.run(
+                ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            if proc.returncode == 0:
+                gpu_names = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+                gpu_count = len(gpu_names)
+                cuda_available = gpu_count > 0
+        except Exception:
+            pass
+
+    if gpu_count <= 0:
+        accelerator_profile = "cpu-only"
+    elif gpu_count == 1:
+        accelerator_profile = "single-gpu"
+    else:
+        accelerator_profile = "multi-gpu"
+
+    t4_compatible = any("t4" in name.lower() for name in gpu_names)
+    flash_recommendation = "fallback"
+    if accelerator_profile != "cpu-only":
+        flash_recommendation = "turing" if t4_compatible else "auto"
+
+    return {
+        "detected_at": datetime.now(timezone.utc).isoformat(),
+        "os_family": system,
+        "machine": machine,
+        "headless": is_headless,
+        "accelerator_profile": accelerator_profile,
+        "gpu_count": gpu_count,
+        "gpu_names": gpu_names,
+        "cuda_available": cuda_available,
+        "t4_compatible": t4_compatible,
+        "flash_recommendation": flash_recommendation,
+    }
+
+
+def write_host_runtime_profile(path: str | Path) -> Path:
+    """Write host profile JSON artifact and return path."""
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(detect_host_runtime_profile(), indent=2), encoding="utf-8")
+    return out
 
 
 def artifact_path(name: str) -> Path:

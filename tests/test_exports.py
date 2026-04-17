@@ -20,6 +20,22 @@ from ultralytics.utils import (
 from ultralytics.utils.torch_utils import TORCH_1_9, TORCH_1_13
 
 
+def test_v13_multitask_yaml_presence():
+    """Ensure v13 multi-task yaml family expected by custom fork is present."""
+    root = Path(__file__).resolve().parents[1]
+    cfg_root = root / "ultralytics" / "cfg" / "models" / "v13"
+    expected = [
+        "yolov13.yaml",
+        "yolov13s.yaml",
+        "yolov13l.yaml",
+        "yolov13x.yaml",
+        "yolov13-seg.yaml",
+        "yolov13-pose.yaml",
+        "yolov13-obb.yaml",
+    ]
+    assert all((cfg_root / name).exists() for name in expected)
+
+
 def test_export_torchscript():
     """Test YOLO model exporting to TorchScript format for compatibility and correctness."""
     file = YOLO(MODEL).export(format="torchscript", optimize=False, imgsz=32)

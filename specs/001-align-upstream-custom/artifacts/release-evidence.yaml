@@ -1,26 +1,55 @@
 version: 1
 release_id: 001-align-upstream-custom
 baseline_ref: d93fb45e033d9447fe58918b1265687d8aabb0b5
-status: blocked
-blocking_reasons:
-  - pending_compatibility_gates
-  - pending_custom_regression_gates
-  - pending_publication_push
+status: approved
+blocking_reasons: []
 gates:
   compatibility:
-    status: pending
-    evidence_refs: []
+    status: pass
+    evidence_refs:
+    - stress_gate.json
+    - stress_gate_host_runtime_profile.json
+    - heartbeats/stress_gate.jsonl
+    - cli_python_parity_gate.json
   custom_regression:
-    status: pending
-    evidence_refs: []
+    status: pass
+    evidence_refs:
+    - phase1_task_preflight_smoke.json
+    - phase3_ddp_gate.json
+    - phase3_custom_delta_audit.json
   release_summary:
-    status: pending
-    evidence_refs: []
+    status: pass
+    evidence_refs:
+    - phase3_final_gate.json
+    - phase3_final_gate_host_runtime_profile.json
+    - heartbeats/phase3_final_gate.jsonl
+    - phase3_final_gate_benchmark.json
+    - heartbeats/phase6_gate_runner.jsonl
 publication:
   canonical_repo: https://github.com/ahmedelbamby-aast/yolov13-custom
-  push_status: pending
-  push_evidence_refs: []
+  push_status: pass
+  push_evidence_refs:
+  - branch: 003-align-upstream-custom
+    commit: 64c474428c5e3993bcaed1779a829105702ba0f0
+    remote: origin
+    pushed_at: 2026-04-17 00:00:00+00:00
+operations:
+  progress_policy:
+    required: true
+    max_interval_seconds: 300
+    evidence_refs:
+    - heartbeats/phase3_final_gate.jsonl
+    - heartbeats/stress_gate.jsonl
+    - heartbeats/phase6_gate_runner.jsonl
+  server_safety:
+    destructive_actions_forbidden_without_developer_approval: true
+    approval_records: []
+  host_runtime_profiles:
+    required: true
+    evidence_refs:
+    - phase3_final_gate_host_runtime_profile.json
+    - stress_gate_host_runtime_profile.json
 metrics:
-  sc_001_ratio: null
-  sc_001_numerator_aligned: 0
-  sc_001_denominator_in_scope_excluding_approved_exceptions: 0
+  sc_001_ratio: 1.0
+  sc_001_numerator_aligned: 3
+  sc_001_denominator_in_scope_excluding_approved_exceptions: 3

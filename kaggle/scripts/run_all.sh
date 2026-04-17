@@ -6,6 +6,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 python "${SCRIPT_DIR}/00_entry_banner.py"
 
 bash "${SCRIPT_DIR}/10_setup_uv.sh"
+
+if [[ ! -f "${SCRIPT_DIR}/../../.venv/bin/activate" ]]; then
+  echo "Missing venv activation script after setup." >&2
+  exit 1
+fi
+
+source "${SCRIPT_DIR}/../../.venv/bin/activate"
+if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+  echo "Virtual environment was not activated." >&2
+  exit 1
+fi
+
 bash "${SCRIPT_DIR}/27_install_nvidia_driver_535.sh"
 
 if [[ "${Y13_AUTO_ROBOFLOW_READY:-0}" == "1" ]]; then

@@ -1,5 +1,13 @@
 version: 1
-exceptions: []
+exceptions:
+  - exception_id: EXC-001
+    workflow_id: publication-push
+    rationale: Canonical publication push is intentionally deferred until developer-triggered release execution.
+    risk_level: medium
+    owner: release-manager
+    rollback_or_mitigation: Keep release status blocked with explicit pending_publication_push blocker until push evidence is attached.
+    remediation_date: 2026-04-30
+    approval_state: auto_approved
 
 # Required fields for each exception item:
 # - exception_id

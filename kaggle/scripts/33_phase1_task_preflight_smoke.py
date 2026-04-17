@@ -8,6 +8,7 @@ from pathlib import Path
 from PIL import Image
 
 from ultralytics.data.utils import check_det_dataset
+from phase3_upgrade.common_artifacts import load_release_evidence, save_gate_json, save_release_evidence, utc_now_iso
 
 
 @dataclass
@@ -132,14 +133,30 @@ def run() -> dict:
         )
 
     summary = {
+        "started_at": utc_now_iso(),
         "total": len(cases),
         "ok": sum(1 for c in cases if c.status == "ok"),
         "mismatch": sum(1 for c in cases if c.status != "ok"),
         "cases": [c.__dict__ for c in cases],
     }
+    summary["ended_at"] = utc_now_iso()
 
     report_json = out_root / "phase1_task_preflight_smoke.json"
     report_json.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    save_gate_json("phase1_task_preflight_smoke.json", summary)
+
+    evidence = load_release_evidence()
+    gates = evidence.setdefault("gates", {})
+    custom_regression = gates.setdefault("custom_regression", {})
+    custom_regression["status"] = "pass" if summary["mismatch"] == 0 else "fail"
+    refs = custom_regression.setdefault("evidence_refs", [])
+    refs.append("phase1_task_preflight_smoke.json")
+    if summary["mismatch"] != 0:
+        evidence["status"] = "blocked"
+        blocking = evidence.setdefault("blocking_reasons", [])
+        if "failed_task_preflight_smoke" not in blocking:
+            blocking.append("failed_task_preflight_smoke")
+    save_release_evidence(evidence)
 
     print(json.dumps(summary, indent=2))
     print(f"report_json={report_json}")

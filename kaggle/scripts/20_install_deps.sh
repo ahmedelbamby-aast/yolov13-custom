@@ -5,6 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 PY="${Y13_ROOT}/.venv/bin/python"
+if [[ ! -x "${PY}" && -x "${Y13_ROOT}/.venv/Scripts/python.exe" ]]; then
+  PY="${Y13_ROOT}/.venv/Scripts/python.exe"
+fi
 if [[ ! -x "${PY}" ]]; then
   echo "Missing venv. Run 10_setup_uv.sh first." >&2
   exit 1
@@ -51,6 +54,32 @@ PY
 
 if [[ "${Y13_INSTALL_TURING_FLASH:-0}" == "1" || "${Y13_USE_TURING_FLASH:-0}" == "1" ]]; then
   bash "${SCRIPT_DIR}/25_install_turing_flash.sh"
+fi
+
+if [[ "${Y13_AUTO_FLASH_INSTALL:-1}" == "1" ]]; then
+  "${PY}" - <<'PY'
+import importlib
+import json
+import os
+from pathlib import Path
+
+mods = ["flash_attn_turing", "flash_attn"]
+status = {"selected": None, "imports": {}}
+for m in mods:
+    try:
+        importlib.import_module(m)
+        status["imports"][m] = "ok"
+        if status["selected"] is None:
+            status["selected"] = m
+    except Exception as e:
+        status["imports"][m] = f"fail: {e}"
+
+out = Path(os.environ.get("Y13_OUTPUT_DIR", "/kaggle/working")) / "flash_backend_probe.json"
+out.parent.mkdir(parents=True, exist_ok=True)
+out.write_text(json.dumps(status, indent=2), encoding="utf-8")
+print(f"[flash-probe] saved={out}")
+print(json.dumps(status, indent=2))
+PY
 fi
 
 # Prefer cp312-compatible ONNX runtime stack

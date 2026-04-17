@@ -9,6 +9,8 @@ import os
 import time
 from pathlib import Path
 
+from phase3_upgrade.common_artifacts import load_release_evidence, save_gate_json, save_release_evidence, utc_now_iso
+
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Phase DDP smoke gate")
@@ -67,6 +69,7 @@ def main() -> None:
     out = {
         "phase": args.phase,
         "gate": "ddp_smoke",
+        "started_at": utc_now_iso(),
         "status": status,
         "error": error[:1000],
         "elapsed_s": time.time() - start,
@@ -88,9 +91,25 @@ def main() -> None:
             "name": args.name,
         },
     }
+    out["ended_at"] = utc_now_iso()
 
     out_path = Path(f"/kaggle/working/{args.phase}_ddp_gate.json")
     out_path.write_text(json.dumps(out, indent=2), encoding="utf-8")
+    save_gate_json(f"{args.phase}_ddp_gate.json", out)
+
+    evidence = load_release_evidence()
+    gates = evidence.setdefault("gates", {})
+    custom_regression = gates.setdefault("custom_regression", {})
+    custom_regression["status"] = "pass" if status == "ok" else "fail"
+    refs = custom_regression.setdefault("evidence_refs", [])
+    refs.append(f"{args.phase}_ddp_gate.json")
+    if status != "ok":
+        evidence["status"] = "blocked"
+        blocking = evidence.setdefault("blocking_reasons", [])
+        if "failed_ddp_smoke_gate" not in blocking:
+            blocking.append("failed_ddp_smoke_gate")
+    save_release_evidence(evidence)
+
     print(json.dumps(out, indent=2))
     print(f"saved={out_path}")
 

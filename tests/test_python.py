@@ -42,6 +42,15 @@ def test_model_forward():
     model(source=None, imgsz=32, augment=True)  # also test no source and augment
 
 
+def test_yolo_import_and_constructor_parity():
+    """Smoke test upstream import and constructor behavior parity."""
+    from ultralytics import YOLO as ImportedYOLO
+
+    model = ImportedYOLO(MODEL)
+    assert callable(model)
+    assert hasattr(model, "train") and hasattr(model, "val") and hasattr(model, "predict")
+
+
 def test_model_methods():
     """Test various methods and properties of the YOLO model to ensure correct functionality."""
     model = YOLO(MODEL)
